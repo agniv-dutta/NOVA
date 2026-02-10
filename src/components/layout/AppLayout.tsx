@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, MessageSquareText, Brain, RefreshCw, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Users, MessageSquareText, Brain, RefreshCw, Menu, X, HeartPulse } from 'lucide-react';
 import { useEmployees } from '@/contexts/EmployeeContext';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/employees', icon: Users, label: 'Employees' },
   { to: '/sentiment', icon: MessageSquareText, label: 'Sentiment Analyzer' },
+  { to: '/org-health', icon: HeartPulse, label: 'Org Health' },
 ];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {

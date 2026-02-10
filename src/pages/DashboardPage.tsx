@@ -1,5 +1,15 @@
 import { MetricsCards } from '@/components/dashboard/MetricsCards';
 import { SentimentPieChart, PerformanceScatterPlot, DepartmentRiskHeatmap } from '@/components/dashboard/Charts';
+import WorkforceHealthScore from '@/components/dashboard/WorkforceHealthScore';
+import AttritionPredictionTimeline from '@/components/dashboard/AttritionPredictionTimeline';
+import EmployeeTenureDistribution from '@/components/dashboard/EmployeeTenureDistribution';
+import EngagementPerformanceQuadrant from '@/components/dashboard/EngagementPerformanceQuadrant';
+import BurnoutHeatmap from '@/components/dashboard/BurnoutHeatmap';
+import SkillsGapRadar from '@/components/dashboard/SkillsGapRadar';
+import CompensationEquityAnalysis from '@/components/dashboard/CompensationEquityAnalysis';
+import HiringFunnel from '@/components/dashboard/HiringFunnel';
+import AbsenteeismPatterns from '@/components/dashboard/AbsenteeismPatterns';
+import ManagerEffectivenessScorecard from '@/components/dashboard/ManagerEffectivenessScorecard';
 import { useEmployees } from '@/contexts/EmployeeContext';
 import { BarChart3, TrendingDown, ShieldCheck, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -14,13 +24,54 @@ const KPI_DATA = [
 export default function DashboardPage() {
   return (
     <div className="space-y-6">
+      {/* Top KPI - Workforce Health Score */}
+      <WorkforceHealthScore />
+
+      {/* Original Metrics Cards */}
       <MetricsCards />
 
+      {/* Attrition Prediction Timeline */}
+      <div className="grid gap-4 lg:grid-cols-1">
+        <AttritionPredictionTimeline />
+      </div>
+
+      {/* Employee Tenure Distribution */}
+      <div className="grid gap-4 lg:grid-cols-1">
+        <EmployeeTenureDistribution />
+      </div>
+
+      {/* Engagement vs Performance Quadrant Matrix */}
+      <EngagementPerformanceQuadrant />
+
+      {/* Original Charts */}
       <div className="grid gap-4 lg:grid-cols-2">
         <SentimentPieChart />
         <PerformanceScatterPlot />
       </div>
 
+      {/* Burnout Heatmap */}
+      <BurnoutHeatmap />
+
+      {/* Skills Gap Radar */}
+      <div className="grid gap-4 lg:grid-cols-1">
+        <SkillsGapRadar />
+      </div>
+
+      {/* Compensation Equity Analysis */}
+      <CompensationEquityAnalysis />
+
+      {/* Hiring Funnel */}
+      <div className="grid gap-4 lg:grid-cols-1">
+        <HiringFunnel />
+      </div>
+
+      {/* Absenteeism Patterns */}
+      <AbsenteeismPatterns />
+
+      {/* Manager Effectiveness Scorecard */}
+      <ManagerEffectivenessScorecard />
+
+      {/* Original Department Risk Heatmap */}
       <DepartmentRiskHeatmap />
 
       {/* Business Impact KPIs */}

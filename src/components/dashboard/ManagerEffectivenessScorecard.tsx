@@ -1,0 +1,264 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Download, ChevronDown, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { generateManagerScores, ManagerScore } from "@/utils/mockAnalyticsData";
+import html2canvas from "html2canvas";
+import { useRef, useState } from "react";
+import { LineChart, Line, ResponsiveContainer } from "recharts";
+import { Badge } from "@/components/ui/badge";
+
+export default function ManagerEffectivenessScorecard() {
+  const data = generateManagerScores();
+  const chartRef = useRef<HTMLDivElement>(null);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [sortConfig, setSortConfig] = useState<{ key: keyof ManagerScore; direction: 'asc' | 'desc' } | null>(null);
+
+  const handleExport = async () => {
+    if (chartRef.current) {
+      const canvas = await html2canvas(chartRef.current);
+      const link = document.createElement("a");
+      link.download = "manager-effectiveness.png";
+      link.href = canvas.toDataURL();
+      link.click();
+    }
+  };
+
+  const toggleRow = (managerId: string) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(managerId)) {
+      newExpanded.delete(managerId);
+    } else {
+      newExpanded.add(managerId);
+    }
+    setExpandedRows(newExpanded);
+  };
+
+  const handleSort = (key: keyof ManagerScore) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedData = [...data].sort((a, b) => {
+    if (!sortConfig) return 0;
+    
+    const aVal = a[sortConfig.key];
+    const bVal = b[sortConfig.key];
+    
+    if (typeof aVal === 'number' && typeof bVal === 'number') {
+      return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+    }
+    
+    return 0;
+  });
+
+  const getTrafficLight = (value: number, metric: string): { color: string; label: string } => {
+    if (metric === 'turnoverRate') {
+      if (value <= 10) return { color: 'bg-green-500', label: 'Good' };
+      if (value <= 20) return { color: 'bg-yellow-500', label: 'Warning' };
+      return { color: 'bg-red-500', label: 'Critical' };
+    }
+    
+    // For performance, sentiment, eNPS
+    if (value >= 75) return { color: 'bg-green-500', label: 'Excellent' };
+    if (value >= 50) return { color: 'bg-yellow-500', label: 'Good' };
+    return { color: 'bg-red-500', label: 'Needs Attention' };
+  };
+
+  const MiniSparkline = ({ data }: { data: number[] }) => {
+    const chartData = data.map((value, index) => ({ index, value }));
+    
+    return (
+      <ResponsiveContainer width={80} height={30}>
+        <LineChart data={chartData}>
+          <Line 
+            type="monotone" 
+            dataKey="value" 
+            stroke="#3b82f6" 
+            strokeWidth={2}
+            dot={false}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    );
+  };
+
+  return (
+    <Card className="col-span-4">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Manager Effectiveness Scorecard</CardTitle>
+        <Button variant="outline" size="sm" onClick={handleExport}>
+          <Download className="h-4 w-4 mr-2" />
+          Export
+        </Button>
+      </CardHeader>
+      <CardContent>
+        <div ref={chartRef} className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-10"></TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-gray-50"
+                  onClick={() => handleSort('managerName')}
+                >
+                  Manager
+                </TableHead>
+                <TableHead 
+                  className="text-center cursor-pointer hover:bg-gray-50"
+                  onClick={() => handleSort('teamSize')}
+                >
+                  Team Size
+                </TableHead>
+                <TableHead 
+                  className="text-center cursor-pointer hover:bg-gray-50"
+                  onClick={() => handleSort('avgPerformance')}
+                >
+                  Avg Performance
+                </TableHead>
+                <TableHead 
+                  className="text-center cursor-pointer hover:bg-gray-50"
+                  onClick={() => handleSort('avgSentiment')}
+                >
+                  Avg Sentiment
+                </TableHead>
+                <TableHead 
+                  className="text-center cursor-pointer hover:bg-gray-50"
+                  onClick={() => handleSort('turnoverRate')}
+                >
+                  Turnover Rate
+                </TableHead>
+                <TableHead 
+                  className="text-center cursor-pointer hover:bg-gray-50"
+                  onClick={() => handleSort('enpsScore')}
+                >
+                  eNPS
+                </TableHead>
+                <TableHead className="text-center">30-Day Trend</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sortedData.map((manager) => (
+                <>
+                  <TableRow key={manager.managerId} className="hover:bg-gray-50">
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={() => toggleRow(manager.managerId)}
+                      >
+                        {expandedRows.has(manager.managerId) ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </TableCell>
+                    <TableCell className="font-medium">{manager.managerName}</TableCell>
+                    <TableCell className="text-center">{manager.teamSize}</TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <div 
+                          className={`w-3 h-3 rounded-full ${getTrafficLight(manager.avgPerformance, 'performance').color}`}
+                          title={getTrafficLight(manager.avgPerformance, 'performance').label}
+                        />
+                        <span>{manager.avgPerformance.toFixed(0)}%</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <div 
+                          className={`w-3 h-3 rounded-full ${getTrafficLight(manager.avgSentiment, 'sentiment').color}`}
+                          title={getTrafficLight(manager.avgSentiment, 'sentiment').label}
+                        />
+                        <span>{manager.avgSentiment.toFixed(0)}%</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <div 
+                          className={`w-3 h-3 rounded-full ${getTrafficLight(manager.turnoverRate, 'turnoverRate').color}`}
+                          title={getTrafficLight(manager.turnoverRate, 'turnoverRate').label}
+                        />
+                        <span>{manager.turnoverRate.toFixed(1)}%</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge 
+                        variant={manager.enpsScore >= 30 ? 'default' : manager.enpsScore >= 0 ? 'secondary' : 'destructive'}
+                      >
+                        {manager.enpsScore.toFixed(0)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <MiniSparkline data={manager.trend} />
+                    </TableCell>
+                  </TableRow>
+                  
+                  {/* Expanded row showing direct reports */}
+                  {expandedRows.has(manager.managerId) && (
+                    <TableRow>
+                      <TableCell colSpan={8} className="bg-gray-50">
+                        <div className="p-4">
+                          <p className="text-sm font-semibold mb-2">Direct Reports ({manager.directReports?.length || 0})</p>
+                          <div className="grid grid-cols-3 gap-2">
+                            {manager.directReports?.map((report, i) => (
+                              <div key={i} className="text-sm p-2 bg-white rounded border">
+                                {report}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Summary Stats */}
+        <div className="mt-4 grid grid-cols-4 gap-4">
+          <div className="text-center p-3 bg-gray-50 rounded-lg">
+            <p className="text-2xl font-bold text-green-600">
+              {sortedData.filter(m => getTrafficLight(m.avgPerformance, 'performance').color === 'bg-green-500').length}
+            </p>
+            <p className="text-xs text-muted-foreground">High Performing Teams</p>
+          </div>
+          <div className="text-center p-3 bg-gray-50 rounded-lg">
+            <p className="text-2xl font-bold text-yellow-600">
+              {sortedData.filter(m => getTrafficLight(m.turnoverRate, 'turnoverRate').color === 'bg-yellow-500').length}
+            </p>
+            <p className="text-xs text-muted-foreground">Teams at Risk</p>
+          </div>
+          <div className="text-center p-3 bg-gray-50 rounded-lg">
+            <p className="text-2xl font-bold text-gray-900">
+              {(sortedData.reduce((sum, m) => sum + m.enpsScore, 0) / sortedData.length).toFixed(0)}
+            </p>
+            <p className="text-xs text-muted-foreground">Avg eNPS Score</p>
+          </div>
+          <div className="text-center p-3 bg-gray-50 rounded-lg">
+            <p className="text-2xl font-bold text-gray-900">
+              {sortedData.reduce((sum, m) => sum + m.teamSize, 0)}
+            </p>
+            <p className="text-xs text-muted-foreground">Total Team Members</p>
+          </div>
+        </div>
+
+        {/* Recommendations */}
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+          <p className="text-sm text-blue-800">
+            <strong>Coaching Recommended:</strong> {sortedData.filter(m => 
+              m.avgPerformance < 60 || m.avgSentiment < 60 || m.turnoverRate > 15
+            ).length} managers would benefit from leadership development programs based on current metrics.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

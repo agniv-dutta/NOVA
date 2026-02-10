@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Search, Download, ChevronUp, ChevronDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { EmployeeDetailDialog } from '@/components/employees/EmployeeDetailDialog';
+import FlightRiskDrawer from '@/components/employees/FlightRiskDrawer';
 import { getSentimentLabel } from '@/utils/sentimentAnalysis';
 
 type SortField = 'name' | 'department' | 'performanceScore' | 'sentimentScore' | 'burnoutRisk' | 'attritionRisk';
@@ -21,6 +22,7 @@ export function EmployeeTable() {
   const [sortField, setSortField] = useState<SortField>('burnoutRisk');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [flightRiskEmployee, setFlightRiskEmployee] = useState<Employee | null>(null);
 
   const filtered = useMemo(() => {
     let result = [...employees];
@@ -174,7 +176,13 @@ export function EmployeeTable() {
                 <td className="px-3 py-3 text-center">
                   <RiskBadge value={emp.burnoutRisk} />
                 </td>
-                <td className="px-3 py-3 text-center">
+                <td 
+                  className="px-3 py-3 text-center"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setFlightRiskEmployee(emp);
+                  }}
+                >
                   <RiskBadge value={emp.attritionRisk} />
                 </td>
                 <td className="px-3 py-3 text-right text-xs text-muted-foreground tabular-nums">
@@ -189,6 +197,13 @@ export function EmployeeTable() {
       <EmployeeDetailDialog
         employee={selectedEmployee}
         onClose={() => setSelectedEmployee(null)}
+      />
+
+      <FlightRiskDrawer
+        employeeId={flightRiskEmployee?.id || null}
+        employeeName={flightRiskEmployee?.name || ''}
+        open={!!flightRiskEmployee}
+        onClose={() => setFlightRiskEmployee(null)}
       />
     </motion.div>
   );

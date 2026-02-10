@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquareText, Sparkles, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import SentimentBreakdown from './SentimentBreakdown';
 
 const SAMPLE_TEXTS = [
   "I'm really enjoying the new project. The team is fantastic and I feel motivated every day. Great leadership!",
@@ -155,6 +156,9 @@ export function SentimentAnalyzer() {
                 </div>
               </div>
             )}
+
+            {/* Enhanced Sentiment Breakdown */}
+            <SentimentBreakdown text={text} />
           </motion.div>
         )}
       </AnimatePresence>
