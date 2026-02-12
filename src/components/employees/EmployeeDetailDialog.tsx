@@ -89,7 +89,7 @@ export function EmployeeDetailDialog({ employee, onClose }: Props) {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(214, 20%, 90%)" />
               <XAxis dataKey="date" tick={{ fontSize: 10 }} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} />
-              <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
+              <Tooltip contentStyle={{ border: '1px solid #475569', boxShadow: 'none', backgroundColor: '#020617' }} />
               <Line type="monotone" dataKey="Performance" stroke="hsl(217, 91%, 60%)" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
@@ -103,7 +103,7 @@ export function EmployeeDetailDialog({ employee, onClose }: Props) {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(214, 20%, 90%)" />
               <XAxis dataKey="date" tick={{ fontSize: 10 }} />
               <YAxis domain={[-1, 1]} tick={{ fontSize: 10 }} />
-              <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
+              <Tooltip contentStyle={{ border: '1px solid #475569', boxShadow: 'none', backgroundColor: '#020617' }} />
               <Line type="monotone" dataKey="Sentiment" stroke="hsl(38, 92%, 50%)" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>

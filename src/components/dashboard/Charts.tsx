@@ -46,7 +46,7 @@ export function SentimentPieChart() {
             ))}
           </Pie>
           <Tooltip
-            contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+            contentStyle={{ border: '1px solid #475569', boxShadow: 'none', backgroundColor: '#020617' }}
             formatter={(value: number) => [`${value} employees`, '']}
           />
           <Legend verticalAlign="bottom" iconType="circle" iconSize={8} />
@@ -81,7 +81,7 @@ export function PerformanceScatterPlot() {
           <YAxis dataKey="engagement" name="Engagement" type="number" domain={[0, 100]} tick={{ fontSize: 11 }} />
           <ZAxis dataKey="risk" range={[30, 200]} name="Burnout Risk" />
           <Tooltip
-            contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+            contentStyle={{ border: '1px solid #475569', boxShadow: 'none', backgroundColor: '#020617' }}
             formatter={(value: number, name: string) => [value, name]}
             labelFormatter={() => ''}
             cursor={{ strokeDasharray: '3 3' }}

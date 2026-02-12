@@ -83,7 +83,7 @@ export default function DashboardPage() {
         <h3 className="mb-3 text-sm font-semibold text-foreground">Business Impact Projections</h3>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {KPI_DATA.map((kpi, i) => (
-            <div key={i} className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+            <div key={i} className="metric-card flex items-center gap-3 p-4">
               <div className="rounded-lg bg-accent p-2">
                 <kpi.icon className="h-4 w-4 text-primary" />
               </div>

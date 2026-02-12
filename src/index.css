@@ -4,99 +4,107 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 220 20% 10%;
+    /* Base HSL values for reference/overrides if needed, but managing via semantic vars below */
+    
+    /* Default to Dark/Terminal Theme */
+    --background: 222 80% 5%;      /* Slate 950 */
+    --foreground: 214 32% 91%;     /* Slate 200 */
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 20% 10%;
+    --card: 217 33% 17%;           /* Slate 800 */
+    --card-foreground: 214 32% 91%; /* Slate 200 */
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 10%;
+    --popover: 217 33% 17%;        /* Slate 800 */
+    --popover-foreground: 214 32% 91%;
 
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 189 94% 43%;        /* Cyan 500 - slightly darker for text contrast on light, but for dark theme we want Cyan 400 */
+    --primary: 189 83% 53%;        /* Cyan 400 */
+    --primary-foreground: 222 80% 5%; /* Slate 950 */
 
-    --secondary: 215 20% 95%;
-    --secondary-foreground: 220 20% 20%;
+    --secondary: 196 63% 24%;      /* Cyan 900 */
+    --secondary-foreground: 189 83% 53%; /* Cyan 400 */
 
-    --muted: 210 15% 95%;
-    --muted-foreground: 215 14% 46%;
+    --muted: 215 19% 35%;          /* Slate 600 - treated as muted bg/border */
+    --muted-foreground: 215 20% 65%; /* Slate 400 */
 
-    --accent: 217 91% 95%;
-    --accent-foreground: 217 91% 40%;
+    --accent: 196 63% 24%;         /* Cyan 900 */
+    --accent-foreground: 189 83% 53%; /* Cyan 400 */
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 91% 71%;      /* Red 400 */
+    --destructive-foreground: 222 80% 5%;
 
-    --border: 214 20% 90%;
-    --input: 214 20% 90%;
-    --ring: 217 91% 60%;
+    --border: 215 19% 35%;         /* Slate 600 */
+    --input: 215 19% 35%;
+    --ring: 189 83% 53%;           /* Cyan 400 */
 
-    --radius: 0.75rem;
+    --radius: 0px;
 
     /* Risk colors */
-    --risk-low: 160 84% 39%;
-    --risk-low-foreground: 0 0% 100%;
-    --risk-low-bg: 160 60% 95%;
-    --risk-medium: 38 92% 50%;
-    --risk-medium-foreground: 38 92% 15%;
-    --risk-medium-bg: 38 70% 94%;
-    --risk-high: 0 84% 60%;
-    --risk-high-foreground: 0 0% 100%;
-    --risk-high-bg: 0 70% 95%;
+    --risk-low: 142 69% 58%;       /* Green 400 */
+    --risk-low-foreground: 222 80% 5%;
+    --risk-low-bg: 142 69% 10%;    /* Darker Green for bg */
+    
+    --risk-medium: 48 96% 53%;     /* Yellow 400 */
+    --risk-medium-foreground: 222 80% 5%;
+    --risk-medium-bg: 48 96% 10%;  /* Darker Yellow for bg */
+    
+    --risk-high: 0 91% 71%;        /* Red 400 */
+    --risk-high-foreground: 222 80% 5%;
+    --risk-high-bg: 0 91% 10%;     /* Darker Red for bg */
 
     /* Chart colors */
-    --chart-1: 217 91% 60%;
-    --chart-2: 160 84% 39%;
-    --chart-3: 38 92% 50%;
-    --chart-4: 0 84% 60%;
-    --chart-5: 262 83% 58%;
+    --chart-1: 189 83% 53%;        /* Cyan 400 */
+    --chart-2: 142 69% 58%;        /* Green 400 */
+    --chart-3: 48 96% 53%;         /* Yellow 400 */
+    --chart-4: 0 91% 71%;          /* Red 400 */
+    --chart-5: 250 60% 70%;        /* Lavender/Purple placeholder */
 
     /* Sidebar */
-    --sidebar-background: 220 20% 10%;
-    --sidebar-foreground: 210 15% 80%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 20% 16%;
-    --sidebar-accent-foreground: 210 15% 95%;
-    --sidebar-border: 220 15% 18%;
-    --sidebar-ring: 217 91% 60%;
-
+    --sidebar-background: 222 47% 11%; /* Slate 900 - varying slightly from main bg */
+    --sidebar-foreground: 215 20% 65%; /* Slate 400 */
+    --sidebar-primary: 189 83% 53%;    /* Cyan 400 */
+    --sidebar-primary-foreground: 222 80% 5%;
+    --sidebar-accent: 217 33% 17%;     /* Slate 800 */
+    --sidebar-accent-foreground: 214 32% 91%; /* Slate 200 */
+    --sidebar-border: 215 19% 35%;     /* Slate 600 */
+    --sidebar-ring: 189 83% 53%;
+    
     /* Metric cards */
-    --metric-blue: 217 91% 60%;
-    --metric-green: 160 84% 39%;
-    --metric-amber: 38 92% 50%;
-    --metric-red: 0 84% 60%;
+    --metric-blue: 189 83% 53%;
+    --metric-green: 142 69% 58%;
+    --metric-amber: 48 96% 53%;
+    --metric-red: 0 91% 71%;
   }
 
   .dark {
-    --background: 220 20% 6%;
-    --foreground: 210 15% 95%;
-    --card: 220 20% 10%;
-    --card-foreground: 210 15% 95%;
-    --popover: 220 20% 10%;
-    --popover-foreground: 210 15% 95%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 15% 18%;
-    --secondary-foreground: 210 15% 95%;
-    --muted: 220 15% 18%;
-    --muted-foreground: 215 14% 60%;
-    --accent: 217 91% 20%;
-    --accent-foreground: 217 91% 80%;
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 220 15% 18%;
-    --input: 220 15% 18%;
-    --ring: 217 91% 60%;
-    --sidebar-background: 220 20% 6%;
-    --sidebar-foreground: 210 15% 80%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 20% 12%;
-    --sidebar-accent-foreground: 210 15% 95%;
-    --sidebar-border: 220 15% 14%;
-    --sidebar-ring: 217 91% 60%;
+    /* Same as root since we are enforcing dark mode, but keeping for compatibility */
+    --background: 222 80% 5%;
+    --foreground: 214 32% 91%;
+    --card: 217 33% 17%;
+    --card-foreground: 214 32% 91%;
+    --popover: 217 33% 17%;
+    --popover-foreground: 214 32% 91%;
+    --primary: 189 83% 53%;
+    --primary-foreground: 222 80% 5%;
+    --secondary: 196 63% 24%;
+    --secondary-foreground: 189 83% 53%;
+    --muted: 215 19% 35%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 196 63% 24%;
+    --accent-foreground: 189 83% 53%;
+    --destructive: 0 91% 71%;
+    --destructive-foreground: 222 80% 5%;
+    --border: 215 19% 35%;
+    --input: 215 19% 35%;
+    --ring: 189 83% 53%;
+    
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 215 20% 65%;
+    --sidebar-primary: 189 83% 53%;
+    --sidebar-primary-foreground: 222 80% 5%;
+    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent-foreground: 214 32% 91%;
+    --sidebar-border: 215 19% 35%;
+    --sidebar-ring: 189 83% 53%;
   }
 }
 
@@ -113,51 +121,58 @@
 }
 
 @layer components {
+  /* Updated card utility for cleaner look */
   .metric-card {
-    @apply rounded-xl border bg-card p-5 shadow-sm transition-all duration-200 hover:shadow-md;
+    @apply rounded-none border border-slate-600 bg-card p-5 shadow-none transition-all duration-200 hover:border-cyan-400/50;
   }
 
   .risk-badge {
-    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold;
+    @apply inline-flex items-center gap-1 rounded-sm px-2.5 py-0.5 text-xs font-mono font-bold tracking-wide uppercase;
   }
 
   .risk-low {
     background: hsl(var(--risk-low-bg));
     color: hsl(var(--risk-low));
+    @apply border border-green-400/20;
   }
 
   .risk-medium {
     background: hsl(var(--risk-medium-bg));
     color: hsl(var(--risk-medium-foreground));
+    @apply border border-yellow-400/20;
   }
 
   .risk-high {
     background: hsl(var(--risk-high-bg));
     color: hsl(var(--risk-high));
+    @apply border border-red-400/20;
   }
 
   .sidebar-link {
-    @apply flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-150;
+    @apply flex items-center gap-3 rounded-none border-l-2 border-transparent px-3 py-2.5 text-sm font-medium transition-colors duration-150;
     color: hsl(var(--sidebar-foreground));
   }
 
   .sidebar-link:hover {
     background: hsl(var(--sidebar-accent));
     color: hsl(var(--sidebar-accent-foreground));
+    @apply border-cyan-400/50;
   }
 
   .sidebar-link-active {
-    background: hsl(var(--sidebar-primary) / 0.15);
+    background: hsl(var(--sidebar-accent));
     color: hsl(var(--sidebar-primary));
+    @apply border-cyan-400;
   }
 
   .chart-container {
-    @apply rounded-xl border bg-card p-5 shadow-sm;
+    @apply rounded-none border border-slate-600 bg-card p-5 shadow-none;
   }
 }
 
 @layer utilities {
   .tabular-nums {
     font-variant-numeric: tabular-nums;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   }
 }

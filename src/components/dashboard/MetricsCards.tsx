@@ -29,7 +29,7 @@ function MetricCard({ title, value, subtitle, icon, accentClass, tooltip, delay 
               <p className={`mt-1 text-3xl font-bold tabular-nums ${accentClass}`}>{value}</p>
               <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>
             </div>
-            <div className={`rounded-lg p-2.5 ${accentClass} bg-opacity-10`} style={{ backgroundColor: 'currentColor', opacity: 0.1, position: 'absolute', right: 16, top: 16, borderRadius: 12, padding: 10 }}>
+            <div className={`rounded-lg p-2.5 ${accentClass} bg-opacity-10`} style={{ backgroundColor: 'currentColor', opacity: 0.1, position: 'absolute', right: 16, top: 16, padding: 10 }}>
             </div>
             <div className={`rounded-lg p-2.5 ${accentClass}`}>
               {icon}
