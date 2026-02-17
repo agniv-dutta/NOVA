@@ -8,10 +8,10 @@ Prerequisites: Node.js and npm. Recommended install: [nvm](https://github.com/nv
 
 ```sh
 # Step 1: Clone the repository
-git clone <YOUR_GIT_URL>
+git clone https://github.com/agniv-dutta/NOVA
 
 # Step 2: Navigate to the project directory
-cd <YOUR_PROJECT_NAME>
+cd NOVA
 
 # Step 3: Install dependencies
 npm i
