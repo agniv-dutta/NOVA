@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, Printer, Share2, TrendingUp, TrendingDown, AlertTriangle } from "lucide-react";
+import { Download, Printer, Share2, TrendingUp, TrendingDown, AlertTriangle, Sparkles } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { 
   calculateWorkforceHealthScore,
@@ -252,12 +252,12 @@ export default function OrgHealthPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <span className="text-lg">🤖</span>
+              <Sparkles className="h-5 w-5 text-primary" />
               AI-Generated Executive Summary
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm leading-relaxed text-gray-700">
+            <p className="text-sm leading-relaxed text-foreground">
               {aiSummary.trim()}
             </p>
           </CardContent>

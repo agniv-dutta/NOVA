@@ -80,7 +80,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               {NAV_ITEMS.find(i => i.to === location.pathname)?.label || 'Employee Insights'}
             </h2>
           </div>
-          <div className="flex items-center gap-2" />
         </header>
 
         <main className="flex-1 overflow-auto p-4 lg:p-6">
