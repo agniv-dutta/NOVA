@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowUp, ArrowDown, TrendingUp } from "lucide-react";
+import { ArrowUp, ArrowDown } from "lucide-react";
 import { calculateWorkforceHealthScore } from "@/utils/mockAnalyticsData";
 import { useEffect, useState } from "react";
 
@@ -45,9 +45,8 @@ export default function WorkforceHealthScore() {
   return (
     <Card className="col-span-1">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Workforce Health Score</span>
-          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+        <CardTitle>
+          Workforce Health Score
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col items-center">

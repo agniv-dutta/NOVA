@@ -176,3 +176,12 @@
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   }
 }
+
+/* Hide lovable-tagger and other development tools */
+[data-lovable-tagger],
+[data-component-name],
+button[data-lovable-tagger-button] {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  display: none !important;
+}
