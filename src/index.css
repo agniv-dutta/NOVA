@@ -180,8 +180,26 @@
 /* Hide lovable-tagger and other development tools */
 [data-lovable-tagger],
 [data-component-name],
-button[data-lovable-tagger-button] {
-  opacity: 0 !important;
-  pointer-events: none !important;
+button[data-lovable-tagger-button],
+div[data-lovable-tagger],
+iframe[data-lovable-tagger],
+#lovable-tagger,
+.lovable-tagger,
+button[style*="position: fixed"],
+div[style*="position: fixed"][style*="z-index"],
+button[style*="right"][style*="top"],
+div[style*="right"][style*="top"][style*="fixed"],
+div[style*="position: fixed"][style*="right: 0"],
+button[style*="position: fixed"][style*="right: 0"] {
+  display: none !important;
+}
+
+/* Nuclear option: hide anything fixed in the top right corner */
+body > *:not(#root) {
+  display: none !important;
+}
+
+header > *:last-child:empty,
+header > div:last-child:empty {
   display: none !important;
 }
