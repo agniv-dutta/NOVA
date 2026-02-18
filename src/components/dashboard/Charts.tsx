@@ -5,9 +5,9 @@ import { Department, DepartmentRisk, getRiskLevel } from '@/types/employee';
 import { motion } from 'framer-motion';
 
 const SENTIMENT_COLORS = {
-  Positive: 'hsl(160, 84%, 39%)',
-  Neutral: 'hsl(217, 91%, 60%)',
-  Negative: 'hsl(0, 84%, 60%)',
+  Positive: '#00C853',
+  Neutral: '#4ECDC4',
+  Negative: '#FF1744',
 };
 
 export function SentimentPieChart() {
@@ -28,7 +28,7 @@ export function SentimentPieChart() {
       transition={{ delay: 0.2 }}
       className="chart-container"
     >
-      <h3 className="mb-4 text-sm font-semibold text-foreground">Sentiment Distribution</h3>
+      <h3 className="mb-4 text-sm font-bold font-heading text-foreground uppercase tracking-wider">Sentiment Distribution</h3>
       <ResponsiveContainer width="100%" height={260}>
         <PieChart>
           <Pie
@@ -39,17 +39,18 @@ export function SentimentPieChart() {
             outerRadius={90}
             paddingAngle={4}
             dataKey="value"
-            stroke="none"
+            stroke="#000000"
+            strokeWidth={2}
           >
             {data.map((entry) => (
               <Cell key={entry.name} fill={SENTIMENT_COLORS[entry.name as keyof typeof SENTIMENT_COLORS]} />
             ))}
           </Pie>
           <Tooltip
-            contentStyle={{ border: '1px solid #475569', boxShadow: 'none', backgroundColor: '#020617' }}
+            contentStyle={{ border: '2px solid #000', boxShadow: '4px 4px 0px #000', backgroundColor: '#FFFFFF', borderRadius: 0 }}
             formatter={(value: number) => [`${value} employees`, '']}
           />
-          <Legend verticalAlign="bottom" iconType="circle" iconSize={8} />
+          <Legend verticalAlign="bottom" iconType="square" iconSize={10} />
         </PieChart>
       </ResponsiveContainer>
     </motion.div>
@@ -73,20 +74,20 @@ export function PerformanceScatterPlot() {
       transition={{ delay: 0.3 }}
       className="chart-container"
     >
-      <h3 className="mb-4 text-sm font-semibold text-foreground">Performance vs Engagement</h3>
+      <h3 className="mb-4 text-sm font-bold font-heading text-foreground uppercase tracking-wider">Performance vs Engagement</h3>
       <ResponsiveContainer width="100%" height={260}>
         <ScatterChart margin={{ top: 5, right: 10, bottom: 5, left: -10 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(214, 20%, 90%)" />
-          <XAxis dataKey="performance" name="Performance" type="number" domain={[0, 100]} tick={{ fontSize: 11 }} />
-          <YAxis dataKey="engagement" name="Engagement" type="number" domain={[0, 100]} tick={{ fontSize: 11 }} />
+          <CartesianGrid strokeDasharray="3 3" stroke="#000000" strokeOpacity={0.15} />
+          <XAxis dataKey="performance" name="Performance" type="number" domain={[0, 100]} tick={{ fontSize: 11 }} stroke="#1A1A1A" />
+          <YAxis dataKey="engagement" name="Engagement" type="number" domain={[0, 100]} tick={{ fontSize: 11 }} stroke="#1A1A1A" />
           <ZAxis dataKey="risk" range={[30, 200]} name="Burnout Risk" />
           <Tooltip
-            contentStyle={{ border: '1px solid #475569', boxShadow: 'none', backgroundColor: '#020617' }}
+            contentStyle={{ border: '2px solid #000', boxShadow: '4px 4px 0px #000', backgroundColor: '#FFFFFF', borderRadius: 0 }}
             formatter={(value: number, name: string) => [value, name]}
             labelFormatter={() => ''}
             cursor={{ strokeDasharray: '3 3' }}
           />
-          <Scatter data={data} fill="hsl(217, 91%, 60%)" fillOpacity={0.6} />
+          <Scatter data={data} fill="#4ECDC4" stroke="#000000" strokeWidth={1} fillOpacity={0.8} />
         </ScatterChart>
       </ResponsiveContainer>
     </motion.div>
@@ -115,9 +116,9 @@ export function DepartmentRiskHeatmap() {
 
   const getRiskBg = (value: number) => {
     const level = getRiskLevel(value);
-    if (level === 'low') return 'bg-risk-low/20 text-foreground';
-    if (level === 'medium') return 'bg-risk-medium/20 text-foreground';
-    return 'bg-risk-high/20 text-foreground';
+    if (level === 'low') return 'bg-[#00C853] text-[#1A1A1A] border-2 border-foreground';
+    if (level === 'medium') return 'bg-[#FFB300] text-[#1A1A1A] border-2 border-foreground';
+    return 'bg-[#FF1744] text-white border-2 border-foreground';
   };
 
   return (
@@ -127,38 +128,38 @@ export function DepartmentRiskHeatmap() {
       transition={{ delay: 0.4 }}
       className="chart-container"
     >
-      <h3 className="mb-4 text-sm font-semibold text-foreground">Department Risk Heatmap</h3>
+      <h3 className="mb-4 text-sm font-bold font-heading text-foreground uppercase tracking-wider">Department Risk Heatmap</h3>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm border-2 border-foreground">
           <thead>
-            <tr className="text-left text-xs text-muted-foreground">
-              <th className="pb-2 pr-3 font-medium">Department</th>
-              <th className="pb-2 px-2 font-medium text-center">Count</th>
-              <th className="pb-2 px-2 font-medium text-center">Burnout</th>
-              <th className="pb-2 px-2 font-medium text-center">Attrition</th>
-              <th className="pb-2 pl-2 font-medium text-center">Sentiment</th>
+            <tr className="text-left text-xs bg-primary text-primary-foreground uppercase tracking-wider">
+              <th className="pb-2 pt-2 pr-3 pl-3 font-bold">Department</th>
+              <th className="pb-2 pt-2 px-2 font-bold text-center">Count</th>
+              <th className="pb-2 pt-2 px-2 font-bold text-center">Burnout</th>
+              <th className="pb-2 pt-2 px-2 font-bold text-center">Attrition</th>
+              <th className="pb-2 pt-2 pl-2 pr-3 font-bold text-center">Sentiment</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border">
+          <tbody className="divide-y divide-foreground">
             {deptRisks.sort((a, b) => b.avgBurnoutRisk - a.avgBurnoutRisk).map(dept => (
-              <tr key={dept.department} className="group">
-                <td className="py-2 pr-3 font-medium">{dept.department}</td>
+              <tr key={dept.department} className="group hover:bg-background">
+                <td className="py-2 pr-3 pl-3 font-semibold">{dept.department}</td>
                 <td className="py-2 px-2 text-center tabular-nums text-muted-foreground">{dept.employeeCount}</td>
                 <td className="py-2 px-2 text-center">
-                  <span className={`inline-block rounded-md px-2 py-0.5 text-xs font-semibold tabular-nums ${getRiskBg(dept.avgBurnoutRisk)}`}>
+                  <span className={`inline-block px-2 py-0.5 text-xs font-bold tabular-nums ${getRiskBg(dept.avgBurnoutRisk)}`}>
                     {dept.avgBurnoutRisk}%
                   </span>
                 </td>
                 <td className="py-2 px-2 text-center">
-                  <span className={`inline-block rounded-md px-2 py-0.5 text-xs font-semibold tabular-nums ${getRiskBg(dept.avgAttritionRisk)}`}>
+                  <span className={`inline-block px-2 py-0.5 text-xs font-bold tabular-nums ${getRiskBg(dept.avgAttritionRisk)}`}>
                     {dept.avgAttritionRisk}%
                   </span>
                 </td>
-                <td className="py-2 pl-2 text-center">
-                  <span className={`inline-block rounded-md px-2 py-0.5 text-xs font-semibold tabular-nums ${
-                    dept.avgSentiment > 0.15 ? 'bg-risk-low/20 text-foreground' :
-                    dept.avgSentiment < -0.15 ? 'bg-risk-high/20 text-foreground' :
-                    'bg-secondary text-foreground'
+                <td className="py-2 pl-2 pr-3 text-center">
+                  <span className={`inline-block px-2 py-0.5 text-xs font-bold tabular-nums ${
+                    dept.avgSentiment > 0.15 ? 'bg-[#00C853] text-[#1A1A1A] border-2 border-foreground' :
+                    dept.avgSentiment < -0.15 ? 'bg-[#FF1744] text-white border-2 border-foreground' :
+                    'bg-muted text-foreground border-2 border-foreground'
                   }`}>
                     {dept.avgSentiment > 0 ? '+' : ''}{dept.avgSentiment.toFixed(2)}
                   </span>

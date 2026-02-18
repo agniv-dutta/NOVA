@@ -15,10 +15,10 @@ import { BarChart3, TrendingDown, ShieldCheck, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const KPI_DATA = [
-  { icon: TrendingDown, label: 'Projected Attrition Reduction', value: '25%', desc: 'With AI-driven interventions' },
-  { icon: ShieldCheck, label: 'Early Detection Rate', value: '87%', desc: 'Employees flagged before exit' },
-  { icon: BarChart3, label: 'Productivity Gain', value: '18%', desc: 'From wellbeing interventions' },
-  { icon: Clock, label: 'HR Time Saved', value: '15hrs/wk', desc: 'Automated analysis vs manual' },
+  { icon: TrendingDown, label: 'Projected Attrition Reduction', value: '25%', desc: 'With AI-driven interventions', color: '#4ECDC4' },
+  { icon: ShieldCheck, label: 'Early Detection Rate', value: '87%', desc: 'Employees flagged before exit', color: '#00C853' },
+  { icon: BarChart3, label: 'Productivity Gain', value: '18%', desc: 'From wellbeing interventions', color: '#FFE500' },
+  { icon: Clock, label: 'HR Time Saved', value: '15hrs/wk', desc: 'Automated analysis vs manual', color: '#FF6B9D' },
 ];
 
 export default function DashboardPage() {
@@ -80,12 +80,15 @@ export default function DashboardPage() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
       >
-        <h3 className="mb-3 text-sm font-semibold text-foreground">Business Impact Projections</h3>
+        <h3 className="mb-3 text-sm font-bold font-heading text-foreground uppercase tracking-wider">Business Impact Projections</h3>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {KPI_DATA.map((kpi, i) => (
             <div key={i} className="metric-card flex items-center gap-3 p-4">
-              <div className="rounded-lg bg-accent p-2">
-                <kpi.icon className="h-4 w-4 text-primary" />
+              <div
+                className="flex h-10 w-10 items-center justify-center border-2 border-foreground shadow-[2px_2px_0px_#000]"
+                style={{ backgroundColor: kpi.color }}
+              >
+                <kpi.icon className="h-4 w-4 text-[#1A1A1A]" />
               </div>
               <div>
                 <p className="text-lg font-bold tabular-nums text-foreground">{kpi.value}</p>
