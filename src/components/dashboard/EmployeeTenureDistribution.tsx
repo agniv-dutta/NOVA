@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Line, ComposedChart } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Line, ComposedChart, Cell } from "recharts";
 import { generateTenureDistribution } from "@/utils/mockAnalyticsData";
 import html2canvas from "html2canvas";
 import { useRef } from "react";
@@ -84,9 +84,8 @@ export default function EmployeeTenureDistribution() {
                 radius={[8, 8, 0, 0]}
               >
                 {data.map((entry, index) => (
-                  <Bar 
-                    key={`bar-${index}`} 
-                    dataKey="count" 
+                  <Cell 
+                    key={`cell-${index}`} 
                     fill={getBarColor(entry.attritionRisk)}
                   />
                 ))}

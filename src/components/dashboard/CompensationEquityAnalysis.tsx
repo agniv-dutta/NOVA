@@ -106,9 +106,9 @@ export default function CompensationEquityAnalysis() {
                   {/* Box from Q1 to Q3 */}
                   <rect
                     x={index * 100 + 30}
-                    y={item.q3}
+                    y={Math.min(item.q1, item.q3)}
                     width={40}
-                    height={item.q1 - item.q3}
+                    height={Math.abs(item.q1 - item.q3)}
                     fill="#3b82f6"
                     fillOpacity={0.6}
                     stroke="#1e40af"

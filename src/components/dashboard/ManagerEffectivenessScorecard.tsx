@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { generateManagerScores, ManagerScore } from "@/utils/mockAnalyticsData";
 import html2canvas from "html2canvas";
-import { useRef, useState } from "react";
+import { useRef, useState, Fragment } from "react";
 import { LineChart, Line, ResponsiveContainer } from "recharts";
 import { Badge } from "@/components/ui/badge";
 
@@ -142,8 +142,8 @@ export default function ManagerEffectivenessScorecard() {
             </TableHeader>
             <TableBody>
               {sortedData.map((manager) => (
-                <>
-                  <TableRow key={manager.managerId} className="hover:bg-gray-50">
+                <Fragment key={manager.managerId}>
+                  <TableRow className="hover:bg-gray-50">
                     <TableCell>
                       <Button
                         variant="ghost"
@@ -216,7 +216,7 @@ export default function ManagerEffectivenessScorecard() {
                       </TableCell>
                     </TableRow>
                   )}
-                </>
+                </Fragment>
               ))}
             </TableBody>
           </Table>
