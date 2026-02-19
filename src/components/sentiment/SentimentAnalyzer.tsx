@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { analyzeSentiment, getSentimentEmoji } from '@/utils/sentimentAnalysis';
+import { analyzeSentiment, getSentimentEmoji, calculateUrgencyLevel, extractInsights } from '@/utils/sentimentAnalysis';
 import { SentimentResult } from '@/types/employee';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquareText, Sparkles, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { MessageSquareText, Sparkles, TrendingUp, TrendingDown, Minus, AlertTriangle, Clock, Lightbulb } from 'lucide-react';
 import SentimentBreakdown from './SentimentBreakdown';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 
 const SAMPLE_TEXTS = [
   "I'm really enjoying the new project. The team is fantastic and I feel motivated every day. Great leadership!",
@@ -13,25 +15,33 @@ const SAMPLE_TEXTS = [
   "I'm feeling overwhelmed and stressed. The constant overtime and pressure is leading to burnout. I dread Mondays.",
   "The company culture is amazing! I feel valued, supported, and excited about growth opportunities here.",
   "Frustrated with the lack of direction. Management seems disconnected. Considering my options elsewhere.",
+  "I'm not unhappy with the team, but I'm very stressed with the workload and thinking of looking for other opportunities.",
 ];
 
 export function SentimentAnalyzer() {
   const [text, setText] = useState('');
   const [result, setResult] = useState<SentimentResult | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [insights, setInsights] = useState<string[]>([]);
+  const [urgency, setUrgency] = useState<ReturnType<typeof calculateUrgencyLevel> | null>(null);
 
   const handleAnalyze = async () => {
     if (!text.trim()) return;
     setAnalyzing(true);
     // Simulate API delay
     await new Promise(r => setTimeout(r, 600));
-    setResult(analyzeSentiment(text));
+    const analysisResult = analyzeSentiment(text);
+    setResult(analysisResult);
+    setInsights(extractInsights(analysisResult, text));
+    setUrgency(calculateUrgencyLevel(analysisResult));
     setAnalyzing(false);
   };
 
   const loadSample = (sample: string) => {
     setText(sample);
     setResult(null);
+    setInsights([]);
+    setUrgency(null);
   };
 
   const scoreColor = result
@@ -57,7 +67,12 @@ export function SentimentAnalyzer() {
 
         <Textarea
           value={text}
-          onChange={e => { setText(e.target.value); setResult(null); }}
+          onChange={e => { 
+            setText(e.target.value); 
+            setResult(null); 
+            setInsights([]); 
+            setUrgency(null); 
+          }}
           placeholder="Paste employee feedback here to analyze sentiment..."
           rows={5}
           className="resize-none"
@@ -134,6 +149,108 @@ export function SentimentAnalyzer() {
                 </div>
               </div>
             </div>
+
+            {/* Critical Flags Alert */}
+            {(result.metadata?.criticalIssue || result.metadata?.mentalHealthConcern || result.metadata?.attritionRisk) && (
+              <Alert variant="destructive" className="border-2">
+                <AlertTriangle className="h-5 w-5" />
+                <AlertTitle className="text-base font-bold">Critical Indicators Detected</AlertTitle>
+                <AlertDescription className="mt-2 space-y-2">
+                  {result.metadata?.criticalIssue && (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="destructive" className="font-semibold">CRITICAL ISSUE</Badge>
+                      <span className="text-sm">Potential legal/HR violation detected - escalate immediately</span>
+                    </div>
+                  )}
+                  {result.metadata?.mentalHealthConcern && (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="destructive" className="font-semibold">MENTAL HEALTH</Badge>
+                      <span className="text-sm">Mental health concern identified - provide crisis support resources</span>
+                    </div>
+                  )}
+                  {result.metadata?.attritionRisk && (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="destructive" className="font-semibold">FLIGHT RISK</Badge>
+                      <span className="text-sm">Employee expressing intent to leave - retention intervention needed</span>
+                    </div>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Urgency Level */}
+            {urgency && (
+              <div className="chart-container">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-semibold">Response Urgency</h4>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded-full ${urgency.color}`}></div>
+                    <Badge className={urgency.color}>
+                      {urgency.level} Priority
+                    </Badge>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Response Time:</span>
+                    <span className="font-medium">{urgency.responseTime}</span>
+                  </div>
+                  <div className="p-3 bg-muted/50 rounded-lg text-sm">
+                    <span className="font-medium">Recommended Action: </span>
+                    {urgency.action}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* AI-Generated Insights */}
+            {insights.length > 0 && (
+              <div className="chart-container">
+                <div className="flex items-center gap-2 mb-3">
+                  <Lightbulb className="h-5 w-5 text-yellow-500" />
+                  <h4 className="text-sm font-semibold">AI-Generated Insights</h4>
+                </div>
+                <div className="space-y-2">
+                  {insights.map((insight, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      className="flex items-start gap-2 p-3 bg-muted/30 rounded-lg text-sm border border-border/50"
+                    >
+                      <span className="flex-1">{insight}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Analysis Metadata */}
+            {result.metadata && (
+              <div className="chart-container bg-muted/30">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Analysis Details</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                  <div>
+                    <p className="text-muted-foreground">Words Analyzed</p>
+                    <p className="text-lg font-bold">{result.metadata.textLength}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Sentiment Words</p>
+                    <p className="text-lg font-bold">{result.metadata.wordCount}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Confidence</p>
+                    <p className="text-lg font-bold">{result.confidence}%</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Keywords Found</p>
+                    <p className="text-lg font-bold">{result.keywords.length}</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Keywords */}
             {result.keywords.length > 0 && (

@@ -34,6 +34,13 @@ export interface SentimentResult {
   label: 'Positive' | 'Neutral' | 'Negative';
   confidence: number; // 0-100
   keywords: { word: string; sentiment: 'positive' | 'negative' | 'neutral'; weight: number }[];
+  metadata?: {
+    attritionRisk: boolean;
+    mentalHealthConcern: boolean;
+    criticalIssue: boolean;
+    textLength: number;
+    wordCount: number;
+  };
 }
 
 export interface DepartmentRisk {
