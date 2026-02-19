@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { generateCompensationData } from "@/utils/mockAnalyticsData";
 import html2canvas from "html2canvas";
 import { useRef } from "react";
-import { ResponsiveContainer, ComposedChart, XAxis, YAxis, CartesianGrid, Tooltip, Scatter, ReferenceLine } from "recharts";
+import { ResponsiveContainer, ComposedChart, XAxis, YAxis, CartesianGrid, Tooltip, Bar, Scatter, ReferenceLine, Cell } from "recharts";
 
 export default function CompensationEquityAnalysis() {
   const data = generateCompensationData();
@@ -30,6 +30,7 @@ export default function CompensationEquityAnalysis() {
     q3: d.q3,
     max: d.max,
     salaries: d.salaries,
+    iqrHeight: d.q3 - d.q1,
     outliers: d.salaries.filter(s => 
       s < d.q1 - 1.5 * (d.q3 - d.q1) || s > d.q3 + 1.5 * (d.q3 - d.q1)
     ),
@@ -73,80 +74,81 @@ export default function CompensationEquityAnalysis() {
       </CardHeader>
       <CardContent>
         <div ref={chartRef}>
-          <ResponsiveContainer width="100%" height={400}>
-            <ComposedChart data={transformedData}>
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md text-sm">
+            <p className="text-blue-900 font-semibold mb-2">Salary Quartile Visualization</p>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div><span className="inline-block w-3 h-3 bg-blue-400 mr-2"></span>Q1 (25th percentile)</div>
+              <div><span className="inline-block w-3 h-3 bg-blue-600 mr-2"></span>IQR Height (Q1→Q3 range)</div>
+              <div><span className="inline-block w-3 h-3 bg-slate-600 mr-2 rounded-full"></span>Min/Max</div>
+              <div><span className="inline-block w-3 h-3 bg-orange-400 mr-2"></span>Outliers</div>
+              <div><span className="inline-block w-3 h-3 bg-blue-900 mr-2"></span>Median</div>
+            </div>
+          </div>
+          
+          <ResponsiveContainer width="100%" height={350}>
+            <ComposedChart data={transformedData} margin={{ top: 20, right: 30, left: 60, bottom: 100 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
                 dataKey="category" 
                 angle={-45}
                 textAnchor="end"
-                height={100}
+                height={120}
                 tick={{ fontSize: 10 }}
               />
               <YAxis 
-                label={{ value: 'Salary ($k)', angle: -90, position: 'insideLeft' }}
+                type="number"
+                label={{ value: 'Salary ($)', angle: -90, position: 'insideLeft' }}
                 tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
                 tick={{ fontSize: 11 }}
               />
               <Tooltip content={<CustomTooltip />} />
 
-              {/* Box plot components using custom shapes */}
-              {transformedData.map((item, index) => (
-                <g key={index}>
-                  {/* Vertical line from min to max */}
-                  <line
-                    x1={index * 100 + 50}
-                    y1={item.min}
-                    x2={index * 100 + 50}
-                    y2={item.max}
-                    stroke="#64748b"
-                    strokeWidth={1}
-                  />
-                  
-                  {/* Box from Q1 to Q3 */}
-                  <rect
-                    x={index * 100 + 30}
-                    y={Math.min(item.q1, item.q3)}
-                    width={40}
-                    height={Math.abs(item.q1 - item.q3)}
-                    fill="#3b82f6"
-                    fillOpacity={0.6}
-                    stroke="#1e40af"
-                    strokeWidth={1}
-                  />
-                  
-                  {/* Median line */}
-                  <line
-                    x1={index * 100 + 30}
-                    y1={item.median}
-                    x2={index * 100 + 70}
-                    y2={item.median}
-                    stroke="#1e40af"
-                    strokeWidth={2}
-                  />
-                </g>
-              ))}
-
-              {/* Outliers as scatter points */}
-              <Scatter 
-                data={transformedData.flatMap((d, i) => 
-                  d.outliers.map(salary => ({ x: i, y: salary }))
-                )}
-                fill="#f97316"
-                shape="circle"
+              {/* Q1 base bar */}
+              <Bar 
+                dataKey="q1" 
+                fill="#60a5fa" 
+                fillOpacity={0.8}
+                name="Q1 (25%)"
+                radius={[0, 0, 4, 4]}
               />
 
-              {/* Gender pay gap reference line (if applicable) */}
-              {genderPayGap > 0 && (
-                <ReferenceLine 
-                  y={100000} 
-                  stroke="#ef4444" 
-                  strokeDasharray="5 5"
-                  label={{ value: 'Gender Pay Gap Indicator', position: 'right', fill: '#ef4444', fontSize: 10 }}
-                />
-              )}
+              {/* IQR stacked bar showing the quartile range */}
+              <Bar 
+                dataKey="iqrHeight" 
+                stackId="a"
+                fill="#3b82f6" 
+                fillOpacity={0.7}
+                name="Q1→Q3 Range"
+              />
+
+              {/* Average salary reference line */}
+              <ReferenceLine 
+                y={data.reduce((sum, d) => sum + d.median, 0) / data.length}
+                stroke="#10b981" 
+                strokeDasharray="5 5"
+                label={{ value: `Avg Median: $${(data.reduce((sum, d) => sum + d.median, 0) / data.length / 1000).toFixed(0)}k`, position: 'topRight', fill: '#10b981', fontSize: 9, offset: 5 }}
+              />
             </ComposedChart>
           </ResponsiveContainer>
+
+          {/* Details below chart */}
+          <div className="mt-6 grid grid-cols-2 gap-4 text-xs">
+            {transformedData.slice(0, 4).map((item, idx) => (
+              <div key={idx} className="p-2 bg-gray-50 rounded border">
+                <p className="font-semibold text-gray-700 mb-1">{item.category.replace('\n', ' • ')}</p>
+                <div className="space-y-1 text-gray-600">
+                  <p>Min: ${(item.min / 1000).toFixed(0)}k</p>
+                  <p>Q1: ${(item.q1 / 1000).toFixed(0)}k</p>
+                  <p className="font-semibold text-blue-700">Median: ${(item.median / 1000).toFixed(0)}k</p>
+                  <p>Q3: ${(item.q3 / 1000).toFixed(0)}k</p>
+                  <p>Max: ${(item.max / 1000).toFixed(0)}k</p>
+                  {item.outliers.length > 0 && (
+                    <p className="text-orange-600 font-semibold">⚠ {item.outliers.length} outlier(s)</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Summary Statistics */}
