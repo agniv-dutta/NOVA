@@ -1,20 +1,42 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, MessageSquareText, Brain, RefreshCw, Menu, X, HeartPulse } from 'lucide-react';
+import { LayoutDashboard, Users, MessageSquareText, Brain, RefreshCw, Menu, X, HeartPulse, ShieldCheck, UserRound, LogOut } from 'lucide-react';
 import { useEmployees } from '@/contexts/EmployeeContext';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import { UserRole } from '@/types/auth';
 
-const NAV_ITEMS = [
+const CORE_NAV_ITEMS = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/employees', icon: Users, label: 'Employees' },
   { to: '/sentiment', icon: MessageSquareText, label: 'Sentiment Analyzer' },
   { to: '/org-health', icon: HeartPulse, label: 'Org Health' },
+  { to: '/employee/profile', icon: UserRound, label: 'My Backend Profile' },
 ];
+
+const ROLE_NAV_ITEMS: Record<UserRole, Array<{ to: string; icon: typeof ShieldCheck; label: string }>> = {
+  employee: [],
+  manager: [
+    { to: '/manager/team-alerts', icon: ShieldCheck, label: 'Manager API' },
+  ],
+  hr: [
+    { to: '/hr/org-risk-distribution', icon: ShieldCheck, label: 'HR API' },
+  ],
+  leadership: [
+    { to: '/leadership/roi-analytics', icon: ShieldCheck, label: 'Leadership API' },
+  ],
+};
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { refreshData } = useEmployees();
+  const { user, logout } = useAuth();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const navItems = [
+    ...CORE_NAV_ITEMS,
+    ...(user ? ROLE_NAV_ITEMS[user.role] : []),
+  ];
 
   return (
     <div className="flex min-h-screen w-full">
@@ -41,7 +63,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="flex-1 space-y-1 p-3">
-          {NAV_ITEMS.map(item => (
+          {navItems.map(item => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -57,13 +79,31 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
 
-        <div className="border-t-2 border-foreground p-3">
+        <div className="border-t-2 border-foreground p-3 space-y-2">
+          {user && (
+            <div className="px-2 py-2 border-2 border-foreground bg-muted text-xs">
+              <p className="font-bold truncate">{user.full_name}</p>
+              <p className="text-muted-foreground truncate">{user.email}</p>
+              <p className="font-semibold uppercase mt-1">Role: {user.role}</p>
+            </div>
+          )}
+
           <button
             onClick={refreshData}
             className="sidebar-link w-full justify-center gap-2 hover:text-foreground"
           >
             <RefreshCw className="h-4 w-4" />
             <span>Regenerate Demo Data</span>
+          </button>
+
+          <button
+            onClick={() => {
+              void logout();
+            }}
+            className="sidebar-link w-full justify-center gap-2 hover:text-foreground"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Logout</span>
           </button>
         </div>
       </aside>
@@ -77,7 +117,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </Button>
           <div className="flex-1">
             <h2 className="text-lg font-bold font-heading">
-              {NAV_ITEMS.find(i => i.to === location.pathname)?.label || 'Employee Insights'}
+              {navItems.find(i => i.to === location.pathname)?.label || 'Employee Insights'}
             </h2>
           </div>
         </header>
