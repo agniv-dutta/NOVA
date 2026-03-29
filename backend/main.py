@@ -28,14 +28,10 @@ logger.info("🚀 Initializing NOVA API Server...")
 
 # Configure CORS
 logger.info("📡 Configuring CORS middleware...")
+cors_origins = settings.get_cors_origins()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        settings.FRONTEND_URL,
-        "http://localhost:8080",
-        "http://localhost:3000",
-        "http://localhost:5173",
-    ],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -107,6 +103,7 @@ async def startup_event():
     logger.info("=" * 60)
     logger.info(f"📍 Host: {settings.HOST}:{settings.PORT}")
     logger.info(f"🌐 Frontend URL: {settings.FRONTEND_URL}")
+    logger.info("🌐 CORS origins: %s", ", ".join(cors_origins))
     logger.info(f"📚 API Docs: http://{settings.HOST}:{settings.PORT}/docs")
     if supabase_dns_ok:
         logger.info("🔐 Supabase DNS: reachable (%s)", supabase_host)

@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     
     # CORS Configuration
     FRONTEND_URL: str = "http://localhost:8080"
+    CORS_ORIGINS: str = ""
     
     # Server Configuration
     HOST: str = "0.0.0.0"
@@ -26,6 +27,25 @@ class Settings(BaseSettings):
         env_file = ".env"
         case_sensitive = True
         extra = "ignore"  # Ignore extra fields in .env
+
+    def get_cors_origins(self) -> List[str]:
+        """Build deduplicated CORS origin list from defaults and env settings."""
+        origins: List[str] = [
+            self.FRONTEND_URL,
+            "http://localhost:8080",
+            "http://localhost:3000",
+            "http://localhost:5173",
+        ]
+
+        if self.CORS_ORIGINS:
+            extra_origins = [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+            origins.extend(extra_origins)
+
+        deduped: List[str] = []
+        for origin in origins:
+            if origin not in deduped:
+                deduped.append(origin)
+        return deduped
 
 
 settings = Settings()

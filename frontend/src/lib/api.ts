@@ -1,6 +1,7 @@
 import { AuthUser, RegisterPayload, TokenResponse } from "@/types/auth";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
+const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() ?? "";
+const API_BASE_URL = RAW_API_BASE_URL.replace(/\/$/, "");
 
 type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -11,15 +12,25 @@ type RequestOptions = {
 
 async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = "GET", token, body = null, headers = {} } = options;
+  const requestUrl = API_BASE_URL ? `${API_BASE_URL}${path}` : path;
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method,
-    body,
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...headers,
-    },
-  });
+  let response: Response;
+  try {
+    response = await fetch(requestUrl, {
+      method,
+      body,
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...headers,
+      },
+    });
+  } catch {
+    const configuredBase = API_BASE_URL || "<same-origin>";
+    throw new Error(
+      `Network error: unable to reach API at ${configuredBase}. ` +
+      "Set VITE_API_BASE_URL to your live backend URL (https://...)."
+    );
+  }
 
   if (!response.ok) {
     let errorMessage = `Request failed (${response.status})`;
