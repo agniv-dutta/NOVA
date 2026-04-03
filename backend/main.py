@@ -8,6 +8,7 @@ from core.config import settings
 from core.database import get_supabase_hostname, is_supabase_host_resolvable
 from api.routes import auth, hr, manager, leadership, employee
 from api.routes.ai import router as ai_router
+from api.routes.intervention import router as intervention_router
 
 # Configure logging
 logging.basicConfig(
@@ -51,6 +52,7 @@ logger.info("  ✓ Leadership routes registered at /leadership")
 app.include_router(employee.router)
 logger.info("  ✓ Employee routes registered at /employee")
 app.include_router(ai_router, prefix="/api/ai", tags=["AI Insights"])
+app.include_router(intervention_router, prefix="/api/interventions", tags=["Interventions"])
 
 
 @app.middleware("http")
