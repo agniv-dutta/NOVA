@@ -20,6 +20,14 @@
   - `POST /api/interventions/anomalies`
 - [x] Enhanced anomaly scoring with temporal weighting while preserving core base weights.
 - [x] Extended composite anomaly response payload with explainability metadata (weighted contributions + comparison context).
+- [x] Upgraded sentiment pipeline to classify a full emotion spectrum: stress, frustration, disengagement, satisfaction, enthusiasm, anxiety.
+- [x] Updated sentiment LLM prompt/output contract to include `polarity`, six-dimension `emotions`, and `dominant_emotion`.
+- [x] Added rolling emotion trend calculations with daily emotion vectors and per-emotion `trend_delta_14d` (+ `trend_delta_7d` support).
+- [x] Expanded sentiment API response shape with:
+  - `polarity`
+  - `emotions`
+  - `dominant_emotion`
+  - `trend_delta_14d`
 
 ### Frontend
 - [x] Integrated `InterventionRecommendations` and `AnomalyIndicator` into both:
@@ -34,6 +42,8 @@
   - weighted breakdown popovers
   - "Why did this score change?" context (7-day comparison)
   - quick trend delta badge (up/down)
+- [x] Sentiment page now includes a 6-dimension emotion radar chart (Recharts `RadarChart`).
+- [x] Added Emotion Shift Alert when any emotion changes by more than `0.3` over 7 days.
 
 ### Validation
 - [x] Backend compile checks passed.
@@ -48,6 +58,7 @@
   - structured insight parsing fallback paths
   - temporal weighting calculations
   - composite explainability payload fields
+  - sentiment emotion-spectrum extraction and 14d/7d trend deltas
 
 ### Medium Priority
 - [ ] Add feature-importance visualization in frontend for classifier explainability.

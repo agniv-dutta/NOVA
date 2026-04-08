@@ -1,4 +1,14 @@
-# 🚀 NOVA: AI-Powered Organizational Wellness & Risk Intelligence Platform
+<h1 align="center">🚀 NOVA: AI-Powered Organizational Wellness & Risk Intelligence Platform</h1>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/FastAPI-0.109-009688?logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=111827" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-3-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?logo=supabase&logoColor=white" alt="Supabase" />
+  <img src="https://img.shields.io/badge/Groq-LLM-F55036" alt="Groq" />
+</p>
 
 **Live Demo**: https://nova-two-woad.vercel.app/
 
@@ -562,3 +572,17 @@ Built by a team of 4 passionate developers committed to workplace wellness.
 ---
 
 **NOVA: Predict. Prevent. Protect.** 🚀
+
+---
+
+## 🆕 Latest Changes (April 8, 2026)
+
+- Upgraded sentiment pipeline to classify a full 6-dimension emotion spectrum: stress, frustration, disengagement, satisfaction, enthusiasm, anxiety.
+- Updated Groq sentiment prompt contract to return polarity plus normalized emotion scores (`0.0`-`1.0`) and dominant emotion.
+- Added rolling emotion trend computation in backend:
+  - Daily emotion vector storage per employee
+  - `trend_delta_14d` calculation for each emotion
+  - `trend_delta_7d` support for short-horizon shift detection
+- Expanded sentiment API response with: `polarity`, `emotions`, `dominant_emotion`, and `trend_delta_14d` (plus `trend_delta_7d` for alerts).
+- Enhanced Sentiment page with a Recharts `RadarChart` visualizing the six emotion dimensions.
+- Added Emotion Shift Alert in the Sentiment UI, triggered when any emotion changes by more than `0.3` over 7 days.
