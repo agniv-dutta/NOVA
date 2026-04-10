@@ -107,7 +107,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     elif oauth_payload:
         avatar_url = oauth_payload.get("avatar_url")
     
-    return User(**user.model_dump(exclude={"hashed_password"}), avatar_url=avatar_url)
+    user_payload = user.model_dump(exclude={"hashed_password"})
+    if avatar_url:
+        user_payload["avatar_url"] = avatar_url
+    return User(**user_payload)
 
 
 async def get_current_active_user(

@@ -87,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [login]);
 
   const signInWithGoogle = useCallback(async () => {
-    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+    if (!supabase || !import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
       throw new Error("Google sign-in is not configured. Missing Supabase environment variables.");
     }
 
@@ -102,6 +102,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const completeGoogleSignIn = useCallback(async () => {
+    if (!supabase) {
+      throw new Error("Google sign-in is not configured. Missing Supabase environment variables.");
+    }
+
     setIsLoading(true);
     try {
       const { data, error } = await supabase.auth.getSession();

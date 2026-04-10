@@ -13,7 +13,7 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
   ResponsiveContainer,
-  Tooltip,
+  Tooltip as RechartsTooltip,
 } from 'recharts';
 import { AlertTriangle } from 'lucide-react';
 
@@ -75,7 +75,7 @@ export default function SentimentPage() {
                   <PolarGrid stroke="#e5e7eb" />
                   <PolarAngleAxis dataKey="emotion" tick={{ fill: '#64748b', fontSize: 12 }} />
                   <PolarRadiusAxis angle={90} domain={[0, 1]} tick={{ fill: '#64748b', fontSize: 10 }} />
-                  <Tooltip formatter={(value: number) => value.toFixed(2)} />
+                  <RechartsTooltip formatter={(value: number) => value.toFixed(2)} />
                   <Radar
                     name="Emotion Intensity"
                     dataKey="value"

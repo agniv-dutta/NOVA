@@ -231,17 +231,7 @@ button[data-lovable-tagger-button],
 div[data-lovable-tagger],
 iframe[data-lovable-tagger],
 #lovable-tagger,
-.lovable-tagger,
-button[style*="position: fixed"],
-div[style*="position: fixed"][style*="z-index"],
-button[style*="right"][style*="top"],
-div[style*="right"][style*="top"][style*="fixed"],
-div[style*="position: fixed"][style*="right: 0"],
-button[style*="position: fixed"][style*="right: 0"] {
-  display: none !important;
-}
-
-body>*:not(#root) {
+.lovable-tagger {
   display: none !important;
 }
 

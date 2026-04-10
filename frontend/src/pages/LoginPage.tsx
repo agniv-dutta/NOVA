@@ -8,6 +8,7 @@ import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 export default function LoginPage() {
   const { login, signInWithGoogle, completeGoogleSignIn, isAuthenticated, isLoading } = useAuth();
+  const isGoogleConfigured = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
   const [email, setEmail] = useState("hr.admin@company.com");
   const [password, setPassword] = useState("secret");
   const [error, setError] = useState<string | null>(null);
@@ -78,6 +79,9 @@ export default function LoginPage() {
           <form className="space-y-4" onSubmit={handleSubmit}>
             <GoogleSignInButton
               onClick={async () => {
+                if (!isGoogleConfigured) {
+                  return;
+                }
                 setError(null);
                 setOauthLoading(true);
                 try {
@@ -88,7 +92,13 @@ export default function LoginPage() {
                 }
               }}
               loading={oauthLoading}
+              disabled={!isGoogleConfigured}
             />
+            {!isGoogleConfigured && (
+              <p className="text-xs text-muted-foreground">
+                Google sign-in is not configured in this local environment.
+              </p>
+            )}
 
             <div className="relative py-1">
               <div className="absolute inset-0 flex items-center">

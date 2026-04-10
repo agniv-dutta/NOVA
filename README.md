@@ -38,10 +38,11 @@
 Using advanced machine learning, statistical anomaly detection, and network analysis, NOVA provides HR leaders with **actionable insights** and **AI-recommended interventions** to protect their most valuable assets: their people.
 
 ### Key Statistics
-- **12+ real-time dashboards** for organizational health
+- **15+ role-aware dashboards and panels** for organizational health
 - **8 intervention types** automatically recommended by AI
 - **5 behavioral anomaly detectors** using Z-score analysis
 - **Network-based burnout propagation modeling**
+- **7 enterprise expansion modules** now integrated (OAuth, reporting, benchmarking, Jira signals, manager 360, onboarding watch, PWA)
 - **Role-based access control** for HR, Managers, Leadership, and Employees
 
 ---
@@ -102,6 +103,12 @@ Risk Score = (
 - Estimates propagation risk: `Risk = 0.4×own + 0.3×neighbors + 0.2×centrality×neighbor_avg + 0.1×degree`
 - **Identifies burnout clusters** spreading through teams
 
+#### 5. **Onboarding Cohort Baselines** (Fair Comparison for New Joiners)
+- Detects employees in first 90 days and marks onboarding phase explicitly
+- Uses onboarding baseline logic instead of org-wide comparisons for early-tenure risk
+- Adds onboarding risk flags: **Integration Risk**, **Ramp Risk**, **Isolation Risk**
+- Exposes onboarding watchlist for HR/Leadership via dedicated endpoint
+
 ### 🎯 Intelligent Intervention Engine
 
 **8 Intervention Types** automatically recommended based on AI analysis:
@@ -117,6 +124,14 @@ Risk Score = (
 | **Team Building** | Low team engagement | 4 weeks | +25% team sentiment |
 | **Flexible Schedule** | Work-life imbalance signal | 3 weeks | -20-30% burnout |
 
+### 🧾 Explainability, Accountability, and Trust
+
+- Every major risk metric now supports **"Why this score?"** drilldowns in dashboard UI
+- Score explanations include weighted contributors, confidence, and readable rationale
+- Cost and savings analytics expose formulas, inputs, and stepwise calculations
+- Org Health includes methodology disclosures and simulated-benchmark labels for transparency
+- AI feedback sessions include explicit consent handling and review workflow for HR
+
 ### 📊 Real-Time Organizational Health Dashboard
 
 **One screen shows the entire org's wellness:**
@@ -127,6 +142,8 @@ Risk Score = (
 - Attrition prediction timeline
 - Engagement × Performance quadrant
 - Sentiment trends & vocabulary shifts
+- Industry benchmark overlays (simulated medians) for context-aware interpretation
+- Downloadable executive-ready report package (multi-page PDF export)
 
 ---
 
@@ -140,6 +157,8 @@ Risk Score = (
 - ✅ **Anomaly Detection** - Z-score detection of sudden behavioral shifts
 - ✅ **Network Analysis** - Centrality, collaboration entropy, propagation modeling
 - ✅ **Composite Risk Scoring** - Temporal-weighted multi-factor scoring
+- ✅ **Onboarding Risk Scoring** - 90-day cohort baseline + onboarding flags
+- ✅ **Benchmark Comparison** - Sector-level median overlays for workforce and attrition trends
 
 ### 📈 **Visualization & Insights**
 - ✅ **12+ Dashboard Components** - Real-time metrics & trends
@@ -150,6 +169,10 @@ Risk Score = (
 - ✅ **Engagement-Performance Quadrant** - Identify Stars & At-Risk
 - ✅ **Sentiment Analyzer** - Word clouds & trend analysis
 - ✅ **Peer Network Graph** - D3.js force-directed graph
+- ✅ **Jira Health Panel** - Objective delivery signals with privacy framing
+- ✅ **Onboarding Watch** - HR-focused new-joiner risk card with baseline tooltip
+- ✅ **How You Compare** - Benchmark badge + industry comparison section
+- ✅ **Explainability Drawers** - Score-level factor contributions across key cards/charts
 
 ### 🎯 **AI-Powered Interventions**
 - ✅ **Intervention Engine** - Rule-based + ML hybrid recommendations
@@ -157,18 +180,28 @@ Risk Score = (
 - ✅ **Timing Awareness** - Avoid suggesting interventions during crunch weeks
 - ✅ **Impact Estimation** - "This will reduce burnout by 20-30% in 3 weeks"
 - ✅ **Risk Explanation** - "If delayed, disengagement will deepen"
+- ✅ **Mandatory Feedback Session Workflow** - Schedule, consent, review, and HR ingestion
+- ✅ **Manager 360 Feedback Loop** - Anonymous upward ratings + trend and improvement suggestions
 
 ### 🔐 **Security & Access Control**
 - ✅ **Role-Based Access** (RBAC) - HR, Manager, Leadership, Employee roles
-- ✅ **Supabase Authentication** - OAuth + JWT tokens
+- ✅ **Supabase Authentication** - Email/password and Google OAuth + JWT exchange
 - ✅ **Data Privacy** - PII handling, audit logging
 - ✅ **Streaming AI Chat** - Real-time insights with Server-Sent Events
+- ✅ **OAuth Account Linking Rules** - Existing org account matching and explicit reject message for unknown emails
 
 ### 📊 **Data Integration**
-- ✅ **Multi-Source Data** - Calendar, Slack, email, HR systems
+- ✅ **Multi-Source Data** - Survey, system telemetry, feedback sessions, and integration-ready connectors
 - ✅ **Feature Engineering** - 10+ engineered features for ML
 - ✅ **Batch Processing** - APScheduler for periodic inference
 - ✅ **Real-Time Updates** - Async concurrent processing
+- ✅ **Jira Connector (Mock Pipeline)** - Stable seeded ingestion for demo-consistent objective metrics
+
+### 📱 **Product Experience**
+- ✅ **Google Sign-In Primary CTA** - OAuth-first login experience
+- ✅ **Installable PWA** - Manifest + service worker for app-shell caching
+- ✅ **Mobile UX Enhancements** - Bottom tab navigation, install banner, chart touch zoom/scroll handling
+- ✅ **Org Health Report Export** - One-click multi-page PDF generation with progress states
 
 ---
 
@@ -178,12 +211,15 @@ Risk Score = (
 - **Framework**: FastAPI 0.109.2
 - **Server**: Uvicorn
 - **Database**: Supabase (PostgreSQL)
-- **Authentication**: JWT + Supabase Auth
+- **Authentication**: JWT + Supabase Auth (email/password + Google OAuth)
 - **AI/ML**:
   - Groq API (LLM inference)
   - NumPy / Scikit-Learn (ML models)
   - Custom anomaly detection (Z-score)
   - Network analysis algorithms
+- **Integration Layer**:
+  - Jira connector module (mocked deterministic ingestion, real API shape)
+  - Integration config persistence (`integration_configs`)
 - **Async**: Python asyncio
 - **Scheduling**: APScheduler (batch jobs)
 
@@ -193,6 +229,9 @@ Risk Score = (
 - **Styling**: Tailwind CSS + shadcn/ui
 - **Visualization**: D3.js (network graphs), Recharts (dashboards)
 - **State Management**: React Context
+- **Auth SDK**: supabase-js (Google OAuth flow)
+- **Export Tooling**: jsPDF + html2canvas
+- **PWA Runtime**: Web App Manifest + Service Worker
 - **HTTP Client**: Fetch API
 
 ### Infrastructure
@@ -211,9 +250,12 @@ Risk Score = (
 ┌─────────────────────────────────────────────────────────────┐
 │                     FRONTEND (React + TypeScript)            │
 │  ├─ Dashboard (12+ visualization components)                 │
+│  ├─ OAuth Login + Session Exchange                            │
 │  ├─ Employee Management                                      │
 │  ├─ Intervention Recommendations UI                          │
-│  └─ Anomaly Indicators                                       │
+│  ├─ Explainability Drawers                                   │
+│  ├─ Report Export (PDF)                                      │
+│  └─ PWA + Mobile UX Shell                                    │
 └──────────────────────────┬──────────────────────────────────┘
                            │ REST API
 ┌──────────────────────────▼──────────────────────────────────┐
@@ -228,7 +270,9 @@ Risk Score = (
 │  │  ├─ Network Analysis (centrality, propagation)          │
 │  │  └─ Intervention Engine (8 types)                       │
 │  ├─ Batch Processing (APScheduler)                         │
-│  └─ API Routes (55+ endpoints)                             │
+│  ├─ Integrations Layer (Jira connector + config)           │
+│  ├─ Reporting & Benchmark APIs                             │
+│  └─ API Routes (70+ endpoints)                             │
 └──────────────────────────┬──────────────────────────────────┘
                            │ SQL
 ┌──────────────────────────▼──────────────────────────────────┐
@@ -238,6 +282,9 @@ Risk Score = (
 │  ├─ Risk Scores & History                                   │
 │  ├─ Interventions & Execution Log                          │
 │  ├─ Anomaly Records                                         │
+│  ├─ Integration Configs                                     │
+│  ├─ Manager 360 Feedback                                    │
+│  ├─ Feedback Session Artifacts                              │
 │  └─ Audit Trail                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -263,7 +310,7 @@ Risk Score = (
 ```
 POST   /auth/register              Register new user
 POST   /auth/login                 Login & get JWT token
-POST   /auth/refresh               Refresh access token
+POST   /auth/oauth/exchange        Exchange Supabase OAuth token for NOVA JWT
 GET    /auth/me                    Get current user profile
 ```
 
@@ -285,6 +332,41 @@ POST   /api/interventions/analyze-anomalies   Detect behavioral anomalies
 POST   /api/interventions/anomalies           Alias: anomaly analysis endpoint
 GET    /api/interventions/history/{id}        Get intervention history
 POST   /api/interventions/execute/{id}        Log intervention execution
+```
+
+### Explainability, Reporting, and Benchmarks
+```
+GET    /api/explain/burnout/{id}              Explain burnout score factors
+GET    /api/explain/attrition/{id}            Explain attrition score factors
+GET    /api/explain/engagement/{id}           Explain engagement score factors
+GET    /api/insights/cost-impact              Transparent cost/savings methodology payload
+GET    /api/reports/org-health?format=pdf     Structured report payload for frontend PDF rendering
+GET    /api/benchmarks/{sector}               Sector benchmark reference data
+GET    /api/benchmarks/current/org            Org-sector benchmark mapping
+```
+
+### Feedback Sessions and 360 Feedback
+```
+GET    /api/feedback/sessions/my              Employee session schedule/status
+POST   /api/feedback/sessions/consent         Record explicit feedback-session consent
+POST   /api/feedback/sessions/process         Process and analyze session payload
+GET    /api/feedback/sessions/pending-review  HR pending session count/list
+POST   /api/feedback/manager/{manager_id}     Anonymous upward manager feedback submission
+GET    /api/managers/{id}/360-scores          Aggregated manager 360 trends + suggestion
+```
+
+### Integrations
+```
+GET    /api/integrations/jira/metrics/{employee_id}  Jira metrics per employee (mock-backed)
+GET    /api/integrations/jira/team/{department}      Team-level Jira health aggregate
+POST   /api/integrations/config                      Save integration config (HR/Leadership)
+GET    /api/integrations/status                      Connected/disconnected integration statuses
+POST   /api/integrations/jira/sync                  Trigger Jira sync (manual)
+```
+
+### Onboarding Intelligence
+```
+GET    /api/employees/onboarding          Onboarding watchlist with adjusted risk and flags
 ```
 
 ### Employee Management
@@ -397,6 +479,11 @@ VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_key
 ```
 
+**4. Enable Google OAuth in Supabase:**
+- In Supabase Auth Providers, enable Google
+- Add site URL and redirect URL for your frontend (e.g., `http://localhost:5173/login?oauth=google`)
+- Ensure allowed email domains/org policy align with your employee directory
+
 ---
 
 ## ▶️ Running the Application
@@ -466,23 +553,30 @@ curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
 - Role-based access control (RBAC)
 - Streaming AI chat (Server-Sent Events)
 - Supabase authentication & database
+- Google OAuth sign-in with account linking rules and avatar propagation
 - 12+ frontend visualization components
-- **NEW: Intervention Engine** (8 recommendation types)
-- **NEW: Anomaly Detection** (Z-score + temporal weighting)
-- **NEW: Network Analysis** (centrality, propagation)
-- **NEW: Batch Scheduler** (APScheduler ready)
-- **NEW: Structured AI insight schema** (summary, key signals, recommended action + fallback parser)
-- **NEW: Intervention + anomaly widgets integrated** in both dashboard and org health pages with RBAC visibility
-- **NEW: Composite score explainability UI** (weighted breakdown, 7-day change reason, trend badges)
+- Intervention Engine (8 recommendation types)
+- Anomaly Detection (Z-score + temporal weighting)
+- Network Analysis (centrality, propagation)
+- Batch Scheduler (APScheduler ready)
+- Structured AI insight schema (summary, key signals, recommended action + fallback parser)
+- Intervention + anomaly widgets integrated in both dashboard and org health pages with RBAC visibility
+- Composite score explainability UI (weighted breakdown, 7-day change reason, trend badges)
+- Jira integration system (mocked ingestion, real UI and config lifecycle)
+- Manager 360 feedback loop with k-anonymity behavior and trend aggregation
+- Onboarding risk handling with first-90-days cohort baseline and onboarding watchlist
+- Org Health report export API + frontend multi-page PDF generation flow
+- Industry benchmark APIs and UI overlays/badges (explicitly labeled simulated medians)
+- PWA support + mobile responsiveness enhancements (install banner, bottom tabs, touch graph interactions)
 
 ### 🔄 **In Progress**
 - ML feature importance visualization
 - What-If intervention simulator
 - Historical trend persistence with correlation tagging
+- Production hardening of Jira connector from mock pipeline to live API token flow
 
 ### ⏳ **Planned (Roadmap)**
-- Org-graph burnout propagation map
-- Competitor benchmarking
+- Org-graph burnout propagation map enhancements
 - k-anonymity privacy layer
 - PII boundary service
 - Advanced audit logging
@@ -502,15 +596,17 @@ curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
 - Temporal-weighted anomaly composite with explainability panels
 - ML classifier with feature importance visualization
 - What-if intervention simulator
+- Manager 360 trend quality scoring and manager coaching feedback loop refinements
 
 ### Phase 3: Enterprise (Q2 2026)
 - Advanced privacy & compliance (k-anonymity, PII vault)
 - Multi-org support
 - Custom intervention types
 - External data integrations (Slack, Google Calendar, HiBob)
+- Live Jira REST v3 integration rollout (replacing seeded mock provider)
 
 ### Phase 4: Scale (Q3+ 2026)
-- Competitor benchmarking database
+- Competitor benchmarking database expansion (real datasets beyond simulated medians)
 - Industry-specific insights
 - Advanced predictive models
 - API for third-party integrations
@@ -575,14 +671,3 @@ Built by a team of 4 passionate developers committed to workplace wellness.
 
 ---
 
-## 🆕 Latest Changes (April 8, 2026)
-
-- Upgraded sentiment pipeline to classify a full 6-dimension emotion spectrum: stress, frustration, disengagement, satisfaction, enthusiasm, anxiety.
-- Updated Groq sentiment prompt contract to return polarity plus normalized emotion scores (`0.0`-`1.0`) and dominant emotion.
-- Added rolling emotion trend computation in backend:
-  - Daily emotion vector storage per employee
-  - `trend_delta_14d` calculation for each emotion
-  - `trend_delta_7d` support for short-horizon shift detection
-- Expanded sentiment API response with: `polarity`, `emotions`, `dominant_emotion`, and `trend_delta_14d` (plus `trend_delta_7d` for alerts).
-- Enhanced Sentiment page with a Recharts `RadarChart` visualizing the six emotion dimensions.
-- Added Emotion Shift Alert in the Sentiment UI, triggered when any emotion changes by more than `0.3` over 7 days.

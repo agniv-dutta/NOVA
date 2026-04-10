@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { useAuth } from '@/contexts/AuthContext';
+import { protectedGetApi } from '@/lib/api';
 
 type ScoreType = 'burnout' | 'attrition' | 'engagement';
 
@@ -34,21 +35,23 @@ export default function ScoreExplanationDrawer({
   const [open, setOpen] = useState(false);
   const [data, setData] = useState<ExplanationResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
       if (!open || !token) return;
       setLoading(true);
+      setError(null);
       try {
-        const response = await fetch(`/api/explain/${scoreType}/${encodeURIComponent(employeeId)}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!response.ok) {
-          setData(null);
-          return;
-        }
-        const payload = (await response.json()) as ExplanationResponse;
+        const payload = await protectedGetApi<ExplanationResponse>(
+          `/api/explain/${scoreType}/${encodeURIComponent(employeeId)}`,
+          token,
+        );
         setData(payload);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Unable to load explanation right now.';
+        setData(null);
+        setError(message);
       } finally {
         setLoading(false);
       }
@@ -129,7 +132,7 @@ export default function ScoreExplanationDrawer({
 
         {!loading && !data && (
           <p className="text-sm text-muted-foreground mt-4">
-            Explanation unavailable for this item right now.
+            {error || 'Explanation unavailable for this item right now.'}
           </p>
         )}
       </SheetContent>
