@@ -45,16 +45,24 @@ export function InsightsDashboard() {
     : null;
 
   const backendComposite = data?.composite;
+  const hasBackendCompositeSignal = Boolean(
+    backendComposite &&
+      (
+        backendComposite.detected ||
+        (typeof backendComposite.score_today === "number" && backendComposite.score_today > 0) ||
+        Object.values(backendComposite.weighted_contributions ?? {}).some((value) => value > 0)
+      ),
+  );
 
-  const scoreToday = backendComposite
+  const scoreToday = hasBackendCompositeSignal && backendComposite
     ? Math.round(backendComposite.score_today * 100)
     : composite?.score ?? 0;
-  const score7dAgo = backendComposite
+  const score7dAgo = hasBackendCompositeSignal && backendComposite
     ? Math.round(backendComposite.score_7d_ago * 100)
     : composite?.score ?? 0;
   const scoreDelta = scoreToday - score7dAgo;
 
-  const weightedBars = backendComposite
+  const weightedBars = hasBackendCompositeSignal && backendComposite
     ? [
         { label: "Burnout (35%)", value: backendComposite.weighted_contributions.burnout },
         { label: "Sentiment (25%)", value: backendComposite.weighted_contributions.sentiment },
@@ -144,14 +152,16 @@ export function InsightsDashboard() {
                 <p className="text-xs text-muted-foreground mt-1">
                   Today: {scoreToday}% vs 7 days ago: {score7dAgo}%
                 </p>
-                {backendComposite?.changed_signals && backendComposite.changed_signals.length > 0 ? (
+                {hasBackendCompositeSignal && backendComposite?.changed_signals && backendComposite.changed_signals.length > 0 ? (
                   <ul className="mt-1 list-disc pl-4 text-xs text-slate-700">
                     {backendComposite.changed_signals.slice(0, 3).map((item, idx) => (
                       <li key={idx}>{item}</li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-xs text-slate-700 mt-1">No major changes detected in the last 7 days.</p>
+                  <p className="text-xs text-slate-700 mt-1">
+                    No major anomaly shifts were detected; showing baseline composite risk from workload, sentiment, performance, and engagement.
+                  </p>
                 )}
               </div>
               <div className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">

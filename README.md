@@ -181,6 +181,9 @@ Risk Score = (
 - ✅ **Impact Estimation** - "This will reduce burnout by 20-30% in 3 weeks"
 - ✅ **Risk Explanation** - "If delayed, disengagement will deepen"
 - ✅ **Mandatory Feedback Session Workflow** - Schedule, consent, review, and HR ingestion
+- ✅ **HR Session Scheduler** - Dedicated tab for single-employee or department-wide scheduling
+- ✅ **HR Session Queue** - Sessions to Review now tracks scheduled, in-progress, and completed-not-reviewed states
+- ✅ **Employee Action Channels** - Internal messages, recognitions, and manager 1:1 scheduling integrated end-to-end
 - ✅ **Manager 360 Feedback Loop** - Anonymous upward ratings + trend and improvement suggestions
 
 ### 🔐 **Security & Access Control**
@@ -347,12 +350,29 @@ GET    /api/benchmarks/current/org            Org-sector benchmark mapping
 
 ### Feedback Sessions and 360 Feedback
 ```
-GET    /api/feedback/sessions/my              Employee session schedule/status
-POST   /api/feedback/sessions/consent         Record explicit feedback-session consent
-POST   /api/feedback/sessions/process         Process and analyze session payload
-GET    /api/feedback/sessions/pending-review  HR pending session count/list
+POST   /api/feedback/sessions/schedule                    HR schedule session (employee or department)
+GET    /api/feedback/sessions/my                          Employee session schedule/status
+POST   /api/feedback/sessions/{session_id}/consent       Record explicit feedback-session consent
+POST   /api/feedback/sessions/{session_id}/upload        Upload recorded feedback session
+POST   /api/feedback/sessions/{session_id}/process       Process transcript + emotion analysis
+GET    /api/feedback/sessions/pending-review             HR queue: scheduled/in-progress/completed pending review
+GET    /api/feedback/sessions/{session_id}/results       HR review payload (transcript/timeline/scores/summary)
+POST   /api/feedback/sessions/{session_id}/hr-ingest     Mark reviewed and ingest derived signals
+POST   /api/feedback/sessions/{session_id}/flag-follow-up  Mark session follow-up required
+POST   /api/feedback/sessions/seed-demo                  Seed mixed-state demo sessions
 POST   /api/feedback/manager/{manager_id}     Anonymous upward manager feedback submission
 GET    /api/managers/{id}/360-scores          Aggregated manager 360 trends + suggestion
+```
+
+### Employee Action APIs
+```
+POST   /api/meetings/schedule                           Create/reschedule manager 1:1
+GET    /api/meetings?employee_id={employee_id}         List employee meetings
+POST   /api/messages/send                               Send internal employee message/reminder
+GET    /api/messages/inbox                              Employee/role inbox with unread count
+PATCH  /api/messages/{message_id}/read                  Mark message as read
+POST   /api/recognition/send                            Send recognition
+GET    /api/recognition/{employee_id}                   Recognition history + 90-day count
 ```
 
 ### Integrations
@@ -455,8 +475,17 @@ cp .env.example .env
 
 **5. Run database migrations:**
 ```bash
-# Run SQL migrations in Supabase dashboard
-# or via CLI: psql -U user -d database -f database/001_create_users_table.sql
+# Recommended order in Supabase SQL editor:
+# 001_create_users_table.sql
+# 002_create_interventions_table.sql
+# 003_create_employee_feedback_table.sql
+# feedback_sessions.sql
+# 004_employee_actions_tables.sql
+# 005_feedback_sessions_status_update.sql
+
+# Optional scripted helpers (reads backend/.env):
+# python scripts/apply_feedback_sessions_migration.py
+# python scripts/apply_employee_actions_migration.py
 ```
 
 ### Frontend Setup
@@ -481,8 +510,44 @@ VITE_SUPABASE_ANON_KEY=your_supabase_key
 
 **4. Enable Google OAuth in Supabase:**
 - In Supabase Auth Providers, enable Google
-- Add site URL and redirect URL for your frontend (e.g., `http://localhost:5173/login?oauth=google`)
+- Add site URL and redirect URL for your frontend (e.g., `http://localhost:8080/login?oauth=google`)
 - Ensure allowed email domains/org policy align with your employee directory
+
+### Troubleshooting
+
+**1. Missing Supabase tables (`PGRST205` / relation does not exist)**
+- Symptom: API errors mention missing tables such as `public.feedback_sessions` or `public.internal_messages`.
+- Fix: run the setup SQL in the migration order listed above.
+- Optional verification scripts from `backend/`:
+```bash
+python scripts/verify_feedback_tables.py
+python scripts/verify_employee_action_tables.py
+```
+
+**2. Frontend cannot reach backend (NetworkError / fetch failed / empty panels)**
+- Symptom: scheduling, review, or insights requests fail despite backend running.
+- Fix: confirm frontend `.env` uses the backend host and port actually running locally:
+```bash
+VITE_API_BASE_URL=http://localhost:8000
+```
+- Then restart the frontend dev server after changing `.env`.
+
+**3. Session Queue not updating after scheduling**
+- Symptom: a session is scheduled successfully but does not appear in Sessions to Review.
+- Checks:
+  - Verify `feedback_sessions` rows are being created in Supabase.
+  - Confirm signed-in role can access HR/leadership review surfaces.
+  - Ensure the app is not calling a stale origin (all review calls should use the shared API client and `VITE_API_BASE_URL`).
+
+**4. Reminder send errors after successful scheduling**
+- Symptom: reminder call fails, but the session appears scheduled.
+- Cause: `internal_messages` table missing or policy issue.
+- Fix: apply `004_employee_actions_tables.sql` and re-test reminder send.
+
+**5. Composite risk shows 0% unexpectedly**
+- Context: anomaly composite can be 0% when no significant anomalies are detected.
+- Current behavior: UI falls back to baseline composite risk (workload/sentiment/performance/engagement model) when anomaly composite has no signal.
+- If still 0%: inspect input histories (sentiment/performance/engagement) for the selected employee and verify data generation/API payloads are non-empty.
 
 ---
 
@@ -507,11 +572,11 @@ cd "C:\path\to\NOVA\frontend"
 npm run dev
 ```
 
-✅ Frontend runs at: `http://localhost:5173`
+✅ Frontend runs at: `http://localhost:8080` (this repo's Vite config)
 
 ### Access Application
 
-1. Open browser to `http://localhost:5173`
+1. Open browser to `http://localhost:8080`
 2. Sign in with test credentials:
    - Email: `hr.admin@company.com`
    - Password: `TestPassword123!` (or your test user)
@@ -568,6 +633,11 @@ curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
 - Org Health report export API + frontend multi-page PDF generation flow
 - Industry benchmark APIs and UI overlays/badges (explicitly labeled simulated medians)
 - PWA support + mobile responsiveness enhancements (install banner, bottom tabs, touch graph interactions)
+- Feedback session scheduler page and session queue page wired for HR/Leadership roles
+- Session queue behavior for scheduled/in-progress/completed states with status-aware review panel
+- Supabase-backed feedback session persistence (`public.feedback_sessions`, `public.session_consent_log`)
+- Supabase-backed employee action persistence (`public.internal_messages`, `public.scheduled_meetings`, `public.recognitions`)
+- Backend migration helper scripts for Supabase schema application and verification
 
 ### 🔄 **In Progress**
 - ML feature importance visualization
