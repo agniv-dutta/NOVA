@@ -47,6 +47,12 @@ class InterventionRequest(BaseModel):
     weeks_at_high_risk: int = 0  # How many consecutive weeks above threshold
     anomaly_detected: bool = False
     anomaly_type: str | None = None
+    attrition_probability: float | None = Field(default=None, ge=0.0, le=1.0)
+    salary_band: float | None = Field(default=None, ge=0.0)
+    employee_name: str | None = None
+    department: str | None = None
+    target_employee_ids: list[str] = Field(default_factory=list)
+    recent_recognition_count_90d: int | None = Field(default=None, ge=0)
 
 
 class InterventionRecommendation(BaseModel):
@@ -58,6 +64,13 @@ class InterventionRecommendation(BaseModel):
     estimated_impact: str
     timing_window: str
     risks_if_delayed: str
+    intervention_name: str
+    intervention_cost_inr: float = 0.0
+    projected_savings_inr: float = 0.0
+    roi_percent: float = 0.0
+    target_group: str = ""
+    target_employee_count: int = 1
+    savings_basis: str = ""
 
 
 class InterventionResponse(BaseModel):
@@ -84,6 +97,30 @@ URGENCY_MATRIX = {
     ("low", "LOW"): InterventionUrgency.LOW,
     ("low", "MEDIUM"): InterventionUrgency.MEDIUM,
     ("low", "HIGH"): InterventionUrgency.HIGH,
+}
+
+
+INTERVENTION_COSTS_INR: dict[InterventionType, float] = {
+    InterventionType.ONE_ON_ONE: 500.0,
+    InterventionType.WELLNESS_PROGRAM: 2000.0,
+    InterventionType.TEAM_BUILDING: 15000.0,
+    InterventionType.PROMOTION_DISCUSSION: 0.0,
+    InterventionType.SABBATICAL: 25000.0,
+    InterventionType.WORKLOAD_REDUCTION: 3000.0,
+    InterventionType.MENTORING: 5000.0,
+    InterventionType.FLEXIBLE_SCHEDULE: 1000.0,
+}
+
+
+INTERVENTION_LABELS: dict[InterventionType, str] = {
+    InterventionType.ONE_ON_ONE: "Schedule 1:1",
+    InterventionType.WELLNESS_PROGRAM: "Counselling/EAP referral",
+    InterventionType.TEAM_BUILDING: "Training program",
+    InterventionType.PROMOTION_DISCUSSION: "Salary review",
+    InterventionType.SABBATICAL: "Team restructure",
+    InterventionType.WORKLOAD_REDUCTION: "Workload rebalancing",
+    InterventionType.MENTORING: "Mentorship assignment",
+    InterventionType.FLEXIBLE_SCHEDULE: "Recognition program",
 }
 
 
@@ -243,6 +280,59 @@ def _get_delay_risks(intervention_type: InterventionType, weeks_delayed: int = 1
     return base_risks.get(intervention_type, "Risk escalation if delayed")
 
 
+def _retention_to_probability(retention_risk: str) -> float:
+    mapping = {
+        "low": 0.22,
+        "medium": 0.45,
+        "high": 0.72,
+    }
+    return mapping.get(retention_risk, 0.45)
+
+
+def _replacement_cost_inr(request: InterventionRequest) -> float:
+    annual_salary = request.salary_band if request.salary_band and request.salary_band > 0 else 800000.0
+    is_senior = request.tenure_months >= 36 or request.performance_band == "top"
+    multiplier = 1.5 if is_senior else 0.75
+    return annual_salary * multiplier
+
+
+def _target_group_label(request: InterventionRequest) -> tuple[str, int]:
+    target_count = max(1, len(request.target_employee_ids))
+    if request.department and target_count > 1:
+        return f"{request.department} ({target_count} employees)", target_count
+    if request.employee_name and target_count > 1:
+        return f"{request.employee_name} + {target_count - 1} others", target_count
+    if request.employee_name:
+        return request.employee_name, 1
+    return f"Employee {request.employee_id}", 1
+
+
+def _compute_roi_fields(
+    request: InterventionRequest,
+    intervention_type: InterventionType,
+) -> tuple[float, float, float, str, str, int]:
+    intervention_cost = INTERVENTION_COSTS_INR.get(intervention_type, 1000.0)
+    probability = (
+        request.attrition_probability
+        if request.attrition_probability is not None
+        else _retention_to_probability(request.retention_risk)
+    )
+    replacement_cost = _replacement_cost_inr(request)
+    projected_savings = probability * replacement_cost
+
+    if intervention_cost <= 0:
+        roi_percent = round(projected_savings * 100.0 / max(replacement_cost, 1.0), 1)
+    else:
+        roi_percent = round(((projected_savings - intervention_cost) / intervention_cost) * 100.0, 1)
+
+    target_group, target_count = _target_group_label(request)
+    savings_basis = (
+        f"Based on {target_count} at-risk employees x estimated replacement cost "
+        f"of INR {round(replacement_cost):,}"
+    )
+    return intervention_cost, projected_savings, roi_percent, target_group, savings_basis, target_count
+
+
 async def _enrich_with_llm(
     request: InterventionRequest,
     recommendations: list[InterventionRecommendation],
@@ -311,6 +401,9 @@ async def get_interventions(request: InterventionRequest) -> InterventionRespons
     # Select interventions based on rules
     selected = _select_interventions(request)
 
+    if (request.recent_recognition_count_90d or 0) == 0:
+        selected.append((InterventionType.FLEXIBLE_SCHEDULE, "Recognition Gap flagged in last 90 days"))
+
     # Build recommendations
     recommendations: list[InterventionRecommendation] = []
     for intervention_type, description in selected:
@@ -328,7 +421,16 @@ async def get_interventions(request: InterventionRequest) -> InterventionRespons
             estimated_impact=_get_impact_estimate(intervention_type),
             timing_window=_get_timing_window(urgency),
             risks_if_delayed=_get_delay_risks(intervention_type),
+            intervention_name=INTERVENTION_LABELS.get(intervention_type, intervention_type.value),
         )
+        (
+            rec.intervention_cost_inr,
+            rec.projected_savings_inr,
+            rec.roi_percent,
+            rec.target_group,
+            rec.savings_basis,
+            rec.target_employee_count,
+        ) = _compute_roi_fields(request, intervention_type)
         recommendations.append(rec)
 
     # Sort by urgency then priority

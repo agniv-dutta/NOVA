@@ -19,7 +19,18 @@ interface PersonalDataResponse {
 interface EmployeeFeedbackSession {
   id: string;
   scheduled_date: string;
-  status: "scheduled" | "completed" | "skipped";
+  status: "scheduled" | "in_progress" | "completed" | "skipped" | "declined";
+  hr_reviewed?: boolean;
+}
+
+interface InboxMessage {
+  id: string;
+  from_user_id: string;
+  subject: string;
+  body: string;
+  is_read: boolean;
+  created_at: string;
+  message_type: string;
 }
 
 function levelColor(level: string): string {
@@ -43,6 +54,9 @@ export default function EmployeePersonalPage() {
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [feedbackStatus, setFeedbackStatus] = useState("");
   const [pendingSession, setPendingSession] = useState<EmployeeFeedbackSession | null>(null);
+  const [latestSession, setLatestSession] = useState<EmployeeFeedbackSession | null>(null);
+  const [inbox, setInbox] = useState<InboxMessage[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [managerModalOpen, setManagerModalOpen] = useState(false);
   const [managerId, setManagerId] = useState("mgr-0");
   const [managerText, setManagerText] = useState("");
@@ -70,10 +84,17 @@ export default function EmployeePersonalPage() {
           "/api/feedback/sessions/my",
           token,
         );
-        const nextSession = (sessionsResponse.sessions || []).find((session) => session.status === "scheduled") || null;
+        const allSessions = sessionsResponse.sessions || [];
+        const nextSession = allSessions.find((session) => session.status === "scheduled" || session.status === "in_progress") || null;
+        const latest = allSessions.length > 0 ? [...allSessions].sort((a, b) => new Date(b.scheduled_date).getTime() - new Date(a.scheduled_date).getTime())[0] : null;
+        const inboxPayload = await protectedGetApi<{ messages: InboxMessage[]; unread_count: number }>("/api/messages/inbox", token);
+
         if (mounted) {
           setData(response);
           setPendingSession(nextSession);
+          setLatestSession(latest);
+          setInbox(inboxPayload.messages || []);
+          setUnreadCount(Number(inboxPayload.unread_count || 0));
           setError("");
         }
       } catch (err) {
@@ -209,11 +230,46 @@ export default function EmployeePersonalPage() {
       {pendingSession && (
         <Card className="p-4 border-amber-300 bg-amber-50">
           <p className="text-sm font-semibold text-amber-900">
-            You have a mandatory feedback session due by {new Date(pendingSession.scheduled_date).toLocaleDateString()}.{' '}
-            <a href="/feedback-session" className="underline">Complete it here -&gt;</a>
+            📋 Mandatory feedback session due by {new Date(pendingSession.scheduled_date).toLocaleDateString()} {' '}
+            <a href={`/feedback/session/${pendingSession.id}`} className="underline">Begin Session →</a>
           </p>
         </Card>
       )}
+
+      {!pendingSession && latestSession?.status === "completed" && !latestSession.hr_reviewed && (
+        <Card className="p-4 border-sky-300 bg-sky-50">
+          <p className="text-sm font-semibold text-sky-900">✓ Session submitted - under HR review</p>
+        </Card>
+      )}
+
+      {!pendingSession && latestSession?.status === "completed" && latestSession.hr_reviewed && (
+        <Card className="p-4 border-emerald-300 bg-emerald-50">
+          <p className="text-sm font-semibold text-emerald-900">✓ Feedback processed - thank you</p>
+        </Card>
+      )}
+
+      <Card className="p-5">
+        <h2 className="text-lg font-semibold mb-3 inline-flex items-center gap-2">
+          Messages
+          {unreadCount > 0 && <span className="rounded-full bg-red-600 px-2 py-0.5 text-xs text-white">{unreadCount}</span>}
+        </h2>
+        {inbox.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No messages yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {inbox.slice(0, 6).map((message) => (
+              <div key={message.id} className={`rounded border p-3 ${message.is_read ? "bg-background" : "bg-red-50 border-red-200"}`}>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold">{message.subject}</p>
+                  <p className="text-xs text-muted-foreground">{new Date(message.created_at).toLocaleDateString()}</p>
+                </div>
+                <p className="text-xs text-muted-foreground">From: {message.from_user_id}</p>
+                <p className="text-sm mt-1 line-clamp-2">{message.body}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
 
       {loading && <p className="text-sm text-muted-foreground">Loading your profile...</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}

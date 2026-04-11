@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Request, UploadFile
@@ -253,7 +253,7 @@ async def get_my_feedback_sessions(
     supabase = get_supabase_admin()
     response = (
         supabase.table("feedback_sessions")
-        .select("id, employee_id, scheduled_date, status, is_mandatory, created_at, transcript")
+        .select("id, employee_id, scheduled_date, status, is_mandatory, created_at, transcript, hr_reviewed, hr_reviewer_id, emotion_analysis")
         .eq("employee_id", current_user.email)
         .order("scheduled_date", desc=False)
         .execute()
@@ -460,7 +460,7 @@ async def list_sessions_pending_review(
     supabase = get_supabase_admin()
     rows = (
         supabase.table("feedback_sessions")
-        .select("id, employee_id, department, scheduled_date, status, hr_reviewed, created_at")
+        .select("id, employee_id, department, scheduled_date, status, hr_reviewed, created_at, emotion_analysis, derived_scores")
         .eq("status", "completed")
         .eq("hr_reviewed", False)
         .order("scheduled_date", desc=False)
@@ -472,4 +472,155 @@ async def list_sessions_pending_review(
         "count": len(data),
         "sessions": data,
         "requested_by": current_user.email,
+    }
+
+
+@router.post("/{session_id}/flag-follow-up")
+async def flag_session_follow_up(
+    session_id: str,
+    current_user: User = Depends(require_role([UserRole.HR, UserRole.LEADERSHIP])),
+) -> dict[str, Any]:
+    session = _session_or_404(session_id)
+    emotion_analysis = _safe_json(session.get("emotion_analysis"))
+    emotion_analysis["follow_up_required"] = True
+    emotion_analysis["follow_up_flagged_at"] = datetime.utcnow().isoformat()
+
+    updated = (
+        get_supabase_admin()
+        .table("feedback_sessions")
+        .update({"emotion_analysis": emotion_analysis})
+        .eq("id", session_id)
+        .execute()
+    )
+
+    return {
+        "status": "follow_up_flagged",
+        "session_id": session_id,
+        "session": (updated.data or [])[0] if updated.data else {"id": session_id},
+        "flagged_by": current_user.email,
+    }
+
+
+@router.post("/seed-demo")
+async def seed_demo_feedback_sessions(
+    current_user: User = Depends(require_role([UserRole.HR, UserRole.LEADERSHIP])),
+) -> dict[str, Any]:
+    """Seed demo sessions with mixed states so Sessions to Review is never empty."""
+    supabase = get_supabase_admin()
+    now = datetime.utcnow()
+
+    demo_rows = [
+        {
+            "employee_id": "employee@company.com",
+            "department": "Engineering",
+            "scheduled_date": (now - timedelta(days=2)).isoformat(),
+            "status": "completed",
+            "hr_reviewed": False,
+            "transcript": (
+                "Q1: The last two weeks felt heavier than usual, mostly because sprint scope expanded.\n\n"
+                "Q2: My manager is supportive, but our check-ins are too short to cover blockers in depth.\n\n"
+                "Q3: Team collaboration is positive, though we have unresolved ownership overlap on on-call tasks.\n\n"
+                "Q4: I need clearer growth milestones and feedback on architectural decisions.\n\n"
+                "Q5: I am committed, but stress spikes near release windows and recovery time is limited."
+            ),
+            "emotion_analysis": {
+                "dominant_emotion": "stress",
+                "timeline": [
+                    {"segment": "Q1", "stress": 0.72, "confidence": 0.48, "hesitation": 0.33},
+                    {"segment": "Q2", "stress": 0.61, "confidence": 0.55, "hesitation": 0.29},
+                    {"segment": "Q3", "stress": 0.52, "confidence": 0.62, "hesitation": 0.2},
+                    {"segment": "Q4", "stress": 0.57, "confidence": 0.5, "hesitation": 0.31},
+                    {"segment": "Q5", "stress": 0.68, "confidence": 0.46, "hesitation": 0.35},
+                ],
+                "red_flags": ["stress spikes near release windows"],
+                "hesitation_marker_count": 8,
+                "duration_seconds": 522,
+            },
+            "derived_scores": {
+                "workload_sentiment": 0.34,
+                "manager_relationship": 0.58,
+                "team_dynamics": 0.66,
+                "growth_satisfaction": 0.41,
+            },
+        },
+        {
+            "employee_id": "employee2@company.com",
+            "department": "Sales",
+            "scheduled_date": (now - timedelta(days=1)).isoformat(),
+            "status": "completed",
+            "hr_reviewed": False,
+            "transcript": (
+                "Q1: I am energized by customer conversations but quota pressure has been intense this month.\n\n"
+                "Q2: My manager gives good coaching, but I need faster escalation support on stuck deals.\n\n"
+                "Q3: Team morale is mixed due to territory changes.\n\n"
+                "Q4: I want stronger enablement on enterprise deal strategy.\n\n"
+                "Q5: I am motivated, but I need more consistent planning support."
+            ),
+            "emotion_analysis": {
+                "dominant_emotion": "neutral",
+                "timeline": [
+                    {"segment": "Q1", "stress": 0.49, "confidence": 0.65, "hesitation": 0.2},
+                    {"segment": "Q2", "stress": 0.45, "confidence": 0.69, "hesitation": 0.18},
+                    {"segment": "Q3", "stress": 0.55, "confidence": 0.54, "hesitation": 0.23},
+                    {"segment": "Q4", "stress": 0.4, "confidence": 0.72, "hesitation": 0.14},
+                    {"segment": "Q5", "stress": 0.47, "confidence": 0.67, "hesitation": 0.16},
+                ],
+                "red_flags": ["quota pressure has been intense"],
+                "hesitation_marker_count": 5,
+                "duration_seconds": 486,
+            },
+            "derived_scores": {
+                "workload_sentiment": 0.49,
+                "manager_relationship": 0.63,
+                "team_dynamics": 0.51,
+                "growth_satisfaction": 0.57,
+            },
+        },
+        {
+            "employee_id": "employee3@company.com",
+            "department": "Operations",
+            "scheduled_date": (now - timedelta(days=4)).isoformat(),
+            "status": "completed",
+            "hr_reviewed": True,
+            "transcript": "Completed and reviewed session.",
+            "emotion_analysis": {"dominant_emotion": "positive", "duration_seconds": 451},
+            "derived_scores": {
+                "workload_sentiment": 0.72,
+                "manager_relationship": 0.75,
+                "team_dynamics": 0.73,
+                "growth_satisfaction": 0.71,
+            },
+        },
+        {
+            "employee_id": "employee4@company.com",
+            "department": "Marketing",
+            "scheduled_date": (now - timedelta(hours=5)).isoformat(),
+            "status": "in_progress",
+            "hr_reviewed": False,
+            "emotion_analysis": {"dominant_emotion": "neutral", "duration_seconds": 193},
+            "derived_scores": {},
+        },
+        {
+            "employee_id": "employee5@company.com",
+            "department": "Product",
+            "scheduled_date": (now + timedelta(days=2)).isoformat(),
+            "status": "scheduled",
+            "hr_reviewed": False,
+            "emotion_analysis": {"dominant_emotion": "neutral"},
+            "derived_scores": {},
+        },
+    ]
+
+    inserted = []
+    for row in demo_rows:
+        try:
+            response = supabase.table("feedback_sessions").insert({**row, "is_mandatory": True, "created_at": now.isoformat()}).execute()
+            inserted.extend(response.data or [])
+        except Exception:
+            continue
+
+    return {
+        "status": "seeded",
+        "inserted": len(inserted),
+        "seeded_by": current_user.email,
     }

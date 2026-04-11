@@ -29,6 +29,7 @@ import html2canvas from "html2canvas";
 import { useInterventionInsights } from "@/hooks/useInterventionInsights";
 import jsPDF from "jspdf";
 import BenchmarkBadge from "@/components/dashboard/BenchmarkBadge";
+import { protectedGetApi } from "@/lib/api";
 
 type ImpactStep = {
   name: string;
@@ -67,6 +68,28 @@ type CostImpactPayload = {
     currency: string;
     version: string;
   };
+};
+
+type ROIRecommendationPayload = {
+  intervention_type: string;
+  intervention_name: string;
+  description: string;
+  urgency: "low" | "medium" | "high" | "critical";
+  priority_score: number;
+  target_group: string;
+  target_employee_count: number;
+  intervention_cost_inr: number;
+  projected_savings_inr: number;
+  roi_percent: number;
+  savings_basis: string;
+};
+
+type ROISummaryPayload = {
+  total_investment_inr: number;
+  total_projected_savings_inr: number;
+  net_impact_inr: number;
+  intervention_count: number;
+  avg_roi_percent: number;
 };
 
 function formatINR(value: number): string {
@@ -131,6 +154,8 @@ export default function OrgHealthPage() {
   const absenteeism = generateAbsenteeismData();
   const skills = generateSkillsData();
   const [impact, setImpact] = useState<CostImpactPayload | null>(null);
+  const [roiRecommendations, setROIRecommendations] = useState<ROIRecommendationPayload[]>([]);
+  const [roiSummary, setROISummary] = useState<ROISummaryPayload | null>(null);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [reportStep, setReportStep] = useState("Idle");
   const [benchmark, setBenchmark] = useState<any>(null);
@@ -177,6 +202,34 @@ export default function OrgHealthPage() {
     };
 
     void loadCostImpact();
+  }, [token]);
+
+  useEffect(() => {
+    const loadROI = async () => {
+      if (!token) {
+        setROIRecommendations([]);
+        setROISummary(null);
+        return;
+      }
+      try {
+        const recommendationsPayload = await protectedGetApi<{ recommendations: ROIRecommendationPayload[] }>(
+          "/api/interventions/recommendations",
+          token,
+        );
+        setROIRecommendations(recommendationsPayload.recommendations || []);
+      } catch {
+        setROIRecommendations([]);
+      }
+
+      try {
+        const summaryPayload = await protectedGetApi<ROISummaryPayload>("/api/interventions/roi-summary", token);
+        setROISummary(summaryPayload);
+      } catch {
+        setROISummary(null);
+      }
+    };
+
+    void loadROI();
   }, [token]);
 
   useEffect(() => {
@@ -350,18 +403,19 @@ export default function OrgHealthPage() {
   ];
 
   const interventions = useMemo(() => {
-    const source = impact?.intervention_impacts || [];
-    return source.map((item, idx) => ({
-      intervention: item.intervention,
+    return roiRecommendations.map((item, idx) => ({
+      rank: idx + 1,
+      intervention: item.intervention_name,
+      description: item.description,
       targetGroup: item.target_group,
-      estimatedCost: item.estimated_cost,
-      potentialSavings: item.projected_savings,
-      roi: `${item.roi_percent.toFixed(1)}%`,
-      priority: idx === 2 ? 'Critical' : idx <= 1 ? 'High' : 'Medium',
-      plainEnglish: item.plain_english,
-      breakdown: item.calculation_breakdown,
+      employeeCount: item.target_employee_count,
+      estimatedCost: item.intervention_cost_inr,
+      potentialSavings: item.projected_savings_inr,
+      roiPercent: item.roi_percent,
+      urgency: item.urgency,
+      savingsBasis: item.savings_basis,
     }));
-  }, [impact]);
+  }, [roiRecommendations]);
 
   const getTrendIcon = (trend: string) => {
     if (trend === 'up') return <TrendingUp className="h-4 w-4 text-green-600" />;
@@ -369,13 +423,20 @@ export default function OrgHealthPage() {
     return <div className="h-4 w-4 text-gray-600">→</div>;
   };
 
-  const getPriorityBadge = (priority: string) => {
-    switch (priority) {
-      case 'Critical': return <Badge variant="destructive">{priority}</Badge>;
-      case 'High': return <Badge className="bg-orange-500">{priority}</Badge>;
-      case 'Medium': return <Badge variant="secondary">{priority}</Badge>;
-      default: return <Badge variant="outline">{priority}</Badge>;
+  const getPriorityBadge = (urgency: string, rank: number) => {
+    if (urgency === 'critical') {
+      return <Badge variant="destructive">#{rank} 🔴 Critical</Badge>;
     }
+    if (urgency === 'high') {
+      return <Badge className="bg-amber-500">#{rank} 🟡 High</Badge>;
+    }
+    return <Badge className="bg-green-600">#{rank} 🟢 Medium</Badge>;
+  };
+
+  const getRoiClass = (roiPercent: number) => {
+    if (roiPercent > 200) return 'bg-green-600';
+    if (roiPercent >= 50) return 'bg-amber-500';
+    return 'bg-red-600';
   };
 
   // Generate AI summary
@@ -627,10 +688,12 @@ export default function OrgHealthPage() {
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-2 text-sm">
-                    {(impact?.methodology?.assumptions || []).map((item) => (
-                      <p key={item}>- {item}</p>
-                    ))}
-                    {impact?.plain_english && <p className="text-muted-foreground pt-2">{impact.plain_english}</p>}
+                    <p>- Replacement cost estimate: 75% of salary for junior roles and 150% for senior roles.</p>
+                    <p>- Attrition probability indicates modeled likelihood of voluntary exit based on risk signals.</p>
+                    <p>- Data sources include burnout risk, sentiment, tenure, performance, and retention risk indicators.</p>
+                    <p className="text-muted-foreground pt-2">
+                      Disclaimer: Figures are projections based on risk scores. Actual savings depend on intervention outcomes.
+                    </p>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -651,25 +714,44 @@ export default function OrgHealthPage() {
               <TableBody>
                 {interventions.map((item, i) => (
                   <TableRow key={i}>
-                    <TableCell>{getPriorityBadge(item.priority)}</TableCell>
-                    <TableCell className="font-medium">{item.intervention}</TableCell>
+                    <TableCell>{getPriorityBadge(item.urgency, item.rank)}</TableCell>
+                    <TableCell>
+                      <p className="font-medium">{item.intervention}</p>
+                      <p className="text-xs text-muted-foreground">{item.description}</p>
+                    </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{item.targetGroup}</TableCell>
                     <TableCell className="text-right">
-                      <ExplainableValue
-                        value={formatINR(item.estimatedCost)}
-                        breakdown={item.breakdown}
-                        plainEnglish={item.plainEnglish}
-                      />
+                      <span className="inline-flex items-center gap-1 justify-end">
+                        <span>{formatINR(item.estimatedCost)}</span>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button type="button" className="text-muted-foreground hover:text-foreground" aria-label="Estimated manager and HR cost details">
+                              <Info className="h-3.5 w-3.5" />
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-72 text-xs">
+                            Estimated manager/HR time and program cost.
+                          </PopoverContent>
+                        </Popover>
+                      </span>
                     </TableCell>
                     <TableCell className="text-right text-green-600 font-medium">
-                      <ExplainableValue
-                        value={formatINR(item.potentialSavings)}
-                        breakdown={item.breakdown}
-                        plainEnglish={item.plainEnglish}
-                      />
+                      <span className="inline-flex items-center gap-1 justify-end">
+                        <span>{formatINR(item.potentialSavings)}</span>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button type="button" className="text-muted-foreground hover:text-foreground" aria-label="Projected savings calculation details">
+                              <Info className="h-3.5 w-3.5" />
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-80 text-xs">
+                            {item.savingsBasis}
+                          </PopoverContent>
+                        </Popover>
+                      </span>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Badge className="bg-green-600">{item.roi}</Badge>
+                      <Badge className={getRoiClass(item.roiPercent)}>{item.roiPercent.toFixed(1)}%</Badge>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -680,17 +762,17 @@ export default function OrgHealthPage() {
               <p className="text-sm font-semibold text-green-800">
                 Total Investment:{' '}
                 <ExplainableValue
-                  value={formatINR(interventions.reduce((sum, item) => sum + item.estimatedCost, 0))}
+                  value={formatINR(roiSummary?.total_investment_inr || 0)}
                   breakdown={impact?.calculation_breakdown ?? null}
                   plainEnglish={impact?.plain_english || 'Transparent cost model applied'}
                 />
                 {' | '}Projected Savings:{' '}
                 <ExplainableValue
-                  value={formatINR(impact?.figures?.projected_savings || 0)}
+                  value={formatINR(roiSummary?.total_projected_savings_inr || 0)}
                   breakdown={impact?.calculation_breakdown ?? null}
                   plainEnglish={impact?.plain_english || 'Transparent savings model applied'}
                 />
-                {' | '}Net Impact: {formatINR(impact?.figures?.net_impact || 0)}
+                {' | '}Net Impact: {formatINR(roiSummary?.net_impact_inr || 0)}
               </p>
             </div>
           </CardContent>

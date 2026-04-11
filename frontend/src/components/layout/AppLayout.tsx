@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, MessageSquareText, Brain, RefreshCw, Menu, X, HeartPulse, ShieldCheck, UserRound, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, MessageSquareText, Brain, RefreshCw, Menu, X, HeartPulse, ShieldCheck, UserRound, LogOut, CalendarDays } from 'lucide-react';
 import { useEmployees } from '@/contexts/EmployeeContext';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,7 @@ const ROLE_NAV_ITEMS: Record<UserRole, Array<{ to: string; icon: typeof ShieldCh
   ],
   hr: [
     { to: '/hr/org-risk-distribution', icon: ShieldCheck, label: 'HR API' },
+    { to: '/hr/sessions-schedule', icon: CalendarDays, label: 'Schedule Sessions' },
     { to: '/hr/sessions-review', icon: ShieldCheck, label: 'Sessions to Review' },
     { to: '/integrations', icon: ShieldCheck, label: 'Integrations' },
   ],
@@ -171,7 +172,19 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           )}
 
           <button
-            onClick={refreshData}
+            onClick={async () => {
+              refreshData();
+              if (token) {
+                try {
+                  await fetch('/api/feedback/sessions/seed-demo', {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
+                } catch {
+                  // Non-fatal: local UI regen still succeeds.
+                }
+              }
+            }}
             className="sidebar-link w-full justify-center gap-2 hover:text-foreground"
           >
             <RefreshCw className="h-4 w-4" />

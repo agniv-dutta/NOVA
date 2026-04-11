@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -28,6 +29,7 @@ type FeedbackSession = {
 
 export default function FeedbackSessionPage() {
   const { token } = useAuth();
+  const { sessionId } = useParams<{ sessionId: string }>();
   const [stage, setStage] = useState<Stage>('consent');
   const [consentChecked, setConsentChecked] = useState(false);
   const [declinedMessage, setDeclinedMessage] = useState('');
@@ -62,9 +64,11 @@ export default function FeedbackSessionPage() {
     if (!token) return;
     const load = async () => {
       const response = await protectedGetApi<{ sessions: FeedbackSession[] }>('/api/feedback/sessions/my', token);
-      setSessions(response.sessions || []);
-      const scheduled = (response.sessions || []).find((s) => s.status === 'scheduled');
-      setActiveSessionId(scheduled?.id ?? response.sessions?.[0]?.id ?? null);
+      const allSessions = response.sessions || [];
+      setSessions(allSessions);
+      const scheduled = allSessions.find((s) => s.status === 'scheduled' || s.status === 'in_progress');
+      const byRoute = sessionId ? allSessions.find((s) => s.id === sessionId) : null;
+      setActiveSessionId(byRoute?.id ?? scheduled?.id ?? allSessions?.[0]?.id ?? null);
     };
     void load();
   }, [token]);
@@ -330,16 +334,33 @@ export default function FeedbackSessionPage() {
             <p>
               This mandatory session records video and audio responses for HR review. Recording retained for 90 days, accessible to HR only.
             </p>
-            <p>
+
+            <div className="rounded bg-blue-50 border border-blue-200 p-3 space-y-2 text-xs">
+              <p className="font-medium text-blue-900">🔒 Your privacy is protected:</p>
+              <ul className="list-disc list-inside space-y-1 text-blue-800">
+                <li>Responses are confidential and seen by HR only</li>
+                <li>Recordings deleted after 90 days</li>
+                <li>You can request transcript or data deletion anytime</li>
+                <li>Session is a safe space to share your honest perspective</li>
+              </ul>
+            </div>
+
+            <p className="text-xs text-muted-foreground italic">
               In accordance with India's Digital Personal Data Protection Act 2023, consent is logged with timestamp and IP address.
             </p>
+
             <div className="flex items-center gap-2">
               <Checkbox id="consent" checked={consentChecked} onCheckedChange={(v) => setConsentChecked(Boolean(v))} />
               <Label htmlFor="consent">I understand this session is recorded and my responses are on record</Label>
             </div>
-            <div className="flex items-center gap-3">
-              <Button onClick={beginWithConsent} disabled={!consentChecked || !activeSessionId}>I Consent & Begin Session</Button>
-              <Button variant="outline" onClick={declineConsent} disabled={!activeSessionId}>Decline</Button>
+
+            <div className="flex flex-col gap-3">
+              <Button onClick={beginWithConsent} disabled={!consentChecked || !activeSessionId} className="bg-green-600 hover:bg-green-700">
+                I Consent &amp; Begin Recording
+              </Button>
+              <Button variant="outline" onClick={declineConsent} disabled={!activeSessionId}>
+                Decline &amp; Skip Session
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -361,7 +382,9 @@ export default function FeedbackSessionPage() {
               {livenessPassed ? <Badge>Live person confirmed</Badge> : <Badge variant="secondary">Not verified</Badge>}
             </div>
             {livenessError && <p className="text-sm text-red-600">{livenessError}</p>}
-            <Button onClick={startSession} disabled={!livenessPassed}>Your camera and mic are working. You may begin.</Button>
+            <Button onClick={startSession} disabled={!livenessPassed} className="bg-green-600 hover:bg-green-700">
+              Camera &amp; Mic verified — Start Session
+            </Button>
           </CardContent>
         </Card>
       )}
@@ -383,7 +406,12 @@ export default function FeedbackSessionPage() {
               <div className="space-y-3">
                 <p className="text-xs text-muted-foreground">Question {questionIndex + 1} of {QUESTIONS.length}</p>
                 <p className="font-medium">{currentQuestion}</p>
-                <p className="text-sm">Time remaining: <span className="font-semibold">{timer}s</span></p>
+                <p className="text-sm text-muted-foreground">
+                  Take a moment to reflect on your honest response. No right or wrong answers — we value your perspective.
+                </p>
+                <p className="text-sm">
+                  Time remaining: <span className={`font-semibold ${timer < 20 ? 'text-red-600' : 'text-foreground'}`}>{timer}s</span>
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {!isRecording && <Button onClick={startRecording}>Start Recording</Button>}
                   {isRecording && <Button variant="destructive" onClick={stopRecording}>Stop</Button>}
@@ -411,9 +439,18 @@ export default function FeedbackSessionPage() {
               <>
                 <Alert>
                   <AlertTitle>Your session has been submitted.</AlertTitle>
-                  <AlertDescription>HR will review within 5 business days.</AlertDescription>
+                  <AlertDescription>Your feedback has been securely uploaded. HR will conduct a careful review and may reach out if they need clarification.</AlertDescription>
                 </Alert>
                 <p className="text-sm">Session ID: <span className="font-mono">{activeSessionId}</span></p>
+                <div className="rounded bg-amber-50 border border-amber-200 p-3 space-y-1 text-xs text-amber-900">
+                  <p className="font-medium">📋 Next Steps:</p>
+                  <ul className="list-disc list-inside space-y-0.5">
+                    <li>HR review timeline: 3-5 business days</li>
+                    <li>You'll see status updates in your dashboard</li>
+                    <li>Check "Feedback Sessions" tab in Employee Portal for updates</li>
+                    <li>Questions? Contact HR at <span className="font-semibold">hr@company.com</span></li>
+                  </ul>
+                </div>
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={refreshMySessions}>Refresh Status</Button>
                   <Button

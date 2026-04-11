@@ -18,7 +18,9 @@ import AuditLogPage from "./pages/AuditLogPage";
 import EmployeePersonalPage from "./pages/EmployeePersonalPage";
 import FeedbackSessionPage from "./pages/FeedbackSessionPage";
 import HRSessionsReviewPage from "./pages/HRSessionsReviewPage";
+import HRSessionsSchedulerPage from "./pages/HRSessionsSchedulerPage";
 import IntegrationsPage from "./pages/IntegrationsPage";
+import EmployeeProfilePage from "./pages/EmployeeProfilePage";
 import NotFound from "./pages/NotFound";
 import { InsightsDashboard } from "@/features/insights/InsightsDashboard";
 
@@ -97,6 +99,16 @@ const App = () => (
                 }
               />
               <Route
+                path="/feedback/session/:sessionId"
+                element={
+                  <ProtectedRoute allowedRoles={["employee"]}>
+                    <AppLayout>
+                      <FeedbackSessionPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/hr/sessions-review"
                 element={
                   <ProtectedRoute allowedRoles={["hr", "leadership"]}>
@@ -107,11 +119,31 @@ const App = () => (
                 }
               />
               <Route
+                path="/hr/sessions-schedule"
+                element={
+                  <ProtectedRoute allowedRoles={["hr", "leadership"]}>
+                    <AppLayout>
+                      <HRSessionsSchedulerPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/integrations"
                 element={
                   <ProtectedRoute allowedRoles={["hr", "leadership"]}>
                     <AppLayout>
                       <IntegrationsPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/employees/:employeeId/profile"
+                element={
+                  <ProtectedRoute allowedRoles={["manager", "hr", "leadership"]}>
+                    <AppLayout>
+                      <EmployeeProfilePage />
                     </AppLayout>
                   </ProtectedRoute>
                 }
