@@ -44,6 +44,7 @@ export default function HRSessionsSchedulerPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ScheduleResponse | null>(null);
   const [error, setError] = useState('');
+  const [warning, setWarning] = useState('');
 
   const uniqueDepartments = useMemo(
     () => Array.from(new Set(employees.map((employee) => employee.department))).sort(),
@@ -56,6 +57,7 @@ export default function HRSessionsSchedulerPage() {
     if (!token) return;
     setLoading(true);
     setError('');
+    setWarning('');
 
     try {
       const scheduledDate = new Date(scheduledAt).toISOString();
@@ -67,14 +69,19 @@ export default function HRSessionsSchedulerPage() {
       setResult(response);
 
       if (sendReminder && response.sessions?.length) {
-        for (const session of response.sessions) {
-          await protectedPostApi('/api/messages/send', token, {
-            to_employee_id: session.employee_id,
-            from_user_id: user?.email ?? 'hr@company.com',
-            subject: 'Mandatory feedback session scheduled',
-            body: `${reminderNote}\n\nScheduled for ${new Date(session.scheduled_date).toLocaleString()}.\nThis is a recorded session and attendance is required.`,
-            message_type: 'action_required',
-          });
+        try {
+          for (const session of response.sessions) {
+            await protectedPostApi('/api/messages/send', token, {
+              to_employee_id: session.employee_id,
+              from_user_id: user?.email ?? 'hr@company.com',
+              subject: 'Mandatory feedback session scheduled',
+              body: `${reminderNote}\n\nScheduled for ${new Date(session.scheduled_date).toLocaleString()}.\nThis is a recorded session and attendance is required.`,
+              message_type: 'action_required',
+            });
+          }
+        } catch (reminderErr) {
+          const reminderMessage = reminderErr instanceof Error ? reminderErr.message : 'Unable to send reminder message';
+          setWarning(`Session scheduled, but reminder could not be sent: ${reminderMessage}`);
         }
       }
     } catch (err) {
@@ -188,6 +195,7 @@ export default function HRSessionsSchedulerPage() {
             </div>
 
             {error && <p className="text-sm text-red-600">{error}</p>}
+            {warning && <p className="text-sm text-amber-700">{warning}</p>}
 
             {result && (
               <div className="rounded border border-green-300 bg-green-50 p-4 space-y-3">

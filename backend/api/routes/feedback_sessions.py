@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import uuid
 from datetime import datetime, timedelta
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Request, UploadFile
+from postgrest.exceptions import APIError
 from pydantic import BaseModel, Field
 
 from ai.session_analyzer import (
@@ -24,6 +26,7 @@ router = APIRouter(prefix="/sessions", tags=["Feedback Sessions"])
 
 RECORDINGS_BUCKET = "feedback-recordings"
 CONSENT_VERSION = "v1.0-dpdp-2023"
+_LOCAL_FEEDBACK_SESSIONS: dict[str, dict[str, Any]] = {}
 
 
 class ScheduleSessionRequest(BaseModel):
@@ -42,13 +45,86 @@ class HRIngestRequest(BaseModel):
     notes: str = Field(default="", max_length=3000)
 
 
+def _is_missing_feedback_sessions_table(exc: Exception) -> bool:
+    if isinstance(exc, APIError):
+        payload = exc.args[0] if exc.args and isinstance(exc.args[0], dict) else {}
+        code = str(payload.get("code") or "")
+        message = str(payload.get("message") or "")
+        if code == "PGRST205" and "feedback_sessions" in message:
+            return True
+    text = str(exc)
+    return "PGRST205" in text and "feedback_sessions" in text
+
+
+def _local_insert_sessions(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    inserted: list[dict[str, Any]] = []
+    for row in rows:
+        session_id = str(uuid.uuid4())
+        payload = {
+            "id": session_id,
+            "employee_id": row.get("employee_id"),
+            "department": row.get("department"),
+            "scheduled_date": row.get("scheduled_date"),
+            "status": row.get("status", "scheduled"),
+            "is_mandatory": bool(row.get("is_mandatory", True)),
+            "hr_reviewed": bool(row.get("hr_reviewed", False)),
+            "hr_reviewer_id": row.get("hr_reviewer_id"),
+            "created_at": row.get("created_at") or datetime.utcnow().isoformat(),
+            "transcript": row.get("transcript") or "",
+            "emotion_analysis": row.get("emotion_analysis") or {},
+            "derived_scores": row.get("derived_scores") or {},
+            "recording_url": row.get("recording_url"),
+            "recording_hash": row.get("recording_hash"),
+        }
+        _LOCAL_FEEDBACK_SESSIONS[session_id] = payload
+        inserted.append(payload)
+    return inserted
+
+
+def _local_get_session(session_id: str) -> dict[str, Any] | None:
+    return _LOCAL_FEEDBACK_SESSIONS.get(session_id)
+
+
+def _local_update_session(session_id: str, updates: dict[str, Any]) -> dict[str, Any] | None:
+    session = _LOCAL_FEEDBACK_SESSIONS.get(session_id)
+    if not session:
+        return None
+    session.update(updates)
+    _LOCAL_FEEDBACK_SESSIONS[session_id] = session
+    return session
+
+
+def _local_sessions_for_employee(employee_id: str) -> list[dict[str, Any]]:
+    rows = [row for row in _LOCAL_FEEDBACK_SESSIONS.values() if row.get("employee_id") == employee_id]
+    rows.sort(key=lambda item: str(item.get("scheduled_date") or ""))
+    return rows
+
+
+def _local_pending_sessions() -> list[dict[str, Any]]:
+    rows = [
+        row
+        for row in _LOCAL_FEEDBACK_SESSIONS.values()
+        if row.get("status") in {"scheduled", "in_progress", "completed"} and not bool(row.get("hr_reviewed"))
+    ]
+    rows.sort(key=lambda item: str(item.get("scheduled_date") or ""))
+    return rows
+
+
 def _session_or_404(session_id: str) -> dict[str, Any]:
     supabase = get_supabase_admin()
-    response = supabase.table("feedback_sessions").select("*").eq("id", session_id).limit(1).execute()
-    rows = response.data or []
-    if not rows:
-        raise HTTPException(status_code=404, detail="Session not found")
-    return rows[0]
+    try:
+        response = supabase.table("feedback_sessions").select("*").eq("id", session_id).limit(1).execute()
+        rows = response.data or []
+        if not rows:
+            raise HTTPException(status_code=404, detail="Session not found")
+        return rows[0]
+    except Exception as exc:
+        if not _is_missing_feedback_sessions_table(exc):
+            raise
+        row = _local_get_session(session_id)
+        if not row:
+            raise HTTPException(status_code=404, detail="Session not found")
+        return row
 
 
 def _ensure_access(session: dict[str, Any], current_user: User) -> None:
@@ -223,12 +299,19 @@ async def schedule_feedback_session(
         for eid in employee_ids
     ]
 
-    result = supabase.table("feedback_sessions").insert(rows).execute()
+    try:
+        result = supabase.table("feedback_sessions").insert(rows).execute()
+        sessions = result.data or []
+    except Exception as exc:
+        if not _is_missing_feedback_sessions_table(exc):
+            raise
+        sessions = _local_insert_sessions(rows)
+
     return {
-        "scheduled_count": len(result.data or []),
+        "scheduled_count": len(sessions),
         "mandatory": payload.mandatory,
         "scheduled_by": current_user.email,
-        "sessions": result.data or [],
+        "sessions": sessions,
     }
 
 
@@ -251,14 +334,19 @@ async def get_my_feedback_sessions(
 ) -> dict[str, Any]:
     """Employee view of their own scheduled/completed sessions."""
     supabase = get_supabase_admin()
-    response = (
-        supabase.table("feedback_sessions")
-        .select("id, employee_id, scheduled_date, status, is_mandatory, created_at, transcript, hr_reviewed, hr_reviewer_id, emotion_analysis")
-        .eq("employee_id", current_user.email)
-        .order("scheduled_date", desc=False)
-        .execute()
-    )
-    return {"sessions": response.data or []}
+    try:
+        response = (
+            supabase.table("feedback_sessions")
+            .select("id, employee_id, scheduled_date, status, is_mandatory, created_at, transcript, hr_reviewed, hr_reviewer_id, emotion_analysis")
+            .eq("employee_id", current_user.email)
+            .order("scheduled_date", desc=False)
+            .execute()
+        )
+        return {"sessions": response.data or []}
+    except Exception as exc:
+        if not _is_missing_feedback_sessions_table(exc):
+            raise
+        return {"sessions": _local_sessions_for_employee(current_user.email)}
 
 
 @router.post("/{session_id}/consent")
@@ -430,17 +518,22 @@ async def hr_ingest_feedback_results(
         derived_scores={k: float(v) for k, v in derived_scores.items() if isinstance(v, (int, float))},
     )
 
-    supabase.table("feedback_sessions").update(
-        {
-            "hr_reviewed": True,
-            "hr_reviewer_id": current_user.email,
-            "emotion_analysis": {
-                **_safe_json(session.get("emotion_analysis")),
-                "hr_notes": payload.notes,
-                "ingested_at": datetime.utcnow().isoformat(),
-            },
-        }
-    ).eq("id", session_id).execute()
+    updates = {
+        "hr_reviewed": True,
+        "hr_reviewer_id": current_user.email,
+        "emotion_analysis": {
+            **_safe_json(session.get("emotion_analysis")),
+            "hr_notes": payload.notes,
+            "ingested_at": datetime.utcnow().isoformat(),
+        },
+    }
+
+    try:
+        supabase.table("feedback_sessions").update(updates).eq("id", session_id).execute()
+    except Exception as exc:
+        if not _is_missing_feedback_sessions_table(exc):
+            raise
+        _local_update_session(session_id, updates)
 
     return {
         "status": "ingested",
@@ -456,18 +549,23 @@ async def hr_ingest_feedback_results(
 async def list_sessions_pending_review(
     current_user: User = Depends(require_role([UserRole.HR, UserRole.LEADERSHIP])),
 ) -> dict[str, Any]:
-    """List completed sessions awaiting HR review/ingestion."""
+    """List session queue visible to HR (scheduled, in-progress, and completed pending review)."""
     supabase = get_supabase_admin()
-    rows = (
-        supabase.table("feedback_sessions")
-        .select("id, employee_id, department, scheduled_date, status, hr_reviewed, created_at, emotion_analysis, derived_scores")
-        .eq("status", "completed")
-        .eq("hr_reviewed", False)
-        .order("scheduled_date", desc=False)
-        .execute()
-    )
+    try:
+        rows = (
+            supabase.table("feedback_sessions")
+            .select("id, employee_id, department, scheduled_date, status, hr_reviewed, created_at, emotion_analysis, derived_scores")
+            .in_("status", ["scheduled", "in_progress", "completed"])
+            .eq("hr_reviewed", False)
+            .order("scheduled_date", desc=False)
+            .execute()
+        )
+        data = rows.data or []
+    except Exception as exc:
+        if not _is_missing_feedback_sessions_table(exc):
+            raise
+        data = _local_pending_sessions()
 
-    data = rows.data or []
     return {
         "count": len(data),
         "sessions": data,
@@ -485,18 +583,25 @@ async def flag_session_follow_up(
     emotion_analysis["follow_up_required"] = True
     emotion_analysis["follow_up_flagged_at"] = datetime.utcnow().isoformat()
 
-    updated = (
-        get_supabase_admin()
-        .table("feedback_sessions")
-        .update({"emotion_analysis": emotion_analysis})
-        .eq("id", session_id)
-        .execute()
-    )
+    try:
+        updated = (
+            get_supabase_admin()
+            .table("feedback_sessions")
+            .update({"emotion_analysis": emotion_analysis})
+            .eq("id", session_id)
+            .execute()
+        )
+        session_payload = (updated.data or [])[0] if updated.data else {"id": session_id}
+    except Exception as exc:
+        if not _is_missing_feedback_sessions_table(exc):
+            raise
+        local = _local_update_session(session_id, {"emotion_analysis": emotion_analysis})
+        session_payload = local or {"id": session_id}
 
     return {
         "status": "follow_up_flagged",
         "session_id": session_id,
-        "session": (updated.data or [])[0] if updated.data else {"id": session_id},
+        "session": session_payload,
         "flagged_by": current_user.email,
     }
 
@@ -616,7 +721,10 @@ async def seed_demo_feedback_sessions(
         try:
             response = supabase.table("feedback_sessions").insert({**row, "is_mandatory": True, "created_at": now.isoformat()}).execute()
             inserted.extend(response.data or [])
-        except Exception:
+        except Exception as exc:
+            if _is_missing_feedback_sessions_table(exc):
+                inserted.extend(_local_insert_sessions([{**row, "is_mandatory": True, "created_at": now.isoformat()}]))
+                continue
             continue
 
     return {

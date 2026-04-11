@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { protectedGetApi, protectedPostApi } from '@/lib/api';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { LineChart, CartesianGrid, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
@@ -46,7 +46,6 @@ function durationLabel(seconds?: number): string {
 }
 
 export default function SessionReviewPanel() {
-  const navigate = useNavigate();
   const { token } = useAuth();
   const { toast } = useToast();
   const [pending, setPending] = useState<PendingSession[]>([]);
@@ -56,14 +55,11 @@ export default function SessionReviewPanel() {
   const [busy, setBusy] = useState(false);
 
   const selected = useMemo(() => pending.find((item) => item.id === selectedId) ?? null, [pending, selectedId]);
+  const selectedIsCompleted = (selected?.status || '').toLowerCase() === 'completed';
 
   const fetchPending = async () => {
     if (!token) return;
-    const response = await fetch('/api/feedback/sessions/pending-review', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!response.ok) return;
-    const payload = await response.json();
+    const payload = await protectedGetApi<{ sessions?: PendingSession[] }>('/api/feedback/sessions/pending-review', token);
     setPending(payload.sessions || []);
     if (!selectedId && payload.sessions?.length) {
       setSelectedId(payload.sessions[0].id);
@@ -72,11 +68,7 @@ export default function SessionReviewPanel() {
 
   const fetchResults = async (id: string) => {
     if (!token) return;
-    const response = await fetch(`/api/feedback/sessions/${id}/results`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!response.ok) return;
-    const payload = (await response.json()) as SessionResults;
+    const payload = await protectedGetApi<SessionResults>(`/api/feedback/sessions/${id}/results`, token);
     setResults(payload);
   };
 
@@ -85,26 +77,18 @@ export default function SessionReviewPanel() {
   }, [token]);
 
   useEffect(() => {
-    if (selectedId) {
+    if (selectedId && selectedIsCompleted) {
       void fetchResults(selectedId);
+    } else {
+      setResults(null);
     }
-  }, [selectedId, token]);
+  }, [selectedId, token, selectedIsCompleted]);
 
   const ingest = async () => {
     if (!token || !selectedId || !selected) return;
     setBusy(true);
     try {
-      const response = await fetch(`/api/feedback/sessions/${selectedId}/hr-ingest`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ notes }),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to ingest session');
-      }
+      await protectedPostApi(`/api/feedback/sessions/${selectedId}/hr-ingest`, token, { notes });
       toast({ title: 'Success', description: `Scores updated for ${selected.employee_id}` });
       setNotes('');
       await fetchPending();
@@ -121,13 +105,7 @@ export default function SessionReviewPanel() {
     if (!token || !selectedId) return;
     setBusy(true);
     try {
-      const response = await fetch(`/api/feedback/sessions/${selectedId}/flag-follow-up`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!response.ok) {
-        throw new Error('Failed to flag follow-up');
-      }
+      await protectedPostApi(`/api/feedback/sessions/${selectedId}/flag-follow-up`, token, {});
       toast({ title: 'Follow-up flagged', description: 'Session remains in queue with follow-up tag.' });
       await fetchPending();
     } catch (err) {
@@ -158,7 +136,7 @@ export default function SessionReviewPanel() {
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
       <Card className="xl:col-span-1">
         <CardHeader>
-          <CardTitle>Pending Sessions ({pending.length})</CardTitle>
+          <CardTitle>Session Queue ({pending.length})</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           {pending.map((item) => (
@@ -176,31 +154,26 @@ export default function SessionReviewPanel() {
                   <p className="text-xs text-muted-foreground">{item.department || 'Unknown department'}</p>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">Completed: {new Date(item.scheduled_date).toLocaleDateString()}</p>
+              <p className="text-xs text-muted-foreground mt-2">Scheduled: {new Date(item.scheduled_date).toLocaleDateString()}</p>
               <p className="text-xs text-muted-foreground">Duration: {durationLabel(item.emotion_analysis?.duration_seconds)}</p>
               <div className="mt-2 flex items-center gap-2 flex-wrap">
                 <Badge variant="secondary">{emotionBadge(item.emotion_analysis?.dominant_emotion)}</Badge>
-                {item.emotion_analysis?.follow_up_required ? <Badge className="bg-orange-500">Follow-up</Badge> : <Badge className="bg-amber-500">Awaiting Review</Badge>}
+                <Badge variant="outline" className="uppercase">{item.status || 'scheduled'}</Badge>
+                {item.emotion_analysis?.follow_up_required ? <Badge className="bg-orange-500">Follow-up</Badge> : null}
               </div>
             </button>
           ))}
           {pending.length === 0 && (
             <div className="rounded border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-800 space-y-3">
-              <p className="font-semibold">No pending sessions to review</p>
+              <p className="font-semibold">No sessions in queue</p>
               <p>
-                Use the scheduler to create a recorded feedback session, or seed demo data to populate the review queue immediately.
+                Use the Schedule Sessions tab to create a recorded feedback session, or seed demo data to populate the queue immediately.
               </p>
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" onClick={() => navigate('/hr/sessions-schedule')}>
-                  Open Scheduler
-                </Button>
                 <Button
                   onClick={async () => {
                     if (!token) return;
-                    await fetch('/api/feedback/sessions/seed-demo', {
-                      method: 'POST',
-                      headers: { Authorization: `Bearer ${token}` },
-                    });
+                    await protectedPostApi('/api/feedback/sessions/seed-demo', token, {});
                     await fetchPending();
                   }}
                 >
@@ -220,16 +193,19 @@ export default function SessionReviewPanel() {
           {!selected && (
             <div className="rounded border p-8 text-center text-muted-foreground space-y-3">
               <p className="text-3xl">📄</p>
-              <p>Select a session from the left to begin review</p>
-              <div className="flex justify-center gap-2">
-                <Button variant="outline" onClick={() => navigate('/hr/sessions-schedule')}>
-                  Schedule New Session
-                </Button>
-              </div>
+              <p>Select a session from the left to view status or begin review</p>
             </div>
           )}
 
-          {selected && results && (
+          {selected && !selectedIsCompleted && (
+            <div className="rounded border p-6 text-center text-muted-foreground space-y-2">
+              <p className="font-semibold text-foreground">Session not ready for HR review yet</p>
+              <p>Status: <span className="uppercase">{selected.status}</span></p>
+              <p>Once this session is completed by the employee, transcript and emotion analysis will appear here automatically.</p>
+            </div>
+          )}
+
+          {selected && selectedIsCompleted && results && (
             <>
               <div className="rounded border p-3 flex items-center justify-between">
                 <div>

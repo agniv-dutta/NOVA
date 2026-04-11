@@ -45,43 +45,124 @@ alter table public.internal_messages enable row level security;
 alter table public.recognitions enable row level security;
 
 -- Service role full access (backend writes through service key)
-create policy if not exists "Service role full access scheduled meetings"
-    on public.scheduled_meetings for all
-    using (auth.role() = 'service_role')
-    with check (auth.role() = 'service_role');
+do $$
+begin
+    if not exists (
+        select 1 from pg_policies
+        where schemaname = 'public' and tablename = 'scheduled_meetings' and policyname = 'Service role full access scheduled meetings'
+    ) then
+        create policy "Service role full access scheduled meetings"
+            on public.scheduled_meetings for all
+            using (auth.role() = 'service_role')
+            with check (auth.role() = 'service_role');
+    end if;
+end
+$$;
 
-create policy if not exists "Service role full access internal messages"
-    on public.internal_messages for all
-    using (auth.role() = 'service_role')
-    with check (auth.role() = 'service_role');
+do $$
+begin
+    if not exists (
+        select 1 from pg_policies
+        where schemaname = 'public' and tablename = 'internal_messages' and policyname = 'Service role full access internal messages'
+    ) then
+        create policy "Service role full access internal messages"
+            on public.internal_messages for all
+            using (auth.role() = 'service_role')
+            with check (auth.role() = 'service_role');
+    end if;
+end
+$$;
 
-create policy if not exists "Service role full access recognitions"
-    on public.recognitions for all
-    using (auth.role() = 'service_role')
-    with check (auth.role() = 'service_role');
+do $$
+begin
+    if not exists (
+        select 1 from pg_policies
+        where schemaname = 'public' and tablename = 'recognitions' and policyname = 'Service role full access recognitions'
+    ) then
+        create policy "Service role full access recognitions"
+            on public.recognitions for all
+            using (auth.role() = 'service_role')
+            with check (auth.role() = 'service_role');
+    end if;
+end
+$$;
 
 -- Employees read own rows only
-create policy if not exists "Employees read own meetings"
-    on public.scheduled_meetings for select
-    using (employee_id = coalesce(auth.jwt() ->> 'sub', auth.email()));
+do $$
+begin
+    if not exists (
+        select 1 from pg_policies
+        where schemaname = 'public' and tablename = 'scheduled_meetings' and policyname = 'Employees read own meetings'
+    ) then
+        create policy "Employees read own meetings"
+            on public.scheduled_meetings for select
+            using (employee_id = coalesce(auth.jwt() ->> 'sub', auth.email()));
+    end if;
+end
+$$;
 
-create policy if not exists "Employees read own inbox"
-    on public.internal_messages for select
-    using (to_employee_id = coalesce(auth.jwt() ->> 'sub', auth.email()));
+do $$
+begin
+    if not exists (
+        select 1 from pg_policies
+        where schemaname = 'public' and tablename = 'internal_messages' and policyname = 'Employees read own inbox'
+    ) then
+        create policy "Employees read own inbox"
+            on public.internal_messages for select
+            using (to_employee_id = coalesce(auth.jwt() ->> 'sub', auth.email()));
+    end if;
+end
+$$;
 
-create policy if not exists "Employees read own recognitions"
-    on public.recognitions for select
-    using (employee_id = coalesce(auth.jwt() ->> 'sub', auth.email()));
+do $$
+begin
+    if not exists (
+        select 1 from pg_policies
+        where schemaname = 'public' and tablename = 'recognitions' and policyname = 'Employees read own recognitions'
+    ) then
+        create policy "Employees read own recognitions"
+            on public.recognitions for select
+            using (employee_id = coalesce(auth.jwt() ->> 'sub', auth.email()));
+    end if;
+end
+$$;
 
 -- HR and leadership read all rows
-create policy if not exists "HR leadership read all meetings"
-    on public.scheduled_meetings for select
-    using ((auth.jwt() ->> 'role') in ('hr', 'leadership'));
+do $$
+begin
+    if not exists (
+        select 1 from pg_policies
+        where schemaname = 'public' and tablename = 'scheduled_meetings' and policyname = 'HR leadership read all meetings'
+    ) then
+        create policy "HR leadership read all meetings"
+            on public.scheduled_meetings for select
+            using ((auth.jwt() ->> 'role') in ('hr', 'leadership'));
+    end if;
+end
+$$;
 
-create policy if not exists "HR leadership read all messages"
-    on public.internal_messages for select
-    using ((auth.jwt() ->> 'role') in ('hr', 'leadership'));
+do $$
+begin
+    if not exists (
+        select 1 from pg_policies
+        where schemaname = 'public' and tablename = 'internal_messages' and policyname = 'HR leadership read all messages'
+    ) then
+        create policy "HR leadership read all messages"
+            on public.internal_messages for select
+            using ((auth.jwt() ->> 'role') in ('hr', 'leadership'));
+    end if;
+end
+$$;
 
-create policy if not exists "HR leadership read all recognitions"
-    on public.recognitions for select
-    using ((auth.jwt() ->> 'role') in ('hr', 'leadership'));
+do $$
+begin
+    if not exists (
+        select 1 from pg_policies
+        where schemaname = 'public' and tablename = 'recognitions' and policyname = 'HR leadership read all recognitions'
+    ) then
+        create policy "HR leadership read all recognitions"
+            on public.recognitions for select
+            using ((auth.jwt() ->> 'role') in ('hr', 'leadership'));
+    end if;
+end
+$$;

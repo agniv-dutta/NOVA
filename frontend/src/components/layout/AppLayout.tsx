@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/types/auth';
 import { Badge } from '@/components/ui/badge';
+import { protectedGetApi, protectedPostApi } from '@/lib/api';
 
 const CORE_NAV_ITEMS = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -32,6 +33,8 @@ const ROLE_NAV_ITEMS: Record<UserRole, Array<{ to: string; icon: typeof ShieldCh
   ],
   leadership: [
     { to: '/leadership/roi-analytics', icon: ShieldCheck, label: 'Leadership API' },
+    { to: '/hr/sessions-schedule', icon: CalendarDays, label: 'Schedule Sessions' },
+    { to: '/hr/sessions-review', icon: ShieldCheck, label: 'Sessions to Review' },
     { to: '/audit-logs', icon: ShieldCheck, label: 'Audit Logs' },
     { to: '/integrations', icon: ShieldCheck, label: 'Integrations' },
   ],
@@ -59,20 +62,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const loadPendingCount = async () => {
-      if (!token || user?.role !== 'hr') {
+      if (!token || (user?.role !== 'hr' && user?.role !== 'leadership')) {
         setPendingSessionReviewCount(0);
         return;
       }
 
       try {
-        const response = await fetch('/api/feedback/sessions/pending-review', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!response.ok) {
-          setPendingSessionReviewCount(0);
-          return;
-        }
-        const payload = await response.json();
+        const payload = await protectedGetApi<{ count?: number }>('/api/feedback/sessions/pending-review', token);
         setPendingSessionReviewCount(Number(payload?.count ?? 0));
       } catch {
         setPendingSessionReviewCount(0);
@@ -176,10 +172,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               refreshData();
               if (token) {
                 try {
-                  await fetch('/api/feedback/sessions/seed-demo', {
-                    method: 'POST',
-                    headers: { Authorization: `Bearer ${token}` },
-                  });
+                  await protectedPostApi('/api/feedback/sessions/seed-demo', token, {});
                 } catch {
                   // Non-fatal: local UI regen still succeeds.
                 }
