@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronRight, Database } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Employee } from '@/types/employee';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ParameterDef {
   name: string;
@@ -37,6 +38,13 @@ function mapEmployeeToSchema(employee: Employee): Record<string, unknown> {
     meeting_load_hours_weekly: Number(meetingLoad.toFixed(2)),
     sentiment_score: employee.sentimentScore,
     engagement_score: employee.engagementScore,
+    attendance_rate: employee.attendanceRate,
+    avg_weekly_hours: employee.avgWeeklyHours,
+    leaves_taken_30d: employee.leavesTaken30d,
+    last_1on1_days_ago: employee.lastOneOnOneDaysAgo,
+    feedback_submissions_count: employee.feedbackSubmissionsCount,
+    after_hours_sessions_weekly: employee.afterHoursSessionsWeekly,
+    tenure_days: employee.tenureDays,
     manager_relationship_score: Number(Math.min(1, Math.max(0, employee.engagementScore / 100)).toFixed(3)),
     team_dynamics_score: Number(Math.min(1, Math.max(0, (employee.engagementScore - employee.burnoutRisk / 2) / 100)).toFixed(3)),
     growth_satisfaction_score: Number(Math.min(1, Math.max(0, employee.performanceScore / 100)).toFixed(3)),
@@ -56,10 +64,12 @@ export default function DataSourcesPanel({ employees, onLowQualityCountChange }:
   const { token } = useAuth();
   const [open, setOpen] = useState(false);
   const [params, setParams] = useState<ParameterDef[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       if (!token) return;
+      setLoading(true);
       try {
         const response = await fetch('/api/schema/parameters', {
           headers: { Authorization: `Bearer ${token}` },
@@ -69,6 +79,8 @@ export default function DataSourcesPanel({ employees, onLowQualityCountChange }:
         setParams(data.parameters || []);
       } catch {
         setParams([]);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -87,27 +99,25 @@ export default function DataSourcesPanel({ employees, onLowQualityCountChange }:
   }, [params, employees]);
 
   const lowQualityEmployees = useMemo(() => {
-    if (!params.length || !employees.length) return [] as Employee[];
-
-    const candidateFields = params.map((p) => p.name).filter((name) => name !== 'employee_id');
-    return employees.filter((employee) => {
-      const row = mapEmployeeToSchema(employee);
-      const present = candidateFields.filter((field) => isPresent(row[field])).length;
-      const quality = (present / Math.max(1, candidateFields.length)) * 100;
-      return quality < 70;
-    });
-  }, [employees, params]);
+    if (!employees.length) return [] as Employee[];
+    return employees.filter((employee) => (employee.dataQualityScore ?? 0) < 70);
+  }, [employees]);
 
   useEffect(() => {
     onLowQualityCountChange?.(lowQualityEmployees.length);
   }, [lowQualityEmployees.length, onLowQualityCountChange]);
 
   const overallCompleteness = useMemo(() => {
-    if (!fieldCompleteness.length) return 0;
-    return Number(
-      (fieldCompleteness.reduce((acc, item) => acc + item.completeness, 0) / fieldCompleteness.length).toFixed(1),
-    );
-  }, [fieldCompleteness]);
+    if (!employees.length) return 0;
+    const total = employees.reduce((sum, employee) => sum + (employee.dataQualityScore ?? 0), 0);
+    return Number((total / employees.length).toFixed(1));
+  }, [employees]);
+
+  const overallBadgeClass = overallCompleteness >= 80
+    ? 'bg-emerald-100 text-emerald-800'
+    : overallCompleteness >= 50
+      ? 'bg-amber-100 text-amber-800'
+      : 'bg-red-100 text-red-800';
 
   return (
     <Card>
@@ -124,7 +134,7 @@ export default function DataSourcesPanel({ employees, onLowQualityCountChange }:
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span>Overall completeness:</span>
-          <Badge variant={overallCompleteness >= 70 ? 'secondary' : 'destructive'}>{overallCompleteness}%</Badge>
+          <Badge className={overallBadgeClass}>{overallCompleteness}%</Badge>
           {lowQualityEmployees.length > 0 && (
             <Badge variant="destructive">{lowQualityEmployees.length} employees below 70%</Badge>
           )}
@@ -133,6 +143,13 @@ export default function DataSourcesPanel({ employees, onLowQualityCountChange }:
 
       {open && (
         <CardContent>
+          {loading && (
+            <div className="space-y-3 mb-3">
+              <Skeleton className="h-14 w-full" />
+              <Skeleton className="h-14 w-full" />
+              <Skeleton className="h-14 w-full" />
+            </div>
+          )}
           <div className="space-y-3">
             {fieldCompleteness.map((param) => (
               <div key={param.name} className="rounded border p-3">

@@ -21,6 +21,16 @@ export interface Employee {
   isOnboarding?: boolean;
   onboardingDay?: number;
   onboardingFlags?: string[];
+  attendanceRate?: number;
+  avgWeeklyHours?: number;
+  leavesTaken30d?: number;
+  kpiScore?: number;
+  lastOneOnOneDaysAgo?: number;
+  feedbackSubmissionsCount?: number;
+  afterHoursSessionsWeekly?: number;
+  tenureDays?: number;
+  peerConnectionCount?: number;
+  dataQualityScore?: number;
 }
 
 export interface TimePoint {

@@ -3,6 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEmployees } from "@/contexts/EmployeeContext";
+import { protectedGetApi } from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
+import { GitBranch } from "lucide-react";
 
 type JiraMetrics = {
   employee_id: string;
@@ -19,6 +22,7 @@ export default function JiraHealthPanel() {
   const { token } = useAuth();
   const { employees } = useEmployees();
   const [rows, setRows] = useState<Array<JiraMetrics & { name: string }>>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -28,20 +32,19 @@ export default function JiraHealthPanel() {
       }
 
       const sample = employees.slice(0, 6);
+      setLoading(true);
       try {
         const results = await Promise.all(
           sample.map(async (employee) => {
-            const response = await fetch(`/api/integrations/jira/metrics/${employee.id}`, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            if (!response.ok) return null;
-            const payload = (await response.json()) as JiraMetrics;
+            const payload = await protectedGetApi<JiraMetrics>(`/api/integrations/jira/metrics/${employee.id}`, token);
             return { ...payload, name: employee.name };
           }),
         );
         setRows(results.filter((item): item is JiraMetrics & { name: string } => Boolean(item)));
       } catch {
         setRows([]);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -64,6 +67,12 @@ export default function JiraHealthPanel() {
         </p>
 
         <div className="space-y-2">
+          {loading && (
+            <div className="space-y-2">
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          )}
           {rows.map((row) => (
             <div key={row.employee_id} className="rounded border p-3">
               <div className="flex items-center justify-between gap-3">
@@ -85,8 +94,14 @@ export default function JiraHealthPanel() {
               </div>
             </div>
           ))}
-          {rows.length === 0 && <p className="text-sm text-muted-foreground">No Jira signals loaded.</p>}
+          {!loading && rows.length === 0 && (
+            <div className="rounded border border-slate-200 bg-slate-50 p-4 text-center">
+              <GitBranch className="h-8 w-8 mx-auto text-slate-400" />
+              <p className="text-sm text-muted-foreground mt-2">No Jira signals loaded yet for this session.</p>
+            </div>
+          )}
         </div>
+        <p className="text-[11px] text-muted-foreground border-t pt-2">Demo data — connect Jira for live signals.</p>
       </CardContent>
     </Card>
   );

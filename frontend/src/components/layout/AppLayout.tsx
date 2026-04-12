@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, MessageSquareText, Brain, RefreshCw, Menu, X, HeartPulse, ShieldCheck, UserRound, LogOut, CalendarDays } from 'lucide-react';
+import { LayoutDashboard, Users, MessageSquare, Brain, RefreshCw, Menu, X, HeartPulse, ShieldCheck, UserCircle, LogOut, CalendarClock, Settings2, Code2, BriefcaseBusiness, LineChart, FileText } from 'lucide-react';
 import { useEmployees } from '@/contexts/EmployeeContext';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -11,32 +11,32 @@ import { protectedGetApi, protectedPostApi } from '@/lib/api';
 const CORE_NAV_ITEMS = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/employees', icon: Users, label: 'Employees' },
-  { to: '/sentiment', icon: MessageSquareText, label: 'Sentiment Analyzer' },
+  { to: '/sentiment', icon: MessageSquare, label: 'Sentiment Analyzer' },
   { to: '/org-health', icon: HeartPulse, label: 'Org Health' },
-  { to: '/employee/profile', icon: UserRound, label: 'My Backend Profile' },
+  { to: '/employee/profile', icon: UserCircle, label: 'My Backend Profile' },
 ];
 
 type NavItem = { to: string; icon: typeof ShieldCheck; label: string; badgeCount?: number };
 
 const ROLE_NAV_ITEMS: Record<UserRole, Array<{ to: string; icon: typeof ShieldCheck; label: string }>> = {
   employee: [
-    { to: '/your-data', icon: UserRound, label: 'Your Data' },
+    { to: '/your-data', icon: UserCircle, label: 'Your Data' },
   ],
   manager: [
-    { to: '/manager/team-alerts', icon: ShieldCheck, label: 'Manager API' },
+    { to: '/manager/team-alerts', icon: BriefcaseBusiness, label: 'Manager API' },
   ],
   hr: [
-    { to: '/hr/org-risk-distribution', icon: ShieldCheck, label: 'HR API' },
-    { to: '/hr/sessions-schedule', icon: CalendarDays, label: 'Schedule Sessions' },
+    { to: '/hr/org-risk-distribution', icon: Code2, label: 'HR API' },
+    { to: '/hr/sessions-schedule', icon: CalendarClock, label: 'Schedule Sessions' },
     { to: '/hr/sessions-review', icon: ShieldCheck, label: 'Sessions to Review' },
-    { to: '/integrations', icon: ShieldCheck, label: 'Integrations' },
+    { to: '/integrations', icon: Settings2, label: 'Integrations' },
   ],
   leadership: [
-    { to: '/leadership/roi-analytics', icon: ShieldCheck, label: 'Leadership API' },
-    { to: '/hr/sessions-schedule', icon: CalendarDays, label: 'Schedule Sessions' },
+    { to: '/leadership/roi-analytics', icon: LineChart, label: 'Leadership API' },
+    { to: '/hr/sessions-schedule', icon: CalendarClock, label: 'Schedule Sessions' },
     { to: '/hr/sessions-review', icon: ShieldCheck, label: 'Sessions to Review' },
-    { to: '/audit-logs', icon: ShieldCheck, label: 'Audit Logs' },
-    { to: '/integrations', icon: ShieldCheck, label: 'Integrations' },
+    { to: '/audit-logs', icon: FileText, label: 'Audit Logs' },
+    { to: '/integrations', icon: Settings2, label: 'Integrations' },
   ],
 };
 
@@ -46,6 +46,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pendingSessionReviewCount, setPendingSessionReviewCount] = useState(0);
+  const [upcomingSessionCount, setUpcomingSessionCount] = useState(0);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   const insightsEmployeeId = employees[0]?.id ?? 'emp-123';
@@ -64,18 +65,46 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     const loadPendingCount = async () => {
       if (!token || (user?.role !== 'hr' && user?.role !== 'leadership')) {
         setPendingSessionReviewCount(0);
+        setUpcomingSessionCount(0);
         return;
       }
 
       try {
-        const payload = await protectedGetApi<{ count?: number }>('/api/feedback/sessions/pending-review', token);
-        setPendingSessionReviewCount(Number(payload?.count ?? 0));
+        const payload = await protectedGetApi<{ count?: number; sessions?: Array<{ scheduled_date?: string; status?: string }> }>('/api/feedback/sessions/pending-review', token);
+        const sessions = payload?.sessions ?? [];
+        setPendingSessionReviewCount(Number(payload?.count ?? sessions.length ?? 0));
+
+        const now = new Date();
+        const next7 = new Date(now);
+        next7.setDate(now.getDate() + 7);
+        const upcoming = sessions.filter((session) => {
+          const status = (session.status || '').toLowerCase();
+          if (status !== 'scheduled' && status !== 'in_progress') return false;
+          const dt = session.scheduled_date ? new Date(session.scheduled_date) : null;
+          return Boolean(dt && dt >= now && dt <= next7);
+        }).length;
+        setUpcomingSessionCount(upcoming);
       } catch {
         setPendingSessionReviewCount(0);
+        setUpcomingSessionCount(0);
       }
     };
 
     void loadPendingCount();
+
+    const intervalId = window.setInterval(() => {
+      void loadPendingCount();
+    }, 60000);
+
+    const onFocus = () => {
+      void loadPendingCount();
+    };
+
+    window.addEventListener('focus', onFocus);
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', onFocus);
+    };
   }, [token, user?.role]);
 
   useEffect(() => {
@@ -93,9 +122,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       if (item.to === '/hr/sessions-review') {
         return { ...item, badgeCount: pendingSessionReviewCount };
       }
+      if (item.to === '/hr/sessions-schedule') {
+        return { ...item, badgeCount: upcomingSessionCount };
+      }
       return item;
     })
-  ), [navItems, pendingSessionReviewCount]);
+  ), [navItems, pendingSessionReviewCount, upcomingSessionCount]);
 
   return (
     <div className="flex min-h-screen w-full">

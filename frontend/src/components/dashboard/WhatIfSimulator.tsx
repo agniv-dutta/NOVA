@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { protectedPostApi } from "@/lib/api";
 import { calculateAttritionRisk, calculateBurnoutRisk } from "@/utils/riskCalculation";
+import { X } from "lucide-react";
 
 type SimulatorInputs = {
   meetingLoadReductionPct: number;
@@ -251,18 +251,37 @@ export default function WhatIfSimulator({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>What-If Intervention Simulator</DialogTitle>
-          <DialogDescription>
-            {interventionLabel
-              ? `Pre-filled from recommendation: ${interventionLabel}`
-              : "Adjust intervention levers to project burnout and attrition impact."}
-          </DialogDescription>
-        </DialogHeader>
+    open ? (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        onClick={() => onOpenChange(false)}
+      >
+        <div
+          className="w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-xl bg-white shadow-xl flex flex-col"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div className="px-6 pt-6 pb-2 flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-semibold">What-If Intervention Simulator</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                {interventionLabel
+                  ? `Pre-filled from recommendation: ${interventionLabel}`
+                  : "Adjust intervention levers to project burnout and attrition impact."}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              className="rounded border p-1.5 text-muted-foreground hover:text-foreground"
+              aria-label="Close simulator"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex-1 overflow-y-auto px-6 pb-6 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-[#ccc]">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
           <div className="border rounded-lg p-4 bg-slate-50">
             <p className="text-sm text-muted-foreground">Current Burnout Risk</p>
             <p className="text-3xl font-bold text-red-600">{toPercent(context.burnoutRisk)}</p>
@@ -396,7 +415,9 @@ export default function WhatIfSimulator({
             Close
           </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+          </div>
+        </div>
+      </div>
+    ) : null
   );
 }

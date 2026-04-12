@@ -205,6 +205,11 @@ Risk Score = (
 - ✅ **Installable PWA** - Manifest + service worker for app-shell caching
 - ✅ **Mobile UX Enhancements** - Bottom tab navigation, install banner, chart touch zoom/scroll handling
 - ✅ **Org Health Report Export** - One-click multi-page PDF generation with progress states
+- ✅ **Anomaly Alerts List Panel** - Dedicated `/anomalies` view with per-employee anomaly rows and quick profile navigation
+- ✅ **Live Sidebar Session Badges** - Sessions-to-review and upcoming-sessions badges auto-refresh every 60s and on window focus
+- ✅ **Scroll-Safe What-If Modal** - Fixed header, backdrop close, and 90vh scrollable simulator body for full-content reachability
+- ✅ **Employee Profile Data Sources Tab** - Fetches server-side employee detail payload including computed `data_quality_score`
+- ✅ **Jira Demo Configure Modal** - Test connection simulation + persisted demo-connected status updates in Integrations UI
 
 ---
 
@@ -305,6 +310,20 @@ Risk Score = (
 4. **Visualization** → Real-time dashboards + alerts
 5. **Logging** → Track interventions & outcomes
 
+### Frontend Routes (Role-Aware)
+| Route | Purpose | Roles |
+|---|---|---|
+| `/` | Main dashboard (org snapshots, anomaly bar, interventions) | Manager, HR, Leadership |
+| `/employees` | Employee table and drill-in entrypoint | Manager, HR, Leadership |
+| `/employees/:employeeId/profile` | Employee profile with Data Sources tab and explainability links | Manager, HR, Leadership |
+| `/insights/:employeeId` | AI insights dashboard with composite risk and card-level analysis | HR, Manager |
+| `/hr/sessions-schedule` | Schedule mandatory sessions (single employee or department) | HR, Leadership |
+| `/hr/sessions-review` | Session queue and HR review/ingestion workflow | HR, Leadership |
+| `/anomalies` | Full anomalies list panel with View Employee navigation | Manager, HR, Leadership |
+| `/integrations` | Jira demo config and integration status cards | HR, Leadership |
+| `/your-data` | Employee self-service data view | Employee |
+| `/feedback-session` | Employee feedback recording/consent flow | Employee |
+
 ---
 
 ## 📡 API Endpoints
@@ -387,6 +406,7 @@ POST   /api/integrations/jira/sync                  Trigger Jira sync (manual)
 ### Onboarding Intelligence
 ```
 GET    /api/employees/onboarding          Onboarding watchlist with adjusted risk and flags
+GET    /api/employees/{employee_id}       Employee detail with server-computed data_quality_score
 ```
 
 ### Employee Management
@@ -513,6 +533,15 @@ VITE_SUPABASE_ANON_KEY=your_supabase_key
 - Add site URL and redirect URL for your frontend (e.g., `http://localhost:8080/login?oauth=google`)
 - Ensure allowed email domains/org policy align with your employee directory
 
+**5. Run frontend tests (optional but recommended):**
+```bash
+npm run test
+```
+
+Lightweight integration coverage now includes:
+- sidebar badge polling behavior (`AppLayout.badges.test.tsx`)
+- what-if modal scroll/backdrop-close behavior (`WhatIfSimulator.modal.test.tsx`)
+
 ### Troubleshooting
 
 **1. Missing Supabase tables (`PGRST205` / relation does not exist)**
@@ -635,9 +664,15 @@ curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
 - PWA support + mobile responsiveness enhancements (install banner, bottom tabs, touch graph interactions)
 - Feedback session scheduler page and session queue page wired for HR/Leadership roles
 - Session queue behavior for scheduled/in-progress/completed states with status-aware review panel
+- Sidebar session badges with 60-second polling and focus-triggered refresh
 - Supabase-backed feedback session persistence (`public.feedback_sessions`, `public.session_consent_log`)
 - Supabase-backed employee action persistence (`public.internal_messages`, `public.scheduled_meetings`, `public.recognitions`)
 - Backend migration helper scripts for Supabase schema application and verification
+- Dedicated employee detail endpoint with deterministic required fields and server-computed `data_quality_score`
+- Dedicated anomalies page route (`/anomalies`) with View All flow from dashboard anomaly bar
+- What-if simulator modal UX hardening (scrollable body, fixed header, backdrop dismiss, close control)
+- Integrations page Jira demo configuration flow with test connection simulation and connected-state update
+- Lightweight frontend integration tests for sidebar polling and modal behavior
 
 ### 🔄 **In Progress**
 - ML feature importance visualization

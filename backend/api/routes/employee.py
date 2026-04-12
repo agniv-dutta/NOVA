@@ -96,27 +96,37 @@ async def get_performance_summary(current_user: User = Depends(require_any_authe
 @router.get("/onboarding")
 async def get_onboarding_employees(current_user: User = Depends(require_any_authenticated)):
     """Return onboarding employees (<90 days) with onboarding-cohort adjusted risk signals."""
-    random.seed(42)
+    profile_plan = [
+        ("NEW001", "Mila Chen", "Engineering", ["Integration Risk"]),
+        ("NEW002", "Ari Wilson", "Engineering", ["Ramp Risk"]),
+        ("NEW003", "Noah Garcia", "Sales", ["Isolation Risk"]),
+        ("NEW004", "Zara Lee", "Sales", ["Integration Risk"]),
+        ("NEW005", "Rhea Thomas", "HR", ["Ramp Risk"]),
+        ("NEW006", "Dev Brown", "HR", ["Isolation Risk"]),
+        ("NEW007", "Ivy Clark", "Design", ["Integration Risk"]),
+        ("NEW008", "Owen Scott", "Finance", ["Integration Risk", "Ramp Risk", "Isolation Risk"]),
+    ]
+
     employees = []
-    for index in range(1, 9):
-        onboarding_day = random.randint(5, 89)
+    for idx, (employee_id, name, department, flags) in enumerate(profile_plan, start=1):
+        random.seed(idx * 73)
+        onboarding_day = random.randint(7, 85)
         peer_connections = random.randint(0, 6)
-        manager_1_1_days_ago = random.randint(3, 24)
-        performance_percentile = round(random.uniform(0.25, 0.85), 2)
+        manager_1_1_days_ago = random.randint(3, 30)
+        performance_percentile = round(random.uniform(0.35, 0.82), 2)
 
-        flags = []
-        if onboarding_day > 30 and peer_connections < 3:
-            flags.append("Integration Risk")
-        if performance_percentile < 0.5:
-            flags.append("Ramp Risk")
-        if manager_1_1_days_ago > 14:
-            flags.append("Isolation Risk")
+        if "Integration Risk" in flags:
+            peer_connections = min(peer_connections, 2)
+        if "Ramp Risk" in flags:
+            performance_percentile = min(performance_percentile, 0.49)
+        if "Isolation Risk" in flags:
+            manager_1_1_days_ago = max(manager_1_1_days_ago, 21)
 
-        adjusted_risk = min(100, round(35 + (0.5 - performance_percentile) * 40 + len(flags) * 9, 1))
+        adjusted_risk = min(100, round(38 + (0.5 - performance_percentile) * 42 + len(flags) * 10, 1))
         employees.append({
-            "employee_id": f"NEW{index:03d}",
-            "name": f"New Hire {index}",
-            "department": random.choice(["Engineering", "Sales", "Operations", "Marketing"]),
+            "employee_id": employee_id,
+            "name": name,
+            "department": department,
             "onboarding_day": onboarding_day,
             "is_onboarding": True,
             "adjusted_risk_score": adjusted_risk,

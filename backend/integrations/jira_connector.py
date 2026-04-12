@@ -31,14 +31,14 @@ def _seed_from_employee(employee_id: str) -> int:
 
 def fetch_jira_metrics(employee_id: str) -> JiraMetrics:
     # TODO: Replace with real Jira REST API v3 call using org's Jira API token — endpoint: /rest/api/3/issue/search
-    random.seed(_seed_from_employee(employee_id))
+    generator = random.Random(_seed_from_employee(employee_id))
     return JiraMetrics(
-      employee_id=employee_id,
-      sprint_velocity=round(random.uniform(12, 34), 1),
-      tickets_closed_7d=random.randint(2, 22),
-      tickets_overdue=random.randint(0, 6),
-      avg_ticket_resolution_hours=round(random.uniform(6, 72), 1),
-      blocked_tickets_count=random.randint(0, 5),
-      last_commit_days_ago=random.randint(0, 9),
-      pr_review_participation_rate=round(random.uniform(0.2, 0.98), 2),
+        employee_id=employee_id,
+        sprint_velocity=round(generator.uniform(60, 95), 1),
+        tickets_closed_7d=generator.randint(2, 8),
+        tickets_overdue=generator.randint(0, 3),
+        avg_ticket_resolution_hours=round(generator.uniform(4, 32), 1),
+        blocked_tickets_count=generator.randint(0, 2),
+        last_commit_days_ago=generator.randint(1, 14),
+        pr_review_participation_rate=round(generator.uniform(0.4, 1.0), 2),
     )

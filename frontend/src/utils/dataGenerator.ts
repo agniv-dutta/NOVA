@@ -75,6 +75,22 @@ function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+function seededRandom(seed: number): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state = (1664525 * state + 1013904223) >>> 0;
+    return state / 4294967296;
+  };
+}
+
+function seedFromId(id: string): number {
+  let hash = 0;
+  for (let index = 0; index < id.length; index++) {
+    hash = (hash * 31 + id.charCodeAt(index)) >>> 0;
+  }
+  return hash;
+}
+
 function generateTimeHistory(months: number, baseScore: number, variance: number, trend: number): TimePoint[] {
   const points: TimePoint[] = [];
   const now = new Date();
@@ -103,6 +119,19 @@ function generateFeedback(sentimentScore: number): string[] {
 export function generateEmployees(count: number = 100): Employee[] {
   const employees: Employee[] = [];
   const usedNames = new Set<string>();
+  const onboardingSlots = [
+    { index: 0, department: 'Engineering', flags: ['Integration Risk'] },
+    { index: 1, department: 'Engineering', flags: ['Ramp Risk'] },
+    { index: 2, department: 'Sales', flags: ['Isolation Risk'] },
+    { index: 3, department: 'Sales', flags: ['Integration Risk'] },
+    { index: 4, department: 'HR', flags: ['Ramp Risk'] },
+    { index: 5, department: 'HR', flags: ['Isolation Risk'] },
+    { index: 6, department: 'Design', flags: ['Integration Risk'] },
+    { index: 7, department: 'Finance', flags: ['Integration Risk', 'Ramp Risk', 'Isolation Risk'] },
+  ] as const;
+  const onboardingMap = new Map<number, { department: Department; flags: string[] }>(
+    onboardingSlots.map((slot) => [slot.index, { department: slot.department as Department, flags: [...slot.flags] }]),
+  );
 
   for (let i = 0; i < count; i++) {
     let name: string;
@@ -111,9 +140,10 @@ export function generateEmployees(count: number = 100): Employee[] {
     } while (usedNames.has(name));
     usedNames.add(name);
 
-    const department = pick(DEPARTMENTS);
+    const forcedOnboarding = onboardingMap.get(i);
+    const department = forcedOnboarding?.department ?? pick(DEPARTMENTS);
     const role = pick(ROLES[department]);
-    const tenure = randInt(1, 72);
+    const tenure = forcedOnboarding ? randInt(1, 2) : randInt(4, 72);
 
     // Create correlated scores
     const baseWellbeing = Math.random(); // 0=poor, 1=great
@@ -143,8 +173,40 @@ export function generateEmployees(count: number = 100): Employee[] {
     const lastAssessmentDate = new Date();
     lastAssessmentDate.setDate(lastAssessmentDate.getDate() - randInt(1, 45));
 
+    const employeeId = `EMP${(i + 1).toString().padStart(4, '0')}`;
+    const seeded = seededRandom(seedFromId(employeeId));
+    const attendanceRate = Number((0.75 + seeded() * 0.25).toFixed(2));
+    const avgWeeklyHours = Number((38 + seeded() * 20).toFixed(1));
+    const leavesTaken30d = Math.floor(seeded() * 6);
+    const kpiScore = Number((0.4 + seeded() * 0.6).toFixed(2));
+    const lastOneOnOneDaysAgo = 3 + Math.floor(seeded() * 43);
+    const feedbackSubmissionsCount = Math.floor(seeded() * 9);
+    const afterHoursSessionsWeekly = Math.floor(seeded() * 7);
+    const tenureDays = forcedOnboarding
+      ? 7 + Math.floor(seeded() * 79)
+      : 90 + Math.floor(seeded() * 1711);
+    const peerConnectionCount = 1 + Math.floor(seeded() * 8);
+
+    const onboardingFlags = forcedOnboarding ? forcedOnboarding.flags : [];
+    const adjustedPeerConnections = onboardingFlags.includes('Integration Risk') ? Math.min(peerConnectionCount, 2) : peerConnectionCount;
+    const adjustedKpi = onboardingFlags.includes('Ramp Risk') ? Math.min(kpiScore, 0.49) : kpiScore;
+    const adjustedOneOnOne = onboardingFlags.includes('Isolation Risk') ? Math.max(lastOneOnOneDaysAgo, 21) : lastOneOnOneDaysAgo;
+
+    const qualityFields = [
+      attendanceRate,
+      avgWeeklyHours,
+      leavesTaken30d,
+      adjustedKpi,
+      adjustedOneOnOne,
+      feedbackSubmissionsCount,
+      afterHoursSessionsWeekly,
+      tenureDays,
+    ];
+    const nonNullCount = qualityFields.filter((value) => value !== null && value !== undefined).length;
+    const dataQualityScore = Math.round((nonNullCount / qualityFields.length) * 100);
+
     employees.push({
-      id: `EMP${(i + 1).toString().padStart(4, '0')}`,
+      id: employeeId,
       name,
       email: `${name.toLowerCase().replace(' ', '.')}@company.com`,
       department,
@@ -162,9 +224,19 @@ export function generateEmployees(count: number = 100): Employee[] {
       recentFeedback: generateFeedback(clampedSentiment),
       performanceHistory,
       sentimentHistory,
-      isOnboarding: tenure < 3,
-      onboardingDay: Math.min(89, tenure * 30),
-      onboardingFlags: tenure < 3 ? ["Onboarding Cohort"] : [],
+      isOnboarding: tenureDays < 90,
+      onboardingDay: Math.min(89, tenureDays),
+      onboardingFlags,
+      attendanceRate,
+      avgWeeklyHours,
+      leavesTaken30d,
+      kpiScore: adjustedKpi,
+      lastOneOnOneDaysAgo: adjustedOneOnOne,
+      feedbackSubmissionsCount,
+      afterHoursSessionsWeekly,
+      tenureDays,
+      peerConnectionCount: adjustedPeerConnections,
+      dataQualityScore,
     });
   }
 

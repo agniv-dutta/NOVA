@@ -1,7 +1,8 @@
-import React from 'react';
-import { AlertTriangle, TrendingDown, Users, MessageSquare, Zap, Info, TrendingUp } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { AlertTriangle, TrendingDown, Users, MessageSquare, Zap, Info, TrendingUp, ExternalLink } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Link } from 'react-router-dom';
 
 export interface AnomalyData {
   detected: boolean;
@@ -35,6 +36,8 @@ interface AnomalyIndicatorProps {
   compact?: boolean;
   isLoading?: boolean;
   emptyStateMessage?: string;
+  employeeId?: string;
+  employeeName?: string;
 }
 
 const severityColors: Record<string, { badge: string; icon: string; bg: string }> = {
@@ -61,7 +64,10 @@ const AnomalyIndicator: React.FC<AnomalyIndicatorProps> = ({
   compact = false,
   isLoading = false,
   emptyStateMessage = 'No anomaly signals available for this employee yet.',
+  employeeId,
+  employeeName,
 }) => {
+  const [expanded, setExpanded] = useState(false);
   const contributionBars = composite?.weighted_contributions
     ? [
         { label: 'Burnout (35%)', value: composite.weighted_contributions.burnout },
@@ -83,6 +89,12 @@ const AnomalyIndicator: React.FC<AnomalyIndicatorProps> = ({
   ].filter((a) => a.data);
 
   const detectedAnomalies = anomalies.filter((a) => a.data?.detected);
+  const anomalyCount = detectedAnomalies.length;
+  const detailRows = useMemo(() => detectedAnomalies.map((anomaly) => ({
+    anomalyType: anomaly.data?.type?.replace(/_/g, ' ') || anomaly.label,
+    severity: anomaly.data?.severity || 'low',
+    explanation: anomaly.data?.description || 'Behavior shifted beyond employee baseline threshold.',
+  })), [detectedAnomalies]);
 
   if (isLoading) {
     return (
@@ -98,13 +110,46 @@ const AnomalyIndicator: React.FC<AnomalyIndicatorProps> = ({
     // Compact view: just show composite or detection count
     if (composite?.detected) {
       return (
-        <div
-          className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold ${
-            severityColors[composite.severity].badge
-          }`}
-        >
-          <AlertTriangle className="w-4 h-4" />
-          {detectedAnomalies.length} Anomal{detectedAnomalies.length === 1 ? 'y' : 'ies'}
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={() => setExpanded((value) => !value)}
+            className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold ${
+              severityColors[composite.severity].badge
+            }`}
+          >
+            <AlertTriangle className="w-4 h-4" />
+            {`⚠ ${anomalyCount} Anomal${anomalyCount === 1 ? 'y' : 'ies'} Detected`}
+          </button>
+          {expanded && (
+            <div className="rounded border border-orange-200 bg-white p-3 space-y-2">
+              {detailRows.length === 0 ? (
+                <p className="text-xs text-muted-foreground">No anomaly detail rows available.</p>
+              ) : (
+                detailRows.map((item, index) => (
+                  <div key={`${item.anomalyType}-${index}`} className="rounded border p-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold capitalize">{item.anomalyType}</p>
+                      <span className={`text-[10px] px-2 py-0.5 rounded font-semibold ${severityColors[item.severity].badge}`}>
+                        {item.severity.toUpperCase()}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">Detected date: {new Date().toLocaleDateString()}</p>
+                    <p className="text-xs mt-1">Employee: {employeeName || employeeId || 'Selected employee'}</p>
+                    <p className="text-xs text-slate-700 mt-1">{item.explanation}</p>
+                    {employeeId && (
+                      <Link
+                        to={`/insights/${employeeId}`}
+                        className="inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-800 mt-1"
+                      >
+                        View Employee <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
       );
     }

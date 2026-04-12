@@ -23,6 +23,7 @@ import IntegrationsPage from "./pages/IntegrationsPage";
 import EmployeeProfilePage from "./pages/EmployeeProfilePage";
 import NotFound from "./pages/NotFound";
 import { InsightsDashboard } from "@/features/insights/InsightsDashboard";
+import AnomaliesPage from "./pages/AnomaliesPage";
 
 const queryClient = new QueryClient();
 
@@ -154,6 +155,17 @@ const App = () => (
                   <ProtectedRoute allowedRoles={["hr", "manager"]}>
                     <AppLayout>
                       <InsightsDashboard />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/anomalies"
+                element={
+                  <ProtectedRoute allowedRoles={["hr", "leadership", "manager"]}>
+                    <AppLayout>
+                      <AnomaliesPage />
                     </AppLayout>
                   </ProtectedRoute>
                 }

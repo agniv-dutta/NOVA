@@ -167,6 +167,7 @@ async def get_intervention_recommendations(
 
 @router.post("/interventions/analyze-anomalies")
 @router.post("/anomalies")
+@router.post("/interventions/anomalies")
 async def analyze_behavioral_anomalies(
     request: AnomalyAnalysisRequest,
     _current_user: User = Depends(

@@ -7,17 +7,24 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/contexts/AuthContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function IntegrationsPage() {
   const { token } = useAuth();
   const [status, setStatus] = useState<any>({});
   const [jiraBaseUrl, setJiraBaseUrl] = useState("");
   const [jiraToken, setJiraToken] = useState("");
+  const [projectKeys, setProjectKeys] = useState("NOVA");
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<string>("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       if (!token) return;
+      setLoading(true);
       try {
         const response = await fetch("/api/integrations/status", {
           headers: { Authorization: `Bearer ${token}` },
@@ -27,6 +34,8 @@ export default function IntegrationsPage() {
         setStatus(payload);
       } catch {
         setStatus({});
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -48,7 +57,7 @@ export default function IntegrationsPage() {
           config: {
             jira_base_url: jiraBaseUrl,
             api_token: jiraToken,
-            project_keys: ["NOVA"],
+            project_keys: projectKeys.split(',').map((value) => value.trim()).filter(Boolean),
             sync_frequency_hours: 24,
           },
         }),
@@ -59,12 +68,34 @@ export default function IntegrationsPage() {
       if (refreshed.ok) {
         setStatus(await refreshed.json());
       }
+      setStatus((previous: any) => ({
+        ...previous,
+        jira: {
+          ...(previous?.jira || {}),
+          connected: true,
+          last_sync_at: 'Just now',
+          mode: 'mock',
+        },
+      }));
+      setDialogOpen(false);
     } finally {
       setSaving(false);
     }
   };
 
-  const comingSoonReason = "Requires org-wide consent policy and explicit governance before activation.";
+  const testConnection = async () => {
+    setTesting(true);
+    setTestResult("");
+    await new Promise((resolve) => window.setTimeout(resolve, 1500));
+    setTestResult("Connection successful (demo mode)");
+    setTesting(false);
+  };
+
+  const comingSoonReason: Record<string, string> = {
+    Slack: "Slack integration requires org-wide communication consent policy. We've deliberately excluded it to protect employee privacy — message content should never feed into performance analytics.",
+    "Google Calendar": "Calendar integration will enable meeting load analysis and 1:1 frequency tracking. Requires Google Workspace admin OAuth approval. Coming in next release.",
+    "HRMS/SAP": "Direct HRMS integration will auto-sync employee records, salary bands, and org structure. Requires IT department API access configuration.",
+  };
 
   return (
     <div className="space-y-6">
@@ -79,14 +110,14 @@ export default function IntegrationsPage() {
             <CardTitle className="flex items-center justify-between">
               <span>Jira</span>
               <Badge variant={status?.jira?.connected ? "default" : "secondary"}>
-                {status?.jira?.connected ? "Active (Mock)" : "Disconnected"}
+                {status?.jira?.connected ? "Connected (Demo)" : "Disconnected"}
               </Badge>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-sm">Last sync: {status?.jira?.last_sync_at || "Never"}</p>
+            {loading ? <Skeleton className="h-4 w-40" /> : <p className="text-sm">Last sync: {status?.jira?.last_sync_at || "Never"}</p>}
             <p className="text-sm">Employees covered: 100 (demo)</p>
-            <Dialog>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline">Configure</Button>
               </DialogTrigger>
@@ -102,6 +133,16 @@ export default function IntegrationsPage() {
                   <div>
                     <Label htmlFor="jira-api-token">API Token</Label>
                     <Input id="jira-api-token" value={jiraToken} onChange={(e) => setJiraToken(e.target.value)} placeholder="Atlassian token" type="password" />
+                  </div>
+                  <div>
+                    <Label htmlFor="jira-project-keys">Project Keys</Label>
+                    <Input id="jira-project-keys" value={projectKeys} onChange={(e) => setProjectKeys(e.target.value)} placeholder="NOVA,HR,PEOPLE" />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="secondary" onClick={testConnection} disabled={testing}>
+                      {testing ? 'Testing...' : 'Test Connection'}
+                    </Button>
+                    {testResult && <p className="text-sm text-emerald-700 self-center">{testResult}</p>}
                   </div>
                   <Button onClick={saveJiraConfig} disabled={saving}>
                     {saving ? "Saving..." : "Save Configuration"}
@@ -130,7 +171,7 @@ export default function IntegrationsPage() {
                   <Button variant="ghost" className="px-0">Why we haven't added this yet</Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="max-w-xs text-xs">{comingSoonReason}</p>
+                  <p className="max-w-xs text-xs">{comingSoonReason[item.name]}</p>
                 </TooltipContent>
               </Tooltip>
             </CardContent>

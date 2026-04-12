@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +7,26 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEmployees } from "@/contexts/EmployeeContext";
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 import ScoreExplanationDrawer from "@/components/explainability/ScoreExplanationDrawer";
+import { useAuth } from "@/contexts/AuthContext";
+import { protectedGetApi } from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
+
+type EmployeeDetailResponse = {
+  employee_id: string;
+  name: string;
+  department: string;
+  role: string;
+  attendance_rate: number;
+  avg_weekly_hours: number;
+  leaves_taken_30d: number;
+  kpi_score: number;
+  last_1on1_days_ago: number;
+  feedback_submissions_count: number;
+  after_hours_sessions_weekly: number;
+  tenure_days: number;
+  data_quality_score: number;
+  data_quality_fields: string[];
+};
 
 function scoreColor(value: number): string {
   if (value >= 70) return "text-red-600";
@@ -17,9 +37,33 @@ function scoreColor(value: number): string {
 export default function EmployeeProfilePage() {
   const { employeeId } = useParams<{ employeeId: string }>();
   const { getEmployee } = useEmployees();
+  const { token } = useAuth();
   const navigate = useNavigate();
+  const [employeeDetail, setEmployeeDetail] = useState<EmployeeDetailResponse | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const employee = employeeId ? getEmployee(employeeId) : undefined;
+
+  useEffect(() => {
+    const loadDetail = async () => {
+      if (!employeeId || !token) {
+        setEmployeeDetail(null);
+        return;
+      }
+
+      setDetailLoading(true);
+      try {
+        const payload = await protectedGetApi<EmployeeDetailResponse>(`/api/employees/${employeeId}`, token);
+        setEmployeeDetail(payload);
+      } catch {
+        setEmployeeDetail(null);
+      } finally {
+        setDetailLoading(false);
+      }
+    };
+
+    void loadDetail();
+  }, [employeeId, token]);
 
   const overview = useMemo(() => {
     if (!employee) return [];
@@ -72,6 +116,7 @@ export default function EmployeeProfilePage() {
       <Tabs defaultValue="overview">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="data-sources">Data Sources</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
           <TabsTrigger value="jira">Jira Signals</TabsTrigger>
           <TabsTrigger value="interventions">Interventions</TabsTrigger>
@@ -102,6 +147,53 @@ export default function EmployeeProfilePage() {
               </Card>
             ))}
           </div>
+        </TabsContent>
+
+        <TabsContent value="data-sources">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between gap-3">
+                <span>Data Sources & Parameters</span>
+                {detailLoading ? (
+                  <Skeleton className="h-5 w-20" />
+                ) : (
+                  <Badge
+                    className={
+                      (employeeDetail?.data_quality_score ?? 0) >= 80
+                        ? "bg-emerald-100 text-emerald-800"
+                        : (employeeDetail?.data_quality_score ?? 0) >= 50
+                          ? "bg-amber-100 text-amber-800"
+                          : "bg-red-100 text-red-800"
+                    }
+                  >
+                    {employeeDetail ? `${employeeDetail.data_quality_score}%` : `${employee.dataQualityScore ?? 0}%`}
+                  </Badge>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {detailLoading && (
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              )}
+
+              {!detailLoading && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                  <div className="rounded border p-3">Attendance rate: <span className="font-semibold">{Math.round((employeeDetail?.attendance_rate ?? employee.attendanceRate ?? 0) * 100)}%</span></div>
+                  <div className="rounded border p-3">Avg weekly hours: <span className="font-semibold">{employeeDetail?.avg_weekly_hours ?? employee.avgWeeklyHours ?? employee.workHoursPerWeek}</span></div>
+                  <div className="rounded border p-3">Leaves (30d): <span className="font-semibold">{employeeDetail?.leaves_taken_30d ?? employee.leavesTaken30d ?? 0}</span></div>
+                  <div className="rounded border p-3">KPI score: <span className="font-semibold">{Math.round((employeeDetail?.kpi_score ?? employee.kpiScore ?? employee.performanceScore / 100) * 100)}%</span></div>
+                  <div className="rounded border p-3">Days since last 1:1: <span className="font-semibold">{employeeDetail?.last_1on1_days_ago ?? employee.lastOneOnOneDaysAgo ?? '-'}</span></div>
+                  <div className="rounded border p-3">Feedback submissions: <span className="font-semibold">{employeeDetail?.feedback_submissions_count ?? employee.feedbackSubmissionsCount ?? 0}</span></div>
+                  <div className="rounded border p-3">After-hours sessions weekly: <span className="font-semibold">{employeeDetail?.after_hours_sessions_weekly ?? employee.afterHoursSessionsWeekly ?? 0}</span></div>
+                  <div className="rounded border p-3">Tenure days: <span className="font-semibold">{employeeDetail?.tenure_days ?? employee.tenureDays ?? employee.tenure * 30}</span></div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="timeline">

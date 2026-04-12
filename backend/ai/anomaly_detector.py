@@ -124,7 +124,7 @@ def _score_to_severity(score: float) -> Literal["low", "medium", "high", "critic
 def detect_sentiment_crash(
     current_sentiment: float,
     historical_sentiments: list[float],
-    threshold_z: float = 2.5,
+    threshold_z: float = 1.8,
 ) -> AnomalyResult:
     """Detect sudden sentiment crash (negative sentiment shift)."""
     if not historical_sentiments:
@@ -157,7 +157,7 @@ def detect_sentiment_crash(
 def detect_engagement_drop(
     current_engagement: float,
     historical_engagement: list[float],
-    threshold_z: float = 2.0,
+    threshold_z: float = 1.8,
 ) -> AnomalyResult:
     """Detect sudden engagement drop."""
     if not historical_engagement:
@@ -192,7 +192,7 @@ def detect_engagement_drop(
 def detect_performance_decline(
     current_performance: float,
     historical_performance: list[float],
-    threshold_z: float = 2.0,
+    threshold_z: float = 1.8,
 ) -> AnomalyResult:
     """Detect sudden performance decline (KPI drops)."""
     if not historical_performance:
@@ -227,7 +227,7 @@ def detect_performance_decline(
 def detect_after_hours_surge(
     current_after_hours: float,
     historical_after_hours: list[float],
-    threshold_z: float = 2.5,
+    threshold_z: float = 1.8,
 ) -> AnomalyResult:
     """Detect sudden increase in after-hours work (burnout signal)."""
     if not historical_after_hours:
@@ -262,7 +262,7 @@ def detect_after_hours_surge(
 def detect_communication_drop(
     current_messages: int,
     historical_messages: list[int],
-    threshold_z: float = 2.0,
+    threshold_z: float = 1.8,
 ) -> AnomalyResult:
     """Detect sudden drop in communication (isolation signal)."""
     if not historical_messages:

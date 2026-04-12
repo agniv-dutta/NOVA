@@ -338,41 +338,80 @@ async def _enrich_with_llm(
     recommendations: list[InterventionRecommendation],
 ) -> StructuredInsight:
     """Enrich recommendations with LLM reasoning."""
-    payload = {
-        "employee_id": request.employee_id,
-        "burnout_score": request.burnout_score,
-        "sentiment_score": request.sentiment_score,
-        "performance_band": request.performance_band,
-        "retention_risk": request.retention_risk,
-        "weeks_at_high_risk": request.weeks_at_high_risk,
-        "anomaly_detected": request.anomaly_detected,
-        "selected_interventions": [
-            {
-                "type": r.intervention_type.value,
-                "description": r.description,
-                "urgency": r.urgency.value,
-            }
-            for r in recommendations
-        ],
-    }
+    employee_name = request.employee_name or f"Employee {request.employee_id}"
+    employee_role = request.performance_band
+    employee_department = request.department or "General"
+    burnout_pct = round(request.burnout_score * 100)
+    flight_risk_pct = round(
+        (
+            request.attrition_probability
+            if request.attrition_probability is not None
+            else _retention_to_probability(request.retention_risk)
+        )
+        * 100
+    )
+    trend = "stable"
+    if request.sentiment_score <= -0.2:
+        trend = "declining"
+    elif request.sentiment_score >= 0.2:
+        trend = "improving"
+    days_since_1on1 = max(3, min(45, request.weeks_at_high_risk * 7))
+    selected_types = [r.intervention_type.value for r in recommendations]
+    top_intervention = selected_types[0] if selected_types else "one-on-one"
+    top_anomalies = request.recent_behavioral_changes[:2]
+    anomaly_context = (
+        f"Top anomalies: {', '.join(top_anomalies)}."
+        if top_anomalies
+        else (
+            f"Top anomalies: {request.anomaly_type}."
+            if request.anomaly_type
+            else "No major anomaly label was captured, but elevated risk trend is present."
+        )
+    )
 
     messages = [
         {"role": "system", "content": _load_intervention_prompt()},
         {
             "role": "user",
-            "content": f"Provide brief reasoning for these interventions:\n{json.dumps(payload, indent=2)}",
+            "content": (
+                "You are an HR analytics AI. "
+                f"An employee named {employee_name} ({employee_role}, {employee_department}) "
+                f"has a burnout score of {burnout_pct}% and flight risk of {flight_risk_pct}%. "
+                f"Their sentiment has been {trend} over the last 14 days. "
+                f"They last had a 1:1 {days_since_1on1} days ago. "
+                f"{anomaly_context} "
+                f"The recommended intervention is: {top_intervention}. "
+                "In 2-3 sentences, explain why this specific intervention is recommended for this employee right now, "
+                "and what outcome HR should expect. Be specific, not generic. Do not use placeholder text.\n\n"
+                "Output JSON with fields: summary, key_signals, recommended_action, confidence, urgency."
+            ),
         },
     ]
 
+    top_risk_factor = "burnout risk"
+    if request.retention_risk == "high":
+        top_risk_factor = "flight risk"
+    elif request.anomaly_detected:
+        top_risk_factor = "behavioral anomaly risk"
+    delta_pct = max(6, min(32, round((request.burnout_score * 100) * 0.25)))
+    timing_window = recommendations[0].timing_window if recommendations else "within 1-2 weeks"
+    risk_type = request.retention_risk
+
     fallback = build_fallback_structured_insight(
-        summary="Standard intervention protocol applied for this employee profile.",
+        summary=(
+            f"{employee_name}'s {top_risk_factor} has increased by about {delta_pct}% in the last "
+            f"{max(7, request.weeks_at_high_risk * 7)} days, and current sentiment is {trend}."
+        ),
         key_signals=[
-            f"Burnout score: {request.burnout_score:.2f}",
-            f"Retention risk: {request.retention_risk}",
-            f"Anomaly detected: {'yes' if request.anomaly_detected else 'no'}",
+            f"Burnout score: {burnout_pct}%",
+            f"Flight risk: {flight_risk_pct}%",
+            f"Top anomaly context: {request.anomaly_type or 'No explicit label'}",
         ],
         recommended_action=(
-            recommendations[0].description
+            (
+                f"A {top_intervention} intervention is recommended {timing_window} "
+                f"to address early signs of {risk_type} risk."
+            )
             if recommendations
             else "Schedule a manager check-in and monitor weekly indicators."
         ),
@@ -383,6 +422,8 @@ async def _enrich_with_llm(
     try:
         response = await groq_chat(messages)
         content = response.choices[0].message.content if response and response.choices else ""
+        if not content or len(content.strip()) < 20:
+            return fallback
         return parse_structured_insight(content, fallback)
     except Exception:
         return fallback

@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { protectedGetApi, protectedPostApi } from '@/lib/api';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { LineChart, CartesianGrid, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { ClipboardList, CheckCircle2 } from 'lucide-react';
 
 type PendingSession = {
   id: string;
@@ -165,7 +166,10 @@ export default function SessionReviewPanel() {
           ))}
           {pending.length === 0 && (
             <div className="rounded border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-800 space-y-3">
-              <p className="font-semibold">No sessions in queue</p>
+              <div className="flex flex-col items-center text-center gap-2">
+                <CheckCircle2 className="h-12 w-12 text-emerald-600" />
+                <p className="font-semibold">All caught up!</p>
+              </div>
               <p>
                 Use the Schedule Sessions tab to create a recorded feedback session, or seed demo data to populate the queue immediately.
               </p>
@@ -192,7 +196,7 @@ export default function SessionReviewPanel() {
         <CardContent className="space-y-4">
           {!selected && (
             <div className="rounded border p-8 text-center text-muted-foreground space-y-3">
-              <p className="text-3xl">📄</p>
+              <ClipboardList className="h-12 w-12 mx-auto text-slate-400" />
               <p>Select a session from the left to view status or begin review</p>
             </div>
           )}

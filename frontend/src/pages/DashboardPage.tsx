@@ -25,6 +25,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useInterventionInsights } from '@/hooks/useInterventionInsights';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { protectedGetApi } from '@/lib/api';
+import { Link } from 'react-router-dom';
 
 const KPI_DATA = [
   { icon: TrendingDown, label: 'Projected Attrition Reduction', value: '25%', desc: 'With AI-driven interventions', color: '#4ECDC4' },
@@ -66,14 +68,7 @@ export default function DashboardPage() {
         return;
       }
       try {
-        const response = await fetch('/api/employees/onboarding', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!response.ok) {
-          setOnboardingEmployees([]);
-          return;
-        }
-        const payload = await response.json();
+        const payload = await protectedGetApi<{ employees?: any[] }>('/api/employees/onboarding', token);
         setOnboardingEmployees(payload.employees || []);
       } catch {
         setOnboardingEmployees([]);
@@ -122,10 +117,10 @@ export default function DashboardPage() {
       {hasRole(['hr', 'leadership']) && (
         <Card className="border-cyan-300 bg-cyan-50/60">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Onboarding Watch</CardTitle>
+            <CardTitle className="text-base">Onboarding Watch ({onboardingEmployees.length})</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {onboardingEmployees.slice(0, 6).map((employee) => (
+            {onboardingEmployees.slice(0, 8).map((employee) => (
               <div key={employee.employee_id} className="rounded border border-cyan-300 bg-white p-3">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm font-semibold">{employee.name}</p>
@@ -154,16 +149,23 @@ export default function DashboardPage() {
       {canViewAnomalyBar && (
         <Card className="border-orange-300 bg-orange-50/50">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <AlertCircle className="h-4 w-4 text-orange-600" />
-              Anomaly Alert Bar
-            </CardTitle>
+            <div className="flex items-center justify-between gap-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <AlertCircle className="h-4 w-4 text-orange-600" />
+                Anomaly Alert Bar
+              </CardTitle>
+              <Link to="/anomalies" className="text-xs text-orange-700 hover:text-orange-800 underline">
+                View All
+              </Link>
+            </div>
           </CardHeader>
           <CardContent>
             <AnomalyIndicator
               compact
               isLoading={anomalyLoading}
               emptyStateMessage="No anomaly data available right now."
+              employeeId={featuredEmployee?.id}
+              employeeName={featuredEmployee?.name}
               sentiment={anomalyData?.sentiment}
               engagement={anomalyData?.engagement}
               performance={anomalyData?.performance}
