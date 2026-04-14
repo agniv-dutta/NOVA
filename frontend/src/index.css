@@ -174,29 +174,66 @@
     background: hsl(var(--sidebar-accent));
     color: hsl(var(--sidebar-accent-foreground));
     border-left-color: hsl(var(--muted-foreground));
-    transform: translateX(2px);
   }
 
   .sidebar-link-active {
     background: hsl(var(--sidebar-primary));
     color: hsl(var(--sidebar-primary-foreground));
-    @apply border-l-4 border-foreground font-bold;
+    @apply border-2 border-foreground font-bold;
     box-shadow: var(--shadow-sm);
-    transform: translateX(2px);
   }
 
   @media (min-width: 1024px) {
+    .app-sidebar,
+    .app-sidebar nav {
+      overflow: hidden !important;
+      overscroll-behavior: none;
+    }
+
+    .app-sidebar:not(:hover):not(:focus-within) nav {
+      display: grid;
+      justify-items: center;
+      align-content: start;
+      gap: 8px;
+      padding: 8px 0;
+    }
+
+    .app-sidebar:not(:hover):not(:focus-within) nav > div {
+      display: contents;
+    }
+
+    .app-sidebar:not(:hover):not(:focus-within) nav > div > p {
+      display: none;
+    }
+
     .app-sidebar:not(:hover):not(:focus-within) .sidebar-link,
     .app-sidebar:not(:hover):not(:focus-within) .sidebar-link:hover {
       border-left-color: transparent;
-      transform: none;
+      border-left-width: 0;
+      width: 44px;
+      height: 44px;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 0;
+      justify-content: center;
+      align-items: center;
+      gap: 0;
+      min-width: 44px;
+      min-height: 44px;
     }
 
     .app-sidebar:not(:hover):not(:focus-within) .sidebar-link-active {
       border-left-width: 0;
+      width: 44px;
+      height: 44px;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 0;
       border: 2px solid hsl(var(--foreground));
       box-shadow: var(--shadow-sm);
-      transform: none;
+      justify-content: center;
+      align-items: center;
+      gap: 0;
     }
   }
 

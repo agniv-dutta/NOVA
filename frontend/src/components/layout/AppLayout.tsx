@@ -325,7 +325,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       )}
 
       <aside
-        className={`app-sidebar group fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r-2 border-foreground bg-card transition-transform duration-200 lg:static lg:w-[88px] lg:overflow-hidden lg:translate-x-0 lg:transition-[width] lg:duration-200 lg:hover:w-64 lg:focus-within:w-64 ${
+        className={`app-sidebar group fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r-2 border-foreground bg-card transition-transform duration-200 lg:static lg:w-[84px] lg:overflow-hidden lg:translate-x-0 lg:transition-[width] lg:duration-200 lg:hover:w-64 lg:focus-within:w-64 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -334,7 +334,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             to={homePath}
             end
             onClick={() => setSidebarOpen(false)}
-            className="flex min-w-0 flex-1 items-center gap-3 lg:flex-none lg:justify-center lg:gap-0 lg:group-hover:flex-1 lg:group-hover:justify-start lg:group-hover:gap-3 lg:group-focus-within:flex-1 lg:group-focus-within:justify-start lg:group-focus-within:gap-3"
+            className="flex min-w-0 items-center gap-3 lg:w-full lg:justify-center lg:gap-0 lg:group-hover:justify-start lg:group-hover:gap-3 lg:group-focus-within:justify-start lg:group-focus-within:gap-3"
           >
             <div className="flex h-9 w-9 items-center justify-center border-2 border-foreground bg-primary shadow-[2px_2px_0px_#000]">
               <Brain className="h-5 w-5 text-primary-foreground" />
@@ -349,11 +349,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </button>
         </div>
 
-        <nav className="flex-1 space-y-4 overflow-y-auto p-3 lg:space-y-1 lg:p-2 lg:group-hover:space-y-4 lg:group-hover:p-3 lg:group-focus-within:space-y-4 lg:group-focus-within:p-3">
+        <nav className="flex-1 overflow-hidden p-2">
           {navSectionsWithBadges.map((section) => (
             <div
               key={section.title}
-              className="space-y-1 lg:space-y-0.5 lg:group-hover:space-y-1 lg:group-focus-within:space-y-1"
+              className="space-y-1"
             >
               <p className="overflow-hidden px-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground transition-all duration-200 lg:max-h-0 lg:opacity-0 lg:group-hover:max-h-6 lg:group-hover:opacity-100 lg:group-focus-within:max-h-6 lg:group-focus-within:opacity-100">
                 {section.title}
@@ -365,7 +365,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   end={item.to === '/'}
                   onClick={() => setSidebarOpen(false)}
                   className={({ isActive }) =>
-                    `sidebar-link lg:mx-auto lg:h-10 lg:w-10 lg:justify-center lg:gap-0 lg:px-0 lg:py-0 lg:group-hover:mx-0 lg:group-hover:h-auto lg:group-hover:w-full lg:group-hover:justify-start lg:group-hover:gap-3 lg:group-hover:px-3 lg:group-hover:py-2.5 lg:group-focus-within:mx-0 lg:group-focus-within:h-auto lg:group-focus-within:w-full lg:group-focus-within:justify-start lg:group-focus-within:gap-3 lg:group-focus-within:px-3 lg:group-focus-within:py-2.5 ${isActive ? 'sidebar-link-active' : ''}`
+                    `sidebar-link lg:mx-auto lg:h-11 lg:w-11 lg:justify-center lg:gap-0 lg:px-0 lg:py-0 lg:group-hover:mx-0 lg:group-hover:h-auto lg:group-hover:w-full lg:group-hover:justify-start lg:group-hover:gap-3 lg:group-hover:px-3 lg:group-hover:py-2.5 lg:group-focus-within:mx-0 lg:group-focus-within:h-auto lg:group-focus-within:w-full lg:group-focus-within:justify-start lg:group-focus-within:gap-3 lg:group-focus-within:px-3 lg:group-focus-within:py-2.5 ${isActive ? 'sidebar-link-active' : ''}`
                   }
                 >
                   <item.icon className="h-4 w-4" />
