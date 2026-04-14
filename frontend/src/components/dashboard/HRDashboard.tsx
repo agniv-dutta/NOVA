@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertCircle, ArrowRight } from 'lucide-react';
+import { AlertCircle, ArrowRight, LayoutGrid } from 'lucide-react';
 import { MetricsCards } from '@/components/dashboard/MetricsCards';
 import WorkforceHealthScore from '@/components/dashboard/WorkforceHealthScore';
 import WeeklyBriefCard from '@/components/dashboard/WeeklyBriefCard';
@@ -59,6 +59,24 @@ export default function HRDashboard() {
       </div>
 
       <MetricsCards />
+
+      <Link
+        to="/departments/heatmap"
+        className="flex items-center justify-between border-2 border-foreground bg-[#FFE500] p-4 shadow-[4px_4px_0px_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[5px_5px_0px_#000] transition-all"
+      >
+        <div className="flex items-center gap-3">
+          <LayoutGrid className="h-5 w-5" />
+          <div>
+            <p className="text-sm font-bold font-heading uppercase tracking-wider">
+              View Department Heatmap
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Compare efficiency across all departments · Drill into each team
+            </p>
+          </div>
+        </div>
+        <ArrowRight className="h-4 w-4" />
+      </Link>
 
       <Card className="border-2 border-foreground shadow-[4px_4px_0px_#000] bg-card">
         <CardHeader className="border-b-2 border-foreground pb-3">

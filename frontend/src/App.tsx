@@ -24,6 +24,7 @@ import EmployeeProfilePage from "./pages/EmployeeProfilePage";
 import NotFound from "./pages/NotFound";
 import { InsightsDashboard } from "@/features/insights/InsightsDashboard";
 import AnomaliesPage from "./pages/AnomaliesPage";
+import DeptHeatmapPage from "./pages/DeptHeatmapPage";
 
 const queryClient = new QueryClient();
 
@@ -160,6 +161,17 @@ const App = () => (
                   <ProtectedRoute allowedRoles={["hr", "manager"]}>
                     <AppLayout>
                       <InsightsDashboard />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/departments/heatmap"
+                element={
+                  <ProtectedRoute allowedRoles={["hr", "leadership"]}>
+                    <AppLayout>
+                      <DeptHeatmapPage />
                     </AppLayout>
                   </ProtectedRoute>
                 }

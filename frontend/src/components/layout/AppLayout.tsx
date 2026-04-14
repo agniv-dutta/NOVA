@@ -17,6 +17,7 @@ import {
   AlertTriangle,
   ClipboardList,
   Home,
+  LayoutGrid,
 } from 'lucide-react';
 import { useEmployees } from '@/contexts/EmployeeContext';
 import { useEffect, useMemo, useState } from 'react';
@@ -116,6 +117,7 @@ function buildNavSections(role: UserRole, insightsEmployeeId: string): NavSectio
           title: 'People',
           items: [
             { to: '/employees', icon: Users, label: 'Employees' },
+            { to: '/departments/heatmap', icon: LayoutGrid, label: 'Dept Heatmap' },
             { to: '/sentiment', icon: MessageSquare, label: 'Sentiment Analyzer' },
             { to: `/insights/${insightsEmployeeId}`, icon: Brain, label: 'AI Insights' },
             { to: '/anomalies', icon: AlertTriangle, label: 'Anomaly Alerts' },
@@ -150,6 +152,7 @@ function buildNavSections(role: UserRole, insightsEmployeeId: string): NavSectio
           title: 'Analytics',
           items: [
             { to: '/employees', icon: Users, label: 'Workforce' },
+            { to: '/departments/heatmap', icon: LayoutGrid, label: 'Dept Heatmap' },
             { to: '/sentiment', icon: MessageSquare, label: 'Sentiment' },
             { to: '/anomalies', icon: AlertTriangle, label: 'Anomaly Alerts' },
             { to: '/leadership/roi-analytics', icon: LineChart, label: 'ROI Analytics' },
