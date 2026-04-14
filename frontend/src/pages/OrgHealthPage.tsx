@@ -112,6 +112,21 @@ function formatINR(value: number): string {
   }).format(value);
 }
 
+function buildRiskReason(
+  burnoutRisk: number,
+  attritionRisk: number,
+  sentimentScore: number,
+  engagementScore: number,
+): string {
+  const reasons: string[] = [];
+  if (burnoutRisk >= 70) reasons.push("High burnout");
+  if (attritionRisk >= 70) reasons.push("High flight risk");
+  if (sentimentScore <= -0.25) reasons.push("Low sentiment");
+  if (engagementScore <= 45) reasons.push("Low engagement");
+  if (reasons.length === 0) reasons.push("Emerging retention risk");
+  return reasons.slice(0, 2).join(" + ");
+}
+
 function ExplainableValue({
   value,
   breakdown,
@@ -405,14 +420,23 @@ export default function OrgHealthPage() {
     },
   ];
 
-  // Top 5 at-risk employees (mock data)
-  const atRiskEmployees = [
-    { id: 1, name: 'Alice Johnson', department: 'Engineering', riskScore: 87, reason: 'High burnout + salary below market' },
-    { id: 2, name: 'Bob Smith', department: 'Sales', riskScore: 82, reason: 'Low sentiment + missed promotion' },
-    { id: 3, name: 'Carol Davis', department: 'Marketing', riskScore: 79, reason: 'Increased absenteeism + disengagement' },
-    { id: 4, name: 'David Lee', department: 'Engineering', riskScore: 76, reason: 'Peer isolation + workload stress' },
-    { id: 5, name: 'Emma Wilson', department: 'Sales', riskScore: 74, reason: 'Manager conflict + low recognition' },
-  ];
+  const atRiskEmployees = useMemo(() => {
+    return [...employees]
+      .sort((a, b) => (b.attritionRisk + b.burnoutRisk) - (a.attritionRisk + a.burnoutRisk))
+      .slice(0, 5)
+      .map((employee) => ({
+        id: employee.id,
+        name: employee.name,
+        department: employee.department,
+        riskScore: Math.round(Math.max(employee.attritionRisk, employee.burnoutRisk)),
+        reason: buildRiskReason(
+          employee.burnoutRisk,
+          employee.attritionRisk,
+          employee.sentimentScore,
+          employee.engagementScore,
+        ),
+      }));
+  }, [employees]);
 
   const interventions = useMemo(() => {
     return roiRecommendations.map((item, idx) => ({

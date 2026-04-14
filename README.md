@@ -39,6 +39,7 @@ Using advanced machine learning, statistical anomaly detection, and network anal
 
 ### Key Statistics
 - **15+ role-aware dashboards and panels** for organizational health
+- **100-employee canonical directory** with deterministic NOVA IDs and shared hierarchy fields
 - **8 intervention types** automatically recommended by AI
 - **5 behavioral anomaly detectors** using Z-score analysis
 - **Network-based burnout propagation modeling**
@@ -225,6 +226,13 @@ Risk Score = (
 - ✅ **Employee Profile Data Sources Tab** - Fetches server-side employee detail payload including computed `data_quality_score`
 - ✅ **Jira Demo Configure Modal** - Test connection simulation + persisted demo-connected status updates in Integrations UI
 - ✅ **Role-Aware Sentiment Navigation** - HR sees Feedback Analyzer while Leadership retains Sentiment Analyzer
+- ✅ **Focused Org Tree + Full Org Tree** - hierarchical drilldown with expand/collapse and dedicated tree route
+
+### 🧭 **Unified Employee Directory & Identity**
+- ✅ **Single source of truth roster** - one canonical Indian employee directory reused across Employees, Org Tree, Org Health, and drilldown APIs
+- ✅ **Deterministic NOVA IDs** - IDs like `NOVA-ENG001` and `NOVA-SAL005` are stable across frontend and backend
+- ✅ **Shared hierarchy model** - `title`, `reports_to`, and `org_level` are wired end to end
+- ✅ **No cross-page identity drift** - legacy mixed placeholder pools removed to prevent overlap/confusion
 
 ---
 
@@ -324,6 +332,12 @@ Risk Score = (
 3. **Recommendations** → Intervention Engine generates suggestions
 4. **Visualization** → Real-time dashboards + alerts
 5. **Logging** → Track interventions & outcomes
+
+### Employee Identity and Hierarchy Flow
+1. **Canonical Directory Seed** → Backend builds deterministic employee directory with NOVA IDs
+2. **Shared Consumption** → Employee pages, org-tree endpoints, and analytics widgets read the same roster model
+3. **Hierarchy Projection** → `reports_to` relationships are transformed into subtree/full-tree API responses
+4. **UI Rendering** → Focused org chart and full org page render identical identities and reporting lines
 
 ### Frontend Routes (Role-Aware)
 | Route | Purpose | Roles |
@@ -429,13 +443,21 @@ GET    /api/integrations/status                      Connected/disconnected inte
 POST   /api/integrations/jira/sync                  Trigger Jira sync (manual)
 ```
 
+### Organization Hierarchy & Directory
+```
+GET    /api/employees                      Canonical employee directory (NOVA IDs + hierarchy fields)
+GET    /api/org/hierarchy                  Role-scoped organization hierarchy tree
+GET    /api/org/hierarchy/stats            Org hierarchy metrics (levels/span/managers/IC count)
+GET    /api/org/hierarchy/{employee_id}/subtree  Subtree rooted at employee (RBAC constrained)
+```
+
 ### Onboarding Intelligence
 ```
 GET    /api/employees/onboarding          Onboarding watchlist with adjusted risk and flags
 GET    /api/employees/{employee_id}       Employee detail with server-computed data_quality_score
 ```
 
-### Employee Management
+### Employee Management (Legacy Route Family)
 ```
 GET    /employees                   Get all employees (paginated)
 GET    /employees/{id}              Get employee details
@@ -524,6 +546,7 @@ cp .env.example .env
 # Recommended order in Supabase SQL editor:
 # 001_create_users_table.sql
 # 002_create_interventions_table.sql
+# 003_add_hierarchy_fields.sql
 # 003_create_employee_feedback_table.sql
 # 004_employee_feedbacks.sql
 # feedback_sessions.sql
@@ -534,6 +557,7 @@ cp .env.example .env
 # python scripts/apply_feedback_sessions_migration.py
 # python scripts/apply_employee_actions_migration.py
 # python scripts/apply_employee_feedbacks_migration.py
+# python scripts/apply_hierarchy_migration.py
 # python scripts/seed_feedbacks.py
 ```
 
@@ -617,6 +641,27 @@ VITE_API_BASE_URL=http://localhost:8000
 - Context: anomaly composite can be 0% when no significant anomalies are detected.
 - Current behavior: UI falls back to baseline composite risk (workload/sentiment/performance/engagement model) when anomaly composite has no signal.
 - If still 0%: inspect input histories (sentiment/performance/engagement) for the selected employee and verify data generation/API payloads are non-empty.
+
+**7. Org Tree page shows "Unable to load hierarchy"**
+- Confirm backend is actually running on port 8000 from the backend directory:
+```bash
+cd backend
+python -m uvicorn main:app --reload --port 8000
+```
+- Validate API health quickly:
+```bash
+curl http://localhost:8000/health
+```
+- If frontend was started before backend was healthy, restart frontend once after confirming `VITE_API_BASE_URL`.
+
+**8. Two different employee groups appear across pages**
+- Cause: stale browser state or an old frontend bundle after roster-unification updates.
+- Fix:
+  - hard refresh the browser (`Ctrl+F5`)
+  - ensure frontend and backend are both restarted
+  - verify `VITE_API_BASE_URL=http://localhost:8000`
+  - if needed, clear site data for `localhost:8080` and sign in again
+- Expected state: Employees, Org Tree, Org Health risk cards, and heatmap detail all use the same canonical roster.
 
 ---
 
@@ -723,6 +768,10 @@ curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
 - HR Feedback Analyzer page with three-column UX, sentiment/sarcasm-aware cards, and batch/deep Groq analysis flows
 - `employee_feedbacks` schema migration + realistic 50-row seed script with precomputed sentiment/emotion/theme fields
 - Feedback Analyzer bootstrap endpoint for migration/seed/schema-cache self-healing in non-primed environments
+- Unified canonical employee roster wired into frontend and backend org-tree generation (single identity model)
+- Deterministic NOVA ID + hierarchy model (`title`, `reports_to`, `org_level`) propagated to employee and org endpoints
+- Organization hierarchy endpoints with RBAC-scoped full tree, subtree, and hierarchy stats
+- Org Health and Burnout Heatmap employee cards now sourced from the canonical employee context (no mixed placeholder roster)
 
 ### 🔄 **In Progress**
 - ML feature importance visualization

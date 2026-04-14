@@ -22,6 +22,7 @@ from core.aggregations import (
     aggregate_by_department,
     get_department_roster,
 )
+from core.employee_directory import get_employee_directory
 from models.user import User
 
 logger = logging.getLogger(__name__)
@@ -107,12 +108,7 @@ def _seeded_float(key: str, low: float, high: float) -> float:
 def _synthesize_employees(department: str) -> List[Dict[str, object]]:
     """Deterministic employee records for drilldown (top-performer / at-risk)."""
     roster = get_department_roster(department)
-    first_names = [
-        "Mila", "Ari", "Noah", "Zara", "Rhea", "Dev", "Ivy", "Owen",
-        "Kai", "Leo", "Maya", "Nia", "Omar", "Pia", "Ravi", "Sana",
-        "Theo", "Uma", "Vik", "Wren", "Xia", "Yara",
-    ]
-    last_names = ["Chen", "Wilson", "Garcia", "Lee", "Thomas", "Brown", "Clark", "Scott"]
+    directory = [row for row in get_employee_directory() if row["department"] == department]
     role_pool = {
         "Engineering": ["Software Engineer", "Senior Engineer", "Staff Engineer", "SRE"],
         "Sales": ["Account Executive", "SDR", "Sales Manager", "Enterprise AE"],
@@ -123,13 +119,13 @@ def _synthesize_employees(department: str) -> List[Dict[str, object]]:
 
     records: List[Dict[str, object]] = []
     for idx, row in enumerate(roster):
-        first = first_names[idx % len(first_names)]
-        last = last_names[idx % len(last_names)]
-        employee_id = f"{department[:3].upper()}-{idx + 1:03d}"
+        canonical = directory[idx % len(directory)] if directory else None
+        employee_id = str(canonical["employee_id"]) if canonical else f"{department[:3].upper()}-{idx + 1:03d}"
+        employee_name = str(canonical["name"]) if canonical else f"{department} Employee {idx + 1}"
         records.append(
             {
                 "id": employee_id,
-                "name": f"{first} {last}",
+                "name": employee_name,
                 "role": role_pool[idx % len(role_pool)],
                 "performance_score": round(row["performance_score"], 3),
                 "engagement_score": round(row["engagement_score"], 3),

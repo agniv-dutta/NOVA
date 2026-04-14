@@ -3,14 +3,22 @@ import { Download, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { generateBurnoutHeatmap } from "@/utils/mockAnalyticsData";
 import html2canvas from "html2canvas";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ScoreExplanationDrawer from "@/components/explainability/ScoreExplanationDrawer";
+import { useEmployees } from "@/contexts/EmployeeContext";
 
 export default function BurnoutHeatmap() {
+  const { employees } = useEmployees();
   const data = generateBurnoutHeatmap();
   const chartRef = useRef<HTMLDivElement>(null);
   const [selectedCell, setSelectedCell] = useState<{ dept: string; week: number; score: number } | null>(null);
+  const highBurnoutEmployees = useMemo(() => {
+    return [...employees]
+      .sort((a, b) => b.burnoutRisk - a.burnoutRisk)
+      .slice(0, 4)
+      .map((employee) => `${employee.name} (${Math.round(employee.burnoutRisk)})`);
+  }, [employees]);
 
   const handleExport = async () => {
     if (chartRef.current) {
@@ -139,7 +147,7 @@ export default function BurnoutHeatmap() {
               <div className="pt-4 border-t">
                 <p className="text-sm font-semibold mb-2">Employees with High Burnout Signals</p>
                 <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {['Alice Johnson (85)', 'Bob Smith (78)', 'Carol Davis (72)', 'David Lee (68)'].map((emp, i) => (
+                  {highBurnoutEmployees.map((emp, i) => (
                     <div key={i} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                       <span className="text-sm">{emp}</span>
                       <Button variant="ghost" size="sm">View</Button>

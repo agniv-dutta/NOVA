@@ -25,7 +25,7 @@ async def get_team_alerts(current_user: User = Depends(require_manager)):
             {
                 "id": 1,
                 "type": "high_risk",
-                "employee": "Alice Johnson",
+                "employee": "Arjun Sharma",
                 "priority": "high",
                 "reason": "Consistent decline in engagement scores",
                 "recommended_action": "Schedule 1-on-1 meeting"
@@ -33,7 +33,7 @@ async def get_team_alerts(current_user: User = Depends(require_manager)):
             {
                 "id": 2,
                 "type": "performance_drop",
-                "employee": "Bob Smith",
+                "employee": "Priya Patel",
                 "priority": "medium",
                 "reason": "Missed 3 deadlines this month",
                 "recommended_action": "Review workload and priorities"
@@ -41,7 +41,7 @@ async def get_team_alerts(current_user: User = Depends(require_manager)):
             {
                 "id": 3,
                 "type": "high_performer",
-                "employee": "Carol Davis",
+                "employee": "Rohan Mehta",
                 "priority": "low",
                 "reason": "Exceeded targets by 150%",
                 "recommended_action": "Consider for promotion/recognition"
@@ -82,7 +82,7 @@ async def get_one_on_one_insights(current_user: User = Depends(require_manager))
         "accessed_by": current_user.email,
         "insights": [
             {
-                "employee": "Alice Johnson",
+                "employee": "Arjun Sharma",
                 "suggested_topics": [
                     "Career development goals",
                     "Work-life balance concerns",

@@ -147,7 +147,9 @@ def _reports_to(department: Department, index: int, total_in_department: int) ->
     direct_report_indices = [
         candidate_index
         for candidate_index in range(1, total_in_department + 1)
-        if candidate_index != 1 and candidate_index != total_in_department and candidate_index not in DEPARTMENT_MANAGERS[department]
+        if candidate_index != 1
+        and (department != "Engineering" or candidate_index != total_in_department)
+        and candidate_index not in DEPARTMENT_MANAGERS[department]
     ]
 
     if department == "Operations":

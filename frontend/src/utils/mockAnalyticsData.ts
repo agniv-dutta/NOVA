@@ -166,10 +166,10 @@ export const generateTenureDistribution = (): TenureBucket[] => {
 
 // Generate quadrant employee data
 export const generateQuadrantEmployees = (): QuadrantEmployee[] => {
-  const names = ['Alice Johnson', 'Bob Smith', 'Carol Davis', 'David Lee', 'Emma Wilson', 
-    'Frank Brown', 'Grace Taylor', 'Henry Miller', 'Iris Chen', 'Jack Anderson',
-    'Kate Martinez', 'Leo Garcia', 'Maya Patel', 'Noah Kim', 'Olivia White',
-    'Paul Jones', 'Quinn Roberts', 'Rachel Green', 'Sam Cooper', 'Tina Lopez'];
+  const names = ['Arjun Sharma', 'Priya Patel', 'Rohan Mehta', 'Sneha Iyer', 'Vikram Nair',
+    'Ananya Krishnan', 'Karan Malhotra', 'Divya Reddy', 'Rahul Gupta', 'Pooja Joshi',
+    'Aditya Verma', 'Meera Pillai', 'Siddharth Rao', 'Kavya Menon', 'Nikhil Desai',
+    'Riya Bose', 'Manish Kumar', 'Tanvi Shah', 'Abhishek Tiwari', 'Deepika Nambiar'];
   
   const departments = ['Engineering', 'Sales', 'Marketing', 'Operations'];
   const roles = ['Senior', 'Mid-Level', 'Junior', 'Lead', 'Manager'];
