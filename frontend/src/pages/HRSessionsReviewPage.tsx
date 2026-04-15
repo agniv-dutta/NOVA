@@ -19,6 +19,8 @@ export default function HRSessionsReviewPage() {
           <Button
             onClick={async () => {
               if (!token) return;
+              const confirmed = window.confirm('Regenerate demo review sessions now? This will reseed the review queue.');
+              if (!confirmed) return;
               await protectedPostApi('/api/feedback/sessions/seed-demo', token, {});
               window.location.reload();
             }}

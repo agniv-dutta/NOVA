@@ -301,8 +301,8 @@ export const generateAbsenteeismData = (): AbsenteeismData[] => {
 // Generate manager effectiveness data
 export const generateManagerScores = (): ManagerScore[] => {
   const managers = [
-    'Sarah Chen', 'Michael Park', 'Jennifer Lopez', 'David Kim',
-    'Amanda White', 'Chris Johnson', 'Lisa Martinez', 'Robert Taylor'
+    'Rahul Gupta', 'Suresh Venkatesh', 'Lakshmi Subramaniam', 'Nidhi Oberoi',
+    'Ramesh Iyer', 'Priyanka Chatterjee', 'Ashish Kapoor', 'Sunita Kulkarni'
   ];
   
   return managers.map((name, i) => ({
@@ -375,8 +375,8 @@ export const generateNetworkData = (
 ): { nodes: NetworkNode[]; links: NetworkLink[] } => {
   const names = employees?.length
     ? employees.map((employee) => employee.name)
-    : ['Alice', 'Bob', 'Carol', 'David', 'Emma', 'Frank', 'Grace',
-      'Henry', 'Iris', 'Jack', 'Kate', 'Leo', 'Maya', 'Noah', 'Olivia'];
+    : ['Arjun', 'Priya', 'Rohan', 'Sneha', 'Vikram', 'Ananya', 'Karan',
+      'Divya', 'Rahul', 'Pooja', 'Aditya', 'Meera', 'Siddharth', 'Kavya', 'Nikhil'];
   const departments = employees?.length
     ? employees.map((employee) => employee.department)
     : ['Engineering', 'Sales', 'Marketing', 'Operations'];

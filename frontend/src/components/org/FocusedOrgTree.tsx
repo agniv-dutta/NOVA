@@ -31,15 +31,11 @@ type OrgHierarchyResponse = {
 type TreeMode = "focused" | "full";
 
 const DEPARTMENT_OPTIONS = ["All", "Engineering", "Sales", "HR", "Design", "Finance", "Operations"] as const;
+const NODE_WIDTH = 200;
+const NODE_HEIGHT = 100;
+const TREE_WIDTH = 1600;
+const TREE_HEIGHT = 560;
 
-const DEPARTMENT_BADGE_STYLES: Record<string, string> = {
-  Engineering: "bg-sky-100 text-sky-900 border-sky-200",
-  Sales: "bg-amber-100 text-amber-900 border-amber-200",
-  HR: "bg-rose-100 text-rose-900 border-rose-200",
-  Design: "bg-violet-100 text-violet-900 border-violet-200",
-  Finance: "bg-emerald-100 text-emerald-900 border-emerald-200",
-  Operations: "bg-slate-100 text-slate-900 border-slate-200",
-};
 
 function isNodeVisibleByDepartment(node: OrgNode, department: string): boolean {
   return department === "All" || node.department === department;
@@ -101,13 +97,6 @@ function getRiskLabel(employee?: { burnoutRisk?: number; attritionRisk?: number 
   return risk >= 60 ? "At risk" : "Stable";
 }
 
-function formatShortName(fullName: string): string {
-  const parts = fullName.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return fullName;
-  if (parts.length === 1) return parts[0];
-  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
-}
-
 function levelStyles(level: number): { fill: string; border: string; text: string } {
   if (level === 1) return { fill: "#fffbe6", border: "#F5C518", text: "#111827" };
   if (level === 2) return { fill: "#111827", border: "#111827", text: "#ffffff" };
@@ -167,8 +156,10 @@ function TreeCanvas({
   const { employees } = useEmployees();
   const svgRef = useRef<SVGSVGElement>(null);
   const zoomLayerRef = useRef<SVGGElement>(null);
+  const zoomBehaviorRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
   const [expandedPathIds, setExpandedPathIds] = useState<string[]>([hierarchy.employee_id]);
   const [selectedLeaf, setSelectedLeaf] = useState<{ node: OrgNode; x: number; y: number } | null>(null);
+  const [pendingFocusNodeId, setPendingFocusNodeId] = useState<string | null>(null);
 
   const employeeMap = useMemo(() => new Map(employees.map((employee) => [employee.id, employee])), [employees]);
 
@@ -179,22 +170,18 @@ function TreeCanvas({
 
   const hierarchyLayout = useMemo(() => {
     const root = d3.hierarchy(visibleTree, (node) => node.children || []);
-    const tree = d3.tree<OrgNode>().nodeSize(mode === "full" ? [220, 150] : [240, 150]);
+    const tree = d3.tree<OrgNode>().nodeSize([220, 160]);
     tree(root);
     return root;
   }, [mode, visibleTree]);
 
   const nodes = hierarchyLayout.descendants();
   const links = hierarchyLayout.links();
+  const nodeById = useMemo(
+    () => new Map(nodes.map((node) => [node.data.employee_id, node])),
+    [nodes],
+  );
   const maxVisibleNodes = visibleCount(visibleTree);
-
-  useEffect(() => {
-    if (!searchQuery.trim()) return;
-    const path = findPathByName(hierarchy, searchQuery);
-    if (path.length > 0) {
-      setExpandedPathIds(path);
-    }
-  }, [hierarchy, searchQuery]);
 
   useEffect(() => {
     if (!svgRef.current || !zoomLayerRef.current) return;
@@ -203,18 +190,40 @@ function TreeCanvas({
     const zoomLayer = d3.select(zoomLayerRef.current);
     svg.selectAll(".zoom-listener").remove();
 
+    const initialTransform = d3.zoomIdentity.translate(TREE_WIDTH / 2, 80).scale(0.75);
     const zoomBehavior = d3.zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.4, 2.5])
       .on("zoom", (event) => {
         zoomLayer.attr("transform", event.transform.toString());
       });
 
+    zoomBehaviorRef.current = zoomBehavior;
     svg.call(zoomBehavior as any);
+    svg.call(zoomBehavior.transform as any, initialTransform as any);
 
     return () => {
       svg.on(".zoom", null);
     };
   }, [visibleTree, mode]);
+
+  useEffect(() => {
+    if (!pendingFocusNodeId || !svgRef.current || !zoomBehaviorRef.current) return;
+    const target = nodeById.get(pendingFocusNodeId);
+    if (!target) return;
+
+    const svg = d3.select(svgRef.current);
+    const scale = 1;
+    const targetTransform = d3.zoomIdentity
+      .translate(TREE_WIDTH / 2 - target.x * scale, 120 - target.y * scale)
+      .scale(scale);
+
+    svg
+      .transition()
+      .duration(450)
+      .call(zoomBehaviorRef.current.transform as any, targetTransform as any);
+
+    setPendingFocusNodeId(null);
+  }, [nodeById, pendingFocusNodeId]);
 
   useEffect(() => {
     setExpandedPathIds([hierarchy.employee_id]);
@@ -236,6 +245,22 @@ function TreeCanvas({
     window.addEventListener("nova:expand-org-node", onExpand as EventListener);
     return () => window.removeEventListener("nova:expand-org-node", onExpand as EventListener);
   }, [hierarchy]);
+
+  const handleFitToScreen = () => {
+    if (!svgRef.current || !zoomBehaviorRef.current) return;
+    const svg = d3.select(svgRef.current);
+    const initialTransform = d3.zoomIdentity.translate(TREE_WIDTH / 2, 80).scale(0.75);
+    svg.transition().duration(300).call(zoomBehaviorRef.current.transform as any, initialTransform as any);
+  };
+
+  const handleFindEmployee = () => {
+    if (!searchQuery.trim()) return;
+    const path = findPathByName(hierarchy, searchQuery);
+    if (path.length > 0) {
+      setExpandedPathIds(path);
+      setPendingFocusNodeId(path[path.length - 1]);
+    }
+  };
 
   const handleNodeClick = (node: d3.HierarchyPointNode<OrgNode>) => {
     const children = node.data.children || [];
@@ -284,7 +309,16 @@ function TreeCanvas({
             onChange={(event) => onSearchQueryChange(event.target.value)}
             placeholder="Search employee name"
             className="w-[220px]"
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                handleFindEmployee();
+              }
+            }}
           />
+
+          <Button variant="outline" onClick={handleFindEmployee}>Find</Button>
+          <Button variant="outline" onClick={handleFitToScreen}>Fit to Screen</Button>
 
           <Button variant="outline" onClick={onToggleRiskOverlay}>
             {riskOverlay ? "Hide Risk Overlay" : "Show Risk Overlay"}
@@ -319,9 +353,12 @@ function TreeCanvas({
       </div>
 
       <div className="relative overflow-hidden rounded-xl border bg-background">
-        <svg ref={svgRef} className="h-[500px] w-full" viewBox="0 0 1600 500" preserveAspectRatio="xMidYMid meet">
+        <div className="px-4 py-3 text-xs text-amber-700 bg-amber-50 border-b md:hidden">
+          Best viewed on desktop for full org hierarchy controls.
+        </div>
+        <svg ref={svgRef} className="h-[560px] w-full" viewBox={`0 0 ${TREE_WIDTH} ${TREE_HEIGHT}`} preserveAspectRatio="xMidYMid meet">
           <g ref={zoomLayerRef}>
-            <g transform={`translate(800, 60)`}>
+            <g>
               {links.map((link) => {
                 const sourceLevel = link.source.data.org_level;
                 const targetLevel = link.target.data.org_level;
@@ -348,40 +385,67 @@ function TreeCanvas({
                 const borderColor = isSearchMatch ? "#f5c518" : riskBorder;
                 const opacity = selectedDepartment === "All" || isHighlightedDepartment ? 1 : 0.3;
                 const riskLabel = getRiskLabel(employee);
-                const chipClass = DEPARTMENT_BADGE_STYLES[node.data.department] || "bg-muted text-foreground border-border";
+                const chip = roleChip(node.data);
+                const [titleLine1, titleLine2] = splitTitleLines(node.data.title || node.data.role || node.data.department);
+                const reportsCount = node.data.children?.length || 0;
+                const expanded = expandedPathIds[expandedPathIds.length - 1] === node.data.employee_id;
+                const nameFontSize = node.data.name.length > 18 ? 12 : 13;
 
                 return (
                   <g
                     key={node.data.employee_id}
-                    transform={`translate(${node.x - 90}, ${node.y - 40})`}
+                    transform={`translate(${node.x - NODE_WIDTH / 2}, ${node.y - NODE_HEIGHT / 2})`}
                     style={{ cursor: node.data.children && node.data.children.length > 0 ? "pointer" : "default", opacity }}
                     onClick={() => handleNodeClick(node)}
                   >
+                    <title>{node.data.name}</title>
                     <rect
-                      width="180"
-                      height="80"
+                      width={NODE_WIDTH}
+                      height={NODE_HEIGHT}
                       rx="8"
                       fill={styles.fill}
                       stroke={borderColor}
                       strokeWidth={2}
                     />
 
-                    <text x="90" y="18" textAnchor="middle" fill={styles.text} fontSize="13" fontWeight="700">
+                    <text x={NODE_WIDTH / 2} y="18" textAnchor="middle" fill={styles.text} fontSize={nameFontSize} fontWeight="700">
                       {node.data.name}
                     </text>
-                    <text x="90" y="35" textAnchor="middle" fill={styles.text} opacity={0.85} fontSize="11">
-                      {node.data.title || node.data.role || node.data.department}
+                    <text x={NODE_WIDTH / 2} y="35" textAnchor="middle" fill={styles.text} opacity={0.85} fontSize="11">
+                      <tspan x={NODE_WIDTH / 2} dy="0">{titleLine1}</tspan>
+                      {titleLine2 ? <tspan x={NODE_WIDTH / 2} dy="14">{titleLine2}</tspan> : null}
                     </text>
 
-                    <rect x="18" y="46" width="96" height="20" rx="10" className={chipClass} fillOpacity={0.95} stroke="none" />
-                    <text x="66" y="60" textAnchor="middle" fill={styles.text} fontSize="10" fontWeight="600">
-                      {node.data.department}
+                    <rect x="16" y="66" width="114" height="22" rx="11" fill={chip.fill} fillOpacity={0.95} stroke={chip.stroke} strokeWidth="0.8" />
+                    <text x="73" y="81" textAnchor="middle" fill={chip.textColor} fontSize="10" fontWeight="700">
+                      {chip.label}
                     </text>
 
-                    <circle cx="152" cy="56" r="5" fill={riskLabel === "At risk" ? "#ef4444" : "#22c55e"} />
-                    <text x="90" y="75" textAnchor="middle" fill={styles.text} opacity={0.8} fontSize="10">
-                      {node.data.children && node.data.children.length > 0 ? `▼ ${node.data.children.length} reports` : riskLabel}
-                    </text>
+                    {reportsCount > 0 ? (
+                      <>
+                        <circle
+                          cx={NODE_WIDTH / 2}
+                          cy={NODE_HEIGHT - 2}
+                          r="9"
+                          fill={expanded ? "#F5C518" : "#e5e7eb"}
+                          stroke="#6b7280"
+                          strokeWidth="1"
+                        />
+                        <text x={NODE_WIDTH / 2} y={NODE_HEIGHT + 2} textAnchor="middle" fill="#111827" fontSize="10" fontWeight="700">
+                          {expanded ? "▴" : "▾"}
+                        </text>
+                        <text x={NODE_WIDTH / 2 + 14} y={NODE_HEIGHT + 2} textAnchor="start" fill={styles.text} opacity={0.85} fontSize="10" fontWeight="600">
+                          {expanded ? "collapse" : `${reportsCount} reports`}
+                        </text>
+                      </>
+                    ) : (
+                      <>
+                        <circle cx="172" cy="77" r="5" fill={riskLabel === "At risk" ? "#ef4444" : "#22c55e"} />
+                        <text x="153" y="94" textAnchor="middle" fill={styles.text} opacity={0.8} fontSize="10">
+                          {riskLabel}
+                        </text>
+                      </>
+                    )}
                   </g>
                 );
               })}
@@ -509,4 +573,38 @@ export default function FocusedOrgTree() {
       </Dialog>
     </>
   );
+}
+
+function splitTitleLines(value: string): [string, string] {
+  const text = (value || "").trim();
+  if (!text) return ["", ""];
+  if (text.length <= 28) return [text, ""];
+  const words = text.split(/\s+/);
+  if (words.length < 2) return [text.slice(0, 28), text.slice(28)];
+  const mid = Math.ceil(words.length / 2);
+  return [words.slice(0, mid).join(" "), words.slice(mid).join(" ")];
+}
+
+function roleChip(node: OrgNode): { label: string; fill: string; stroke: string; textColor: string } {
+  if (node.org_level === 1) {
+    return { label: "C-SUITE", fill: "#F5C518", stroke: "#111827", textColor: "#111827" };
+  }
+  if (node.org_level === 2) {
+    return { label: `VP · ${node.department.toUpperCase()}`, fill: "#111827", stroke: "#111827", textColor: "#ffffff" };
+  }
+  const palette: Record<string, { fill: string; stroke: string; textColor: string }> = {
+    Engineering: { fill: "#e0f2fe", stroke: "#7dd3fc", textColor: "#0c4a6e" },
+    Sales: { fill: "#fef3c7", stroke: "#fcd34d", textColor: "#78350f" },
+    HR: { fill: "#ffe4e6", stroke: "#fda4af", textColor: "#881337" },
+    Design: { fill: "#f3e8ff", stroke: "#d8b4fe", textColor: "#581c87" },
+    Finance: { fill: "#dcfce7", stroke: "#86efac", textColor: "#14532d" },
+    Operations: { fill: "#e2e8f0", stroke: "#94a3b8", textColor: "#0f172a" },
+  };
+  const style = palette[node.department] || { fill: "#f3f4f6", stroke: "#d1d5db", textColor: "#111827" };
+  return {
+    label: node.department,
+    fill: style.fill,
+    stroke: style.stroke,
+    textColor: style.textColor,
+  };
 }

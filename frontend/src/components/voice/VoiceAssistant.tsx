@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bot, CalendarCheck, Mic, Minus, Send, Volume2, X } from 'lucide-react';
+import { Bot, CalendarCheck, Lightbulb, Mic, Minus, Send, Volume2, VolumeX, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { protectedPostApi } from '@/lib/api';
 import {
@@ -48,37 +48,45 @@ const FALLBACK_AGENT = { agentId: 'general_nova_agent', label: 'NOVA Assistant' 
 
 const INTRO_SESSION_KEY = 'nova_assistant_introduced';
 const TEXT_ONLY_NOTICE = 'Voice input not available in this browser. Please type.';
+const MUTE_SESSION_KEY = 'nova_assistant_muted';
 
 const PAGE_SUGGESTIONS: Record<string, string[]> = {
   '/org-health': [
-    "What's our overall workforce health?",
+    "What's our workforce health score?",
     'Which department needs attention?',
     'How many employees are at risk?',
+    'Give me a 2-minute tour of NOVA',
   ],
   '/dashboard': [
-    "What's our overall workforce health?",
+    "What's our workforce health score?",
     'Which department needs attention?',
     'How many employees are at risk?',
+    'Give me a 2-minute tour of NOVA',
   ],
   '/employees': [
     'Who are our top flight risks?',
-    'Tell me about this employee',
-    'Which department has the most burnout?',
+    'Which dept has the most burnout?',
+    'Tell me about the highest risk employee',
   ],
   '/hr/appraisals': [
     'Summarize this appraisal cycle',
-    'Who should be fast-tracked?',
-    'Are there any bias risks?',
+    'Who should be fast-tracked for promotion?',
+    'Are there PIP candidates?',
   ],
   '/hr/feedback-analyzer': [
     'What are employees most concerned about?',
-    'How much sarcasm is in the feedback?',
-    'Which department has the most negative feedback?',
+    'Which dept has most negative feedback?',
+    'How much sarcasm is detected?',
   ],
   '/departments/heatmap': [
     'Which department is performing best?',
-    'Why is this department flagged?',
+    'Which dept has highest burnout?',
     'Compare Engineering and Sales',
+  ],
+  '/employees/org-tree': [
+    'Who has the most at-risk team?',
+    'What is the average span of control?',
+    'Show me the VP Engineering team',
   ],
 };
 
@@ -155,6 +163,12 @@ export function VoiceAssistant() {
   const [introBouncing, setIntroBouncing] = useState(false);
   const [showSuggestedQuestions, setShowSuggestedQuestions] = useState(true);
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
+  const [agentSwitchToast, setAgentSwitchToast] = useState<string | null>(null);
+  const [clearFlash, setClearFlash] = useState(false);
+  const [muted, setMuted] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.sessionStorage.getItem(MUTE_SESSION_KEY) === '1';
+  });
 
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const currentSectionRef = useRef<string>(sectionKey(location.pathname));
@@ -183,15 +197,21 @@ export function VoiceAssistant() {
     const nextSection = sectionKey(location.pathname);
     if (nextSection !== currentSectionRef.current) {
       currentSectionRef.current = nextSection;
-      setMessages([
-        {
-          id: newId(),
-          role: 'system',
-          content: `Switched to ${agent.label}`,
-        },
-      ]);
+      setAgentSwitchToast(agent.label);
+      setMessages([]);
+      setShowSuggestedQuestions(true);
+      const timer = window.setTimeout(() => setAgentSwitchToast(null), 2000);
+      return () => window.clearTimeout(timer);
     }
   }, [location.pathname, agent.label]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.sessionStorage.setItem(MUTE_SESSION_KEY, muted ? '1' : '0');
+    if (muted) {
+      stopSpeaking();
+    }
+  }, [muted, stopSpeaking]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -227,7 +247,7 @@ export function VoiceAssistant() {
 
   const speak = useCallback(
     (text: string, messageId?: string, onEnd?: () => void) => {
-      if (typeof window === 'undefined' || !window.speechSynthesis || !text.trim()) {
+      if (muted || typeof window === 'undefined' || !window.speechSynthesis || !text.trim()) {
         onEnd?.();
         return;
       }
@@ -249,7 +269,7 @@ export function VoiceAssistant() {
       setMicState('speaking');
       window.speechSynthesis.speak(utter);
     },
-    [],
+    [muted],
   );
 
   const stopListening = useCallback(() => {
@@ -520,9 +540,10 @@ export function VoiceAssistant() {
 
       {open && (
         <div
-          className="fixed bottom-6 right-6 z-[1000] flex flex-col border-2 border-foreground bg-card shadow-[4px_4px_0px_#000]"
-          style={{ width: 360, height: 500 }}
+          className="fixed bottom-6 right-6 z-[1000] flex flex-col border border-[#e5e7eb] bg-white"
+          style={{ width: 360, height: 500, boxShadow: '0 8px 32px rgba(0,0,0,0.18)', borderRadius: 12, overflow: 'hidden' }}
         >
+          <div className="h-1 w-full bg-[#F5C518]" />
           <header className="flex items-center gap-2 border-b-2 border-foreground bg-[#F5C518] px-3 py-2">
             <div className="flex h-8 w-8 items-center justify-center border-2 border-foreground bg-black">
               <Bot className="h-4 w-4 text-[#F5C518]" />
@@ -535,11 +556,11 @@ export function VoiceAssistant() {
             </div>
             <button
               type="button"
-              onClick={() => setConversational((v) => !v)}
-              title={conversational ? 'Conversational mode on' : 'Conversational mode off'}
+              onClick={() => setMuted((v) => !v)}
+              title={muted ? 'Unmute voice' : 'Mute voice'}
               className="mr-1 flex h-7 w-7 items-center justify-center border-2 border-foreground bg-white text-black hover:bg-black hover:text-white"
             >
-              <Volume2 className={`h-3.5 w-3.5 ${conversational ? '' : 'opacity-30'}`} />
+              {muted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
             </button>
             <button
               type="button"
@@ -551,7 +572,12 @@ export function VoiceAssistant() {
             </button>
           </header>
 
-          <div className="flex-1 overflow-y-auto px-3 py-3 bg-background">
+          <div className={`flex-1 overflow-y-auto px-3 py-3 bg-white transition-colors duration-500 ${clearFlash ? 'bg-yellow-50' : ''}`}>
+            {agentSwitchToast && (
+              <div className="mx-auto mb-2 w-fit rounded-full bg-gray-100 px-3 py-1 text-[11px] italic text-gray-700 nova-agent-switch-pill">
+                🔄 {agentSwitchToast}
+              </div>
+            )}
             {messages.length === 0 && (
               <div className="text-xs text-muted-foreground text-center py-6">
                 Ask anything about this page or the NOVA platform.
@@ -562,14 +588,7 @@ export function VoiceAssistant() {
             <div className="flex flex-col gap-2">
               {messages.map((m) => {
                 if (m.role === 'system') {
-                  return (
-                    <div
-                      key={m.id}
-                      className="self-center text-[10px] uppercase tracking-wider text-muted-foreground border border-dashed border-muted-foreground/40 px-2 py-0.5"
-                    >
-                      {m.content}
-                    </div>
-                  );
+                  return null;
                 }
                 const isUser = m.role === 'user';
                 return (
@@ -584,8 +603,10 @@ export function VoiceAssistant() {
                     )}
                     <div className="flex max-w-[78%] flex-col gap-1">
                       <div
-                        className={`border-2 border-foreground px-2.5 py-1.5 text-xs leading-snug whitespace-pre-wrap ${
-                          isUser ? 'bg-[#F5C518] text-black' : 'bg-white text-black'
+                        className={`px-3 py-2 text-xs leading-snug whitespace-pre-wrap border ${
+                          isUser
+                            ? 'bg-[#F5C518] text-black border-[#F5C518] rounded-[16px_16px_4px_16px]'
+                            : 'bg-[#f9fafb] text-[#111] border-[#e5e7eb] rounded-[16px_16px_16px_4px]'
                         }`}
                       >
                         {m.content}
@@ -656,16 +677,43 @@ export function VoiceAssistant() {
               }
               .nova-wave-bar {
                 width: 3px;
-                height: 10px;
+                height: 4px;
                 background: #F5C518;
-                border: 1px solid #1A1A1A;
                 display: inline-block;
-                animation: nova-wave 0.9s ease-in-out infinite;
                 transform-origin: bottom;
               }
-              @keyframes nova-wave {
-                0%, 100% { transform: scaleY(0.4); }
-                50% { transform: scaleY(1.4); }
+              .nova-wave-bar:nth-child(1) { animation: nova-wave-1 0.6s ease-in-out infinite; }
+              .nova-wave-bar:nth-child(2) { animation: nova-wave-2 0.8s ease-in-out infinite; animation-delay: 0.1s; }
+              .nova-wave-bar:nth-child(3) { animation: nova-wave-3 0.5s ease-in-out infinite; animation-delay: 0.2s; }
+              .nova-wave-bar:nth-child(4) { animation: nova-wave-4 0.7s ease-in-out infinite; animation-delay: 0.15s; }
+              .nova-wave-bar:nth-child(5) { animation: nova-wave-5 0.9s ease-in-out infinite; animation-delay: 0.05s; }
+              @keyframes nova-wave-1 {
+                0%, 100% { height: 4px; }
+                50% { height: 14px; }
+              }
+              @keyframes nova-wave-2 {
+                0%, 100% { height: 4px; }
+                50% { height: 20px; }
+              }
+              @keyframes nova-wave-3 {
+                0%, 100% { height: 4px; }
+                50% { height: 24px; }
+              }
+              @keyframes nova-wave-4 {
+                0%, 100% { height: 4px; }
+                50% { height: 18px; }
+              }
+              @keyframes nova-wave-5 {
+                0%, 100% { height: 4px; }
+                50% { height: 12px; }
+              }
+              .nova-agent-switch-pill {
+                animation: nova-agent-pill 2s ease-in-out;
+              }
+              @keyframes nova-agent-pill {
+                0% { opacity: 0; transform: translateY(4px); }
+                15%, 75% { opacity: 1; transform: translateY(0); }
+                100% { opacity: 0; transform: translateY(-2px); }
               }
             `}</style>
           </div>
@@ -702,7 +750,7 @@ export function VoiceAssistant() {
             </div>
 
             {showSuggestedQuestions && suggestedQuestions.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-col gap-2">
                 {suggestedQuestions.slice(0, 3).map((question) => (
                   <button
                     key={question}
@@ -711,13 +759,29 @@ export function VoiceAssistant() {
                       setInputValue(question);
                       void sendMessage(question);
                     }}
-                    className="rounded-full border-2 border-foreground bg-white px-2.5 py-1 text-[10px] font-semibold text-black hover:bg-[#FFF9D6]"
+                    className="inline-flex items-center gap-2 rounded-full border border-[#d1d5db] bg-white px-3 py-1.5 text-[12px] text-gray-600 hover:bg-[#fef9c3]"
                   >
+                    <Lightbulb className="h-3.5 w-3.5 text-[#d4a400]" />
                     {question}
                   </button>
                 ))}
               </div>
             )}
+
+            <div className="flex justify-start">
+              <button
+                type="button"
+                className="text-[11px] text-muted-foreground underline-offset-2 hover:underline"
+                onClick={() => {
+                  setMessages([]);
+                  setShowSuggestedQuestions(true);
+                  setClearFlash(true);
+                  window.setTimeout(() => setClearFlash(false), 500);
+                }}
+              >
+                Clear chat
+              </button>
+            </div>
 
             <div className="flex flex-col items-center gap-0.5">
               <button

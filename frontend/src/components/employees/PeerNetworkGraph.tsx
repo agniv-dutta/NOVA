@@ -74,8 +74,28 @@ export default function PeerNetworkGraph() {
       entropy.set(node.id, entropyScore);
 
       const sentimentRisk = 1 - node.sentiment / 100;
-      const propagationScore = Math.min(1, centralityScore * (0.7 + sentimentRisk * 0.6));
-      propagationRisk.set(node.id, propagationScore);
+      const rawScore = Math.min(1, centralityScore * 0.65 + sentimentRisk * 0.35);
+      propagationRisk.set(node.id, rawScore);
+    });
+
+    const ranked = nodes
+      .map((node) => ({ nodeId: node.id, score: propagationRisk.get(node.id) || 0 }))
+      .sort((a, b) => a.score - b.score);
+    const lowCutoff = Math.floor(ranked.length * 0.3);
+    const mediumCutoff = Math.floor(ranked.length * 0.8);
+
+    ranked.forEach((entry, index) => {
+      if (index < lowCutoff) {
+        propagationRisk.set(entry.nodeId, 0.2 + (index / Math.max(1, lowCutoff)) * 0.19);
+      } else if (index < mediumCutoff) {
+        const offset = index - lowCutoff;
+        const span = Math.max(1, mediumCutoff - lowCutoff);
+        propagationRisk.set(entry.nodeId, 0.4 + (offset / span) * 0.25);
+      } else {
+        const offset = index - mediumCutoff;
+        const span = Math.max(1, ranked.length - mediumCutoff);
+        propagationRisk.set(entry.nodeId, 0.66 + (offset / span) * 0.29);
+      }
     });
 
     return { connectionCount, weightedConnections, centrality, entropy, propagationRisk };
@@ -181,8 +201,8 @@ export default function PeerNetworkGraph() {
       .attr("r", (d: any) => 10 + (d.influence / 100) * 20)
       .attr("fill", (d: any) => {
         const risk = metrics.propagationRisk.get(d.id) || 0;
-        if (risk >= 0.66) return "#ef4444";
-        if (risk >= 0.33) return "#eab308";
+        if (risk > 0.65) return "#ef4444";
+        if (risk >= 0.4) return "#eab308";
         return "#22c55e";
       })
       .attr("stroke", "#fff")

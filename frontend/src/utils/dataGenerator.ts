@@ -129,7 +129,7 @@ function getReportsTo(department: Department, index: number, totalInDepartment: 
     if (index === 1) return getEmployeeId('Finance', 1);
   } else {
     if (index === 1) return rootId;
-    if (DEPARTMENT_MANAGER_IDS[department].includes(index)) return rootId;
+    if (DEPARTMENT_MANAGER_IDS[department].includes(index)) return vpId;
   }
 
   const managerIds = DEPARTMENT_MANAGER_IDS[department]
@@ -285,7 +285,16 @@ export function generateEmployees(count: number = 100): Employee[] {
       const baseWellbeing = Math.random(); // 0=poor, 1=great
       const performanceScore = Math.round(rand(50, 100) * (0.5 + baseWellbeing * 0.5));
       const engagementScore = Math.round(rand(30, 100) * (0.3 + baseWellbeing * 0.7));
-      const sentimentScore = Math.round((baseWellbeing * 2 - 1 + (Math.random() - 0.5) * 0.5) * 100) / 100;
+      const sentimentBucket = sequenceIndex % 20;
+      let sentimentScore = 0;
+      if (sentimentBucket < 8) {
+        sentimentScore = rand(0.3, 0.8);
+      } else if (sentimentBucket < 15) {
+        sentimentScore = rand(-0.3, 0.3);
+      } else {
+        sentimentScore = rand(-1.0, -0.3);
+      }
+      sentimentScore = Math.round(sentimentScore * 100) / 100;
       const clampedSentiment = Math.max(-1, Math.min(1, sentimentScore));
 
       const workHoursPerWeek = Math.round(rand(35, 55));
@@ -385,6 +394,44 @@ export function generateEmployees(count: number = 100): Employee[] {
         peerConnectionCount: adjustedPeerConnections,
         dataQualityScore,
       });
+
+      const current = employees[employees.length - 1];
+      if (current.id === 'NOVA-ENG005') {
+        current.burnoutRisk = 82;
+        current.attritionRisk = 78;
+        current.sentimentScore = -0.9;
+        current.lastOneOnOneDaysAgo = 45;
+        current.afterHoursSessionsWeekly = 6;
+        current.feedbackSubmissionsCount = 0;
+        current.kpiScore = Math.min(current.kpiScore, 0.44);
+        current.recentFeedback = [
+          'I am overwhelmed and unable to recover between sprints.',
+          'The ticket load has become unsustainable and support is limited.',
+        ];
+      }
+      if (current.id === 'NOVA-ENG002') {
+        current.performanceScore = 91;
+        current.engagementScore = 94;
+        current.burnoutRisk = 12;
+        current.attritionRisk = 9;
+        current.sentimentScore = 0.8;
+        current.kpiScore = 0.93;
+        current.recentFeedback = [
+          'I feel energized and highly supported by my team.',
+          'Excited to keep growing and taking ownership on complex work.',
+        ];
+      }
+      if (current.id === 'NOVA-DES005') {
+        current.burnoutRisk = 55;
+        current.attritionRisk = Math.max(current.attritionRisk, 56);
+        current.sentimentScore = -0.4;
+        current.afterHoursSessionsWeekly = Math.max(current.afterHoursSessionsWeekly, 6);
+        current.feedbackSubmissionsCount = 0;
+        current.recentFeedback = [
+          'I have been quieter recently and feel disconnected from team decisions.',
+          'Work has become heavier after hours and I am struggling to reset.',
+        ];
+      }
 
       sequenceIndex += 1;
     }

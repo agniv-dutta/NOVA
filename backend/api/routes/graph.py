@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from functools import lru_cache
+
 from fastapi import APIRouter, Depends, Query
 
 from ai.graph.centrality import NetworkAnalyzer
 from ai.graph.propagation import simulate_burnout_propagation
 from api.deps import require_role
+from core.employee_directory import get_employee_directory
 from models.user import User, UserRole
 
 router = APIRouter()
@@ -16,18 +19,38 @@ def _graph_role_dependency() -> Depends:
     return Depends(require_role([UserRole.HR, UserRole.MANAGER, UserRole.LEADERSHIP]))
 
 
+@lru_cache(maxsize=1)
+def _canonical_directory_maps() -> tuple[dict[str, str], list[str], set[str]]:
+    directory = get_employee_directory()
+    by_id = {str(row["employee_id"]): str(row["name"]) for row in directory}
+    names = [str(row["name"]) for row in directory]
+    names_set = set(names)
+    return by_id, names, names_set
+
+
+def _canonical_name(node_id: str, raw_name: str, index: int) -> str:
+    by_id, names, names_set = _canonical_directory_maps()
+    if node_id in by_id:
+        return by_id[node_id]
+    if raw_name in names_set:
+        return raw_name
+    if names:
+        return names[index % len(names)]
+    return raw_name
+
+
 def _build_mock_graph_data(department: str | None = None) -> tuple[list[dict], list[dict]]:
     nodes = [
-        {"id": "node-1", "name": "Alice", "department": "Engineering", "burnout_risk_score": 0.72},
-        {"id": "node-2", "name": "Bob", "department": "Engineering", "burnout_risk_score": 0.48},
-        {"id": "node-3", "name": "Carol", "department": "Sales", "burnout_risk_score": 0.61},
-        {"id": "node-4", "name": "David", "department": "Sales", "burnout_risk_score": 0.35},
-        {"id": "node-5", "name": "Emma", "department": "Marketing", "burnout_risk_score": 0.55},
-        {"id": "node-6", "name": "Frank", "department": "Marketing", "burnout_risk_score": 0.41},
-        {"id": "node-7", "name": "Grace", "department": "Operations", "burnout_risk_score": 0.66},
-        {"id": "node-8", "name": "Henry", "department": "Operations", "burnout_risk_score": 0.29},
-        {"id": "node-9", "name": "Iris", "department": "Engineering", "burnout_risk_score": 0.78},
-        {"id": "node-10", "name": "Jack", "department": "Sales", "burnout_risk_score": 0.57},
+        {"id": "node-1", "name": "Ananya", "department": "Engineering", "burnout_risk_score": 0.72},
+        {"id": "node-2", "name": "Rahul", "department": "Engineering", "burnout_risk_score": 0.48},
+        {"id": "node-3", "name": "Priya", "department": "Sales", "burnout_risk_score": 0.61},
+        {"id": "node-4", "name": "Arjun", "department": "Sales", "burnout_risk_score": 0.35},
+        {"id": "node-5", "name": "Meera", "department": "Marketing", "burnout_risk_score": 0.55},
+        {"id": "node-6", "name": "Vikram", "department": "Marketing", "burnout_risk_score": 0.41},
+        {"id": "node-7", "name": "Kavya", "department": "Operations", "burnout_risk_score": 0.66},
+        {"id": "node-8", "name": "Nikhil", "department": "Operations", "burnout_risk_score": 0.29},
+        {"id": "node-9", "name": "Riya", "department": "Engineering", "burnout_risk_score": 0.78},
+        {"id": "node-10", "name": "Siddharth", "department": "Sales", "burnout_risk_score": 0.57},
     ]
 
     edges = [
@@ -81,7 +104,7 @@ async def get_graph_propagation(
     }
 
     enriched_nodes = []
-    for node in nodes:
+    for index, node in enumerate(nodes):
         node_id = node["id"]
         centrality = centralities.get(node_id)
         propagation_row = propagation_by_node.get(node_id, {})
@@ -89,7 +112,7 @@ async def get_graph_propagation(
         enriched_nodes.append(
             {
                 "id": node_id,
-                "name": node["name"],
+                "name": _canonical_name(node_id, str(node.get("name", "")), index),
                 "department": node["department"],
                 "burnout_risk_score": node["burnout_risk_score"],
                 "propagation_risk": propagation_row.get("propagation_risk", node["burnout_risk_score"]),

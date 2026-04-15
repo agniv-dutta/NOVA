@@ -229,6 +229,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const [upcomingSessionCount, setUpcomingSessionCount] = useState(0);
   const [draftAppraisalCount, setDraftAppraisalCount] = useState(0);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [showDemoBanner, setShowDemoBanner] = useState(true);
 
   const insightsEmployeeId = employees[0]?.id ?? 'emp-123';
 
@@ -342,7 +343,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   }, [location.pathname, flatItemsForHeader, user?.role]);
 
   return (
-    <div className="flex min-h-screen w-full">
+    <div className={`flex min-h-screen w-full ${showDemoBanner ? 'pt-6' : ''}`}>
+      {showDemoBanner && (
+        <div className="fixed inset-x-0 top-0 z-[60] h-6 border-b border-[#111] bg-[#F5C518] px-3 text-[11px] font-medium text-black flex items-center justify-between">
+          <span>🎯 NOVA — Grand Finale Demo | Data is synthetic for demonstration purposes</span>
+          <button type="button" className="px-1" onClick={() => setShowDemoBanner(false)} aria-label="Dismiss demo banner">×</button>
+        </div>
+      )}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 lg:hidden"
@@ -390,6 +397,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   to={item.to}
                   end={item.to === '/'}
                   onClick={() => setSidebarOpen(false)}
+                  title={item.label}
                   className={({ isActive }) =>
                     `sidebar-link lg:mx-auto lg:h-11 lg:w-11 lg:justify-center lg:gap-0 lg:px-0 lg:py-0 lg:group-hover:mx-0 lg:group-hover:h-auto lg:group-hover:w-full lg:group-hover:justify-start lg:group-hover:gap-3 lg:group-hover:px-3 lg:group-hover:py-2.5 lg:group-focus-within:mx-0 lg:group-focus-within:h-auto lg:group-focus-within:w-full lg:group-focus-within:justify-start lg:group-focus-within:gap-3 lg:group-focus-within:px-3 lg:group-focus-within:py-2.5 ${isActive ? 'sidebar-link-active' : ''}`
                   }
@@ -413,6 +421,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           ))}
         </nav>
+        <div className="border-t border-border px-3 py-2 text-[10px] text-muted-foreground">
+          NOVA v1.0 · Grand Finale 2025
+        </div>
       </aside>
 
       <div className="flex flex-1 flex-col min-w-0">
@@ -472,7 +483,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        <main className="flex-1 overflow-auto p-4 lg:p-6 pb-20 lg:pb-6">{children}</main>
+        <main className="flex-1 overflow-auto p-4 lg:p-6 pb-20 lg:pb-6 nova-page-fade">{children}</main>
 
         {mobileNav.length > 0 && (
           <nav className="fixed bottom-0 inset-x-0 z-30 border-t-2 border-foreground bg-card p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] lg:hidden">

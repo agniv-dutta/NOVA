@@ -122,6 +122,7 @@ def _title(department: Department, index: int, total_in_department: int) -> str:
 
 def _reports_to(department: Department, index: int, total_in_department: int) -> str:
     root_id = _employee_id("Engineering", 1)
+    dept_vp_id = _employee_id(department, 1)
     if department == "Engineering":
         if index == 1:
             return ""
@@ -137,7 +138,7 @@ def _reports_to(department: Department, index: int, total_in_department: int) ->
         if index == 1:
             return root_id
         if index in DEPARTMENT_MANAGERS[department]:
-            return root_id
+            return dept_vp_id
 
     manager_ids = [
         _employee_id(department, manager_index)

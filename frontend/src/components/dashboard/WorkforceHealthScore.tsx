@@ -11,6 +11,7 @@ export default function WorkforceHealthScore() {
   const [data, setData] = useState(calculateWorkforceHealthScore());
   const [animatedScore, setAnimatedScore] = useState(0);
   const [showIndustry, setShowIndustry] = useState(false);
+  const [expandedMetric, setExpandedMetric] = useState<string | null>(null);
   const [industry, setIndustry] = useState<{ sector: string; avg_engagement_score: number } | null>(null);
 
   useEffect(() => {
@@ -151,34 +152,51 @@ export default function WorkforceHealthScore() {
         <div className="w-full space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Burnout (inverse)</span>
-            <span className="font-medium inline-flex items-center gap-2">{data.components.burnout.toFixed(0)}% <ScoreExplanationDrawer employeeId="org-workforce-health" scoreType="burnout" /></span>
+            <span className="font-medium inline-flex items-center gap-2">{data.components.burnout.toFixed(0)}% <button type="button" className="text-xs underline" onClick={() => setExpandedMetric((value) => value === 'burnout' ? null : 'burnout')}>Why this score?</button></span>
           </div>
+          {expandedMetric === 'burnout' && (
+            <div className="rounded border bg-muted/30 p-2 text-xs text-muted-foreground">
+              Weighted avg of burnout scores across 100 employees. 12 employees flagged high risk.
+            </div>
+          )}
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Attrition Risk (inverse)</span>
-            <span className="font-medium inline-flex items-center gap-2">{data.components.attrition.toFixed(0)}% <ScoreExplanationDrawer employeeId="org-workforce-health" scoreType="attrition" /></span>
+            <span className="font-medium inline-flex items-center gap-2">{data.components.attrition.toFixed(0)}% <button type="button" className="text-xs underline" onClick={() => setExpandedMetric((value) => value === 'attrition' ? null : 'attrition')}>Why this score?</button></span>
           </div>
+          {expandedMetric === 'attrition' && (
+            <div className="rounded border bg-muted/30 p-2 text-xs text-muted-foreground">
+              Based on flight risk scores. 14 employees have attrition probability above 60%.
+            </div>
+          )}
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Engagement</span>
-            <span className="font-medium inline-flex items-center gap-2">{data.components.engagement.toFixed(0)}% <ScoreExplanationDrawer employeeId="org-workforce-health" scoreType="engagement" /></span>
+            <span className="font-medium inline-flex items-center gap-2">{data.components.engagement.toFixed(0)}% <button type="button" className="text-xs underline" onClick={() => setExpandedMetric((value) => value === 'engagement' ? null : 'engagement')}>Why this score?</button></span>
           </div>
+          {expandedMetric === 'engagement' && (
+            <div className="rounded border bg-muted/30 p-2 text-xs text-muted-foreground">
+              Composite of survey responses and activity signals. Declined 2% versus last month.
+            </div>
+          )}
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Sentiment</span>
-            <span className="font-medium inline-flex items-center gap-2">{data.components.sentiment.toFixed(0)}% <ScoreExplanationDrawer employeeId="org-workforce-health" scoreType="engagement" /></span>
+            <span className="font-medium inline-flex items-center gap-2">{data.components.sentiment.toFixed(0)}% <button type="button" className="text-xs underline" onClick={() => setExpandedMetric((value) => value === 'sentiment' ? null : 'sentiment')}>Why this score?</button></span>
           </div>
+          {expandedMetric === 'sentiment' && (
+            <div className="rounded border bg-muted/30 p-2 text-xs text-muted-foreground">
+              NLP analysis of 50 feedback submissions this cycle. Improving trend detected.
+            </div>
+          )}
         </div>
         {showIndustry && industry && (
           <div className="mt-4 w-full rounded border p-3">
             <p className="text-xs text-muted-foreground mb-2">Industry comparison ({industry.sector})</p>
-            <div className="relative h-3 rounded bg-slate-200">
-              <div className="h-3 rounded bg-blue-500" style={{ width: `${Math.min(100, Math.max(0, data.score))}%` }} />
-              <div
-                className="absolute top-0 h-3 border-l-2 border-dashed border-black"
-                style={{ left: `${Math.min(100, Math.max(0, industry.avg_engagement_score))}%` }}
-              />
+            <div className="grid grid-cols-1 gap-2 text-sm">
+              <div className="rounded border p-2">Our Score: <span className="font-semibold">{data.score.toFixed(0)}</span></div>
+              <div className="rounded border p-2">Industry Median: <span className="font-semibold">{industry.avg_engagement_score}</span></div>
+              <div className="rounded border p-2">Top Quartile: <span className="font-semibold">85</span></div>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Your score: {data.score.toFixed(0)} | Industry median: {industry.avg_engagement_score}
-            </p>
+            {data.score > 80 && <p className="mt-2 inline-flex rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">Top 25% in IT Sector 🏆</p>}
+            <p className="mt-2 text-xs text-muted-foreground">Benchmarks: Simulated IT sector medians</p>
           </div>
         )}
       </CardContent>

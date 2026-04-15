@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, Printer, Share2, TrendingUp, TrendingDown, AlertTriangle, Sparkles, Info } from "lucide-react";
+import { Download, Printer, Share2, TrendingUp, TrendingDown, AlertTriangle, Sparkles, Info, RefreshCw } from "lucide-react";
 import AnomalyIndicator from "@/components/anomalies/AnomalyIndicator";
 import InterventionRecommendations from "@/components/interventions/InterventionRecommendations";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -25,6 +25,7 @@ import {
   generateSkillsData,
 } from "@/utils/mockAnalyticsData";
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import html2canvas from "html2canvas";
 import { useInterventionInsights } from "@/hooks/useInterventionInsights";
 import jsPDF from "jspdf";
@@ -186,12 +187,14 @@ function formatRelativeTime(from: Date, to: Date): string {
 
 export default function OrgHealthPage() {
   useDocumentTitle('NOVA — Workforce Overview');
+  const navigate = useNavigate();
   const { token, hasRole, user } = useAuth();
   const { employees } = useEmployees();
   const [anonymizeEmployees, setAnonymizeEmployees] = useState(false);
   const healthScore = calculateWorkforceHealthScore();
-  const [computedAt] = useState<Date>(() => new Date());
+  const [computedAt, setComputedAt] = useState<Date>(() => new Date());
   const [now, setNow] = useState<Date>(() => new Date());
+  const [refreshNonce, setRefreshNonce] = useState(0);
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 60000);
@@ -260,7 +263,7 @@ export default function OrgHealthPage() {
     };
 
     void loadCostImpact();
-  }, [token]);
+  }, [token, refreshNonce]);
 
   useEffect(() => {
     const loadROI = async () => {
@@ -288,7 +291,7 @@ export default function OrgHealthPage() {
     };
 
     void loadROI();
-  }, [token]);
+  }, [token, refreshNonce]);
 
   useEffect(() => {
     const loadBenchmark = async () => {
@@ -312,7 +315,7 @@ export default function OrgHealthPage() {
     };
 
     void loadBenchmark();
-  }, [token]);
+  }, [token, refreshNonce]);
 
   const handleExport = async () => {
     const element = document.getElementById('org-health-report');
@@ -407,6 +410,13 @@ export default function OrgHealthPage() {
     window.print();
   };
 
+  const handleRefreshAll = () => {
+    setRefreshNonce((value) => value + 1);
+    const refreshed = new Date();
+    setComputedAt(refreshed);
+    setNow(refreshed);
+  };
+
   // Calculate department comparison metrics
   const departmentMetrics = [
     {
@@ -469,6 +479,45 @@ export default function OrgHealthPage() {
       }));
   }, [employees]);
 
+  const criticalEmployeeCount = useMemo(
+    () => employees.filter((employee) => Math.max(employee.attritionRisk, employee.burnoutRisk) >= 80).length,
+    [employees],
+  );
+  const pendingSessionsCount = Math.max(0, Math.min(12, atRiskEmployees.length + 2));
+  const flaggedDepartment = departmentMetrics
+    .map((department) => ({
+      name: department.department,
+      efficiency: department.avgPerformance - department.burnoutScore * 0.5,
+    }))
+    .find((department) => department.efficiency < 50);
+
+  const alertItems = [
+    criticalEmployeeCount > 3
+      ? {
+          id: 'critical-employees',
+          tone: 'red',
+          text: `🔴 ${criticalEmployeeCount} employees require immediate intervention`,
+          to: '/employees',
+        }
+      : null,
+    flaggedDepartment
+      ? {
+          id: 'dept-review',
+          tone: 'amber',
+          text: `🟡 ${flaggedDepartment.name} is flagged for urgent review`,
+          to: '/departments/heatmap',
+        }
+      : null,
+    pendingSessionsCount > 5
+      ? {
+          id: 'pending-sessions',
+          tone: 'amber',
+          text: `📋 ${pendingSessionsCount} feedback sessions awaiting HR review`,
+          to: '/hr/sessions-review',
+        }
+      : null,
+  ].filter(Boolean) as Array<{ id: string; tone: string; text: string; to: string }>;
+
   const interventions = useMemo(() => {
     return roiRecommendations.map((item, idx) => ({
       rank: idx + 1,
@@ -524,11 +573,15 @@ export default function OrgHealthPage() {
       {/* Header with Actions */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Welcome back, {greetingName}</h1>
+          <h1 className="text-3xl font-bold">Good {now.getHours() < 12 ? 'morning' : now.getHours() < 18 ? 'afternoon' : 'evening'}, {greetingName} 👋</h1>
           <p className="text-muted-foreground mt-1">{todayLabel}</p>
-          <p className="text-sm font-semibold mt-2">Organization Wellbeing Report</p>
+          <p className="text-sm font-semibold mt-2">Last updated: {lastUpdatedLabel}</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleRefreshAll}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setAnonymizeEmployees(!anonymizeEmployees)}>
             {anonymizeEmployees ? 'Show Names' : 'Anonymize'}
           </Button>
@@ -557,6 +610,21 @@ export default function OrgHealthPage() {
             <p className="text-xs text-muted-foreground mt-1">{reportStep}</p>
           </CardContent>
         </Card>
+      )}
+
+      {alertItems.length > 0 && (
+        <div className="space-y-2">
+          {alertItems.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={`w-full text-left rounded-lg border px-4 py-2 text-sm ${item.tone === 'red' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-amber-50 border-amber-200 text-amber-900'}`}
+              onClick={() => navigate(item.to)}
+            >
+              {item.text}
+            </button>
+          ))}
+        </div>
       )}
 
       <div id="org-health-report" className="space-y-6">
@@ -612,6 +680,32 @@ export default function OrgHealthPage() {
                 <p className="text-sm text-muted-foreground mt-1">Burnout Score</p>
                 <p className="text-sm text-red-600 font-medium mt-2">Needs attention</p>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <button type="button" onClick={() => navigate('/hr/sessions-schedule')} className="rounded-lg border p-3 text-left hover:bg-muted/40">
+                <p className="font-medium">📅 Schedule Sessions</p>
+                <p className="text-xs text-muted-foreground">{pendingSessionsCount}</p>
+              </button>
+              <button type="button" onClick={() => navigate('/employees')} className="rounded-lg border p-3 text-left hover:bg-muted/40">
+                <p className="font-medium">👥 Review At-Risk</p>
+                <p className="text-xs text-muted-foreground">{criticalEmployeeCount}</p>
+              </button>
+              <button type="button" onClick={() => navigate('/hr/appraisals')} className="rounded-lg border p-3 text-left hover:bg-muted/40">
+                <p className="font-medium">📊 Run Appraisals</p>
+                <p className="text-xs text-muted-foreground">{Math.max(1, interventions.length)}</p>
+              </button>
+              <button type="button" onClick={() => navigate('/hr/feedback-analyzer')} className="rounded-lg border p-3 text-left hover:bg-muted/40">
+                <p className="font-medium">📋 Review Feedback</p>
+                <p className="text-xs text-muted-foreground">50</p>
+              </button>
             </div>
           </CardContent>
         </Card>

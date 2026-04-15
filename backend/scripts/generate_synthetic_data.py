@@ -29,18 +29,69 @@ def _score_fields(employee_id: str) -> Dict[str, object]:
 
     burnout = round(rng.uniform(0.15, 0.80), 3)
     engagement = round(rng.uniform(0.30, 0.95), 3)
-    sentiment = round(rng.uniform(0.25, 0.90), 3)
+    sentiment_bucket = rng.random()
+    if sentiment_bucket < 0.40:
+        sentiment = round(rng.uniform(0.30, 0.80), 3)
+    elif sentiment_bucket < 0.75:
+        sentiment = round(rng.uniform(-0.30, 0.30), 3)
+    else:
+        sentiment = round(rng.uniform(-1.00, -0.30), 3)
     attrition = round(rng.uniform(0.10, 0.75), 3)
     tenure_months = rng.randint(4, 84)
 
-    return {
+    record: Dict[str, object] = {
         "tenure_months": tenure_months,
         "burnout_score": burnout,
         "engagement_score": engagement,
         "sentiment_score": sentiment,
         "attrition_risk": attrition,
         "is_at_risk": burnout > 0.6 or attrition > 0.5,
+        "last_one_on_one_days_ago": rng.randint(4, 40),
+        "overdue_jira_tickets": rng.randint(0, 3),
+        "recognitions_90d": rng.randint(0, 3),
+        "after_hours_sessions_weekly": rng.randint(0, 6),
+        "feedback_submissions_60d": rng.randint(0, 4),
+        "promotion_eligible": False,
+        "fast_track": False,
+        "sentiment_trend_14d": round(rng.uniform(-0.15, 0.15), 3),
     }
+
+    showcase_overrides: Dict[str, Dict[str, object]] = {
+        "NOVA-ENG005": {
+            "burnout_score": 0.82,
+            "sentiment_score": -0.90,
+            "attrition_risk": 0.78,
+            "last_one_on_one_days_ago": 45,
+            "overdue_jira_tickets": 3,
+            "recognitions_90d": 0,
+            "is_at_risk": True,
+            "sentiment_trend_14d": -0.35,
+        },
+        "NOVA-ENG002": {
+            "burnout_score": 0.12,
+            "engagement_score": 0.93,
+            "sentiment_score": 0.80,
+            "attrition_risk": 0.10,
+            "recognitions_90d": 2,
+            "promotion_eligible": True,
+            "fast_track": True,
+            "is_at_risk": False,
+            "sentiment_trend_14d": 0.22,
+        },
+        "NOVA-DES005": {
+            "burnout_score": 0.55,
+            "sentiment_score": -0.40,
+            "attrition_risk": 0.56,
+            "after_hours_sessions_weekly": 6,
+            "feedback_submissions_60d": 0,
+            "is_at_risk": True,
+            "sentiment_trend_14d": -0.50,
+        },
+    }
+    if employee_id in showcase_overrides:
+        record.update(showcase_overrides[employee_id])
+
+    return record
 
 
 def generate_org_hierarchy() -> List[Dict[str, object]]:

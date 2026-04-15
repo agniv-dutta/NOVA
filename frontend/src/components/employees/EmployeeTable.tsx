@@ -127,7 +127,26 @@ export function EmployeeTable() {
 
       <p className="text-xs text-muted-foreground">{filtered.length} employees found</p>
 
+      {filtered.length === 0 && (
+        <div className="rounded-xl border bg-card p-6 text-center">
+          <p className="text-sm font-medium">No employees match '{search}'</p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-3"
+            onClick={() => {
+              setSearch('');
+              setDeptFilter('all');
+              setRiskFilter('all');
+            }}
+          >
+            Clear search
+          </Button>
+        </div>
+      )}
+
       {/* Table */}
+      {filtered.length > 0 && (
       <div className="overflow-x-auto rounded-xl border bg-card shadow-sm">
         <table className="w-full text-sm">
           <thead>
@@ -255,6 +274,7 @@ export function EmployeeTable() {
           </tbody>
         </table>
       </div>
+      )}
 
       <EmployeeDetailDialog
         employee={selectedEmployee}

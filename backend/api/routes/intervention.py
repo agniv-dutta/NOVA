@@ -22,9 +22,28 @@ from ai.intervention_engine import (
 )
 from api.deps import require_role
 from core.database import get_supabase_admin
+from core.employee_directory import get_employee_directory
 from models.user import User, UserRole
 
 router = APIRouter()
+
+
+def _canonical_directory_maps() -> tuple[dict[str, str], list[str]]:
+    directory = get_employee_directory()
+    by_id = {str(row["employee_id"]): str(row["name"]) for row in directory}
+    names = [str(row["name"]) for row in directory]
+    return by_id, names
+
+
+def _canonical_name(employee_id: str, raw_name: str, index: int) -> str:
+    by_id, names = _canonical_directory_maps()
+    if employee_id in by_id:
+        return by_id[employee_id]
+    if raw_name in names:
+        return raw_name
+    if names:
+        return names[index % len(names)]
+    return raw_name
 
 
 class ROIRecommendationItem(BaseModel):
@@ -43,7 +62,8 @@ class ROIRecommendationItem(BaseModel):
 
 def _normalize_employee_payload(raw: dict[str, Any], index: int) -> dict[str, Any]:
     employee_id = str(raw.get("id") or raw.get("employee_id") or f"EMP{index + 1:04d}")
-    name = str(raw.get("name") or raw.get("full_name") or f"Employee {index + 1}")
+    raw_name = str(raw.get("name") or raw.get("full_name") or f"Employee {index + 1}")
+    name = _canonical_name(employee_id, raw_name, index)
     department = str(raw.get("department") or "General")
     burnout_score = float(raw.get("burnout_risk") or raw.get("burnout_score") or 65.0)
     attrition_risk = float(raw.get("attrition_risk") or raw.get("flight_risk") or 60.0)
@@ -77,8 +97,8 @@ def _normalize_employee_payload(raw: dict[str, Any], index: int) -> dict[str, An
 def _fallback_employees() -> list[dict[str, Any]]:
     return [
         {
-            "id": "EMP901",
-            "name": "Val Evans",
+            "id": "NOVA-ENG011",
+            "name": "Aditya Verma",
             "department": "Engineering",
             "burnout_risk": 84,
             "attrition_risk": 79,
@@ -89,7 +109,7 @@ def _fallback_employees() -> list[dict[str, Any]]:
             "recognition_count_90d": 0,
         },
         {
-            "id": "EMP902",
+            "id": "NOVA-SAL012",
             "name": "Ria Sharma",
             "department": "Sales",
             "burnout_risk": 77,
@@ -101,7 +121,7 @@ def _fallback_employees() -> list[dict[str, Any]]:
             "recognition_count_90d": 1,
         },
         {
-            "id": "EMP903",
+            "id": "NOVA-OPS003",
             "name": "Amit Das",
             "department": "Operations",
             "burnout_risk": 72,
@@ -400,8 +420,8 @@ async def get_roi_recommendations(
     if not recommendations:
         fallback = await get_interventions(
             InterventionRequest(
-                employee_id="EMP901",
-                employee_name="Val Evans",
+                employee_id="NOVA-ENG011",
+                employee_name="Aditya Verma",
                 department="Engineering",
                 burnout_score=0.83,
                 sentiment_score=-0.4,
@@ -420,7 +440,7 @@ async def get_roi_recommendations(
                     description=rec.description,
                     urgency=rec.urgency.value,
                     priority_score=rec.priority_score,
-                    target_group="Val Evans + 2 others",
+                    target_group="Aditya Verma + 2 others",
                     target_employee_count=3,
                     intervention_cost_inr=rec.intervention_cost_inr * 3,
                     projected_savings_inr=rec.projected_savings_inr * 3,

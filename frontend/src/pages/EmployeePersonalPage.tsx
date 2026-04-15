@@ -190,9 +190,9 @@ export default function EmployeePersonalPage() {
                   <SelectValue placeholder="Select manager" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="mgr-0">Sarah Chen</SelectItem>
-                  <SelectItem value="mgr-1">Michael Park</SelectItem>
-                  <SelectItem value="mgr-2">Jennifer Lopez</SelectItem>
+                  <SelectItem value="mgr-0">Rahul Gupta</SelectItem>
+                  <SelectItem value="mgr-1">Suresh Venkatesh</SelectItem>
+                  <SelectItem value="mgr-2">Lakshmi Subramaniam</SelectItem>
                 </SelectContent>
               </Select>
             </div>

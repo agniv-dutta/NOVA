@@ -97,14 +97,14 @@ async def get_performance_summary(current_user: User = Depends(require_any_authe
 async def get_onboarding_employees(current_user: User = Depends(require_any_authenticated)):
     """Return onboarding employees (<90 days) with onboarding-cohort adjusted risk signals."""
     profile_plan = [
-        ("NEW001", "Mila Chen", "Engineering", ["Integration Risk"]),
-        ("NEW002", "Ari Wilson", "Engineering", ["Ramp Risk"]),
-        ("NEW003", "Noah Garcia", "Sales", ["Isolation Risk"]),
-        ("NEW004", "Zara Lee", "Sales", ["Integration Risk"]),
-        ("NEW005", "Rhea Thomas", "HR", ["Ramp Risk"]),
-        ("NEW006", "Dev Brown", "HR", ["Isolation Risk"]),
-        ("NEW007", "Ivy Clark", "Design", ["Integration Risk"]),
-        ("NEW008", "Owen Scott", "Finance", ["Integration Risk", "Ramp Risk", "Isolation Risk"]),
+        ("NEW001", "Arjun Sharma", "Engineering", ["Integration Risk"]),
+        ("NEW002", "Priya Patel", "Engineering", ["Ramp Risk"]),
+        ("NEW003", "Amit Sinha", "Sales", ["Isolation Risk"]),
+        ("NEW004", "Sunita Kulkarni", "Sales", ["Integration Risk"]),
+        ("NEW005", "Lakshmi Subramaniam", "HR", ["Ramp Risk"]),
+        ("NEW006", "Ashish Kapoor", "HR", ["Isolation Risk"]),
+        ("NEW007", "Nidhi Oberoi", "Design", ["Integration Risk"]),
+        ("NEW008", "Ramesh Iyer", "Finance", ["Integration Risk", "Ramp Risk", "Isolation Risk"]),
     ]
 
     employees = []
