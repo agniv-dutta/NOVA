@@ -1,0 +1,63 @@
+%.getOrInsert lockdown-install.js:1:202962
+  Removing intrinsics.%MapPrototype%.getOrInsertComputed lockdown-install.js:1:202962
+  Removing intrinsics.%WeakMapPrototype%.getOrInsert lockdown-install.js:1:202962
+  Removing intrinsics.%WeakMapPrototype%.getOrInsertComputed lockdown-install.js:1:202962
+  Removing intrinsics.%DatePrototype%.toTemporalInstant lockdown-install.js:1:202962
+[vite] connecting... client:495:9
+[vite] connected. client:618:15
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools react-dom.development.js:29895:17
+Google OAuth disabled: set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to enable Supabase login. supabaseClient.ts:18:15
+SES_UNCAUGHT_EXCEPTION: ReferenceError: can't access lexical declaration 'stopSpeaking' before initialization
+    VoiceAssistant VoiceAssistant.tsx:216
+    React 12
+    workLoop scheduler.development.js:266
+    flushWork scheduler.development.js:239
+    performWorkUntilDeadline scheduler.development.js:533
+lockdown-install.js:1:145467
+SES_UNCAUGHT_EXCEPTION: ReferenceError: can't access lexical declaration 'stopSpeaking' before initialization
+    VoiceAssistant VoiceAssistant.tsx:216
+    React 13
+    workLoop scheduler.development.js:266
+    flushWork scheduler.development.js:239
+    performWorkUntilDeadline scheduler.development.js:533
+lockdown-install.js:1:145467
+ReferenceError: can't access lexical declaration 'stopSpeaking' before initialization
+    VoiceAssistant VoiceAssistant.tsx:216
+    React 10
+    workLoop scheduler.development.js:266
+    flushWork scheduler.development.js:239
+    performWorkUntilDeadline scheduler.development.js:533
+react-dom.development.js:18683:17
+The above error occurred in the <VoiceAssistant> component:
+
+VoiceAssistant@http://localhost:8080/src/components/voice/VoiceAssistant.tsx?t=1776279253048:146:46
+Suspense
+Router@http://localhost:8080/node_modules/.vite/deps/react-router-dom.js?v=814c6dea:4551:7
+BrowserRouter@http://localhost:8080/node_modules/.vite/deps/react-router-dom.js?v=814c6dea:5294:7
+EmployeeProvider@http://localhost:8080/src/contexts/EmployeeContext.tsx?t=1776279253054:25:33
+AuthProvider@http://localhost:8080/src/contexts/AuthContext.tsx:51:29
+Provider@http://localhost:8080/node_modules/.vite/deps/chunk-PLT6GTVM.js?v=6bc158f3:38:47
+TooltipProvider@http://localhost:8080/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=d4bc4042:67:7
+QueryClientProvider@http://localhost:8080/node_modules/.vite/deps/@tanstack_react-query.js?v=d6d6ad1f:2933:27
+App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries. react-dom.development.js:18704:15
+SES_UNCAUGHT_EXCEPTION: ReferenceError: can't access lexical declaration 'stopSpeaking' before initialization
+    VoiceAssistant VoiceAssistant.tsx:216
+    React 10
+    workLoop scheduler.development.js:266
+    flushWork scheduler.development.js:239
+    performWorkUntilDeadline scheduler.development.js:533
+
+
+(venv) [anamay@archhouse backend]$ python main.py
+Traceback (most recent call last):
+  File "/home/anamay/Programming/hackathons/NOVA/backend/main.py", line 37, in <module>
+    from api.routes.appraisals import router as appraisals_router
+  File "/home/anamay/Programming/hackathons/NOVA/backend/api/routes/appraisals.py", line 141, in <module>
+    APPRAISAL_PERCENTILE_THRESHOLDS = _appraisal_thresholds()
+  File "/home/anamay/Programming/hackathons/NOVA/backend/api/routes/appraisals.py", line 116, in _appraisal_thresholds
+    profile = _resolve_employee_profile(record["employee_id"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+NameError: name '_resolve_employee_pr

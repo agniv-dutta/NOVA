@@ -29,6 +29,7 @@ const TaskAssignmentsPage = lazy(() => import("./pages/TaskAssignmentsPage"));
 const JobBoardPage = lazy(() => import("./pages/JobBoardPage"));
 const WorkProfilesPage = lazy(() => import("./pages/WorkProfilesPage"));
 const EmployeeProfilePage = lazy(() => import("./pages/EmployeeProfilePage"));
+const CareersPage = lazy(() => import("./pages/CareersPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const InsightsDashboard = lazy(() => import("@/features/insights/InsightsDashboard").then((module) => ({ default: module.InsightsDashboard })));
 const AnomaliesPage = lazy(() => import("./pages/AnomaliesPage"));
@@ -61,6 +62,7 @@ const App = () => (
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/forbidden" element={<ForbiddenPage />} />
+                <Route path="/careers" element={<CareersPage />} />
 
                 <Route
                   path="/"

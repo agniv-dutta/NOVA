@@ -138,9 +138,6 @@ def _appraisal_thresholds() -> tuple[float, float, float, float]:
     )
 
 
-APPRAISAL_PERCENTILE_THRESHOLDS = _appraisal_thresholds()
-
-
 def _category_for_score(score: float) -> str:
     exceptional, high, meets, needs = APPRAISAL_PERCENTILE_THRESHOLDS
     if score >= exceptional:
@@ -277,6 +274,9 @@ def _resolve_employee_profile(employee_id: str) -> dict[str, Any]:
         profile.update(showcase_overrides[employee_id])
 
     return profile
+
+
+APPRAISAL_PERCENTILE_THRESHOLDS = _appraisal_thresholds()
 
 
 def _candidate_employee_ids_from_department(department: str) -> list[str]:

@@ -207,6 +207,13 @@ export function VoiceAssistant() {
     }
   }, [location.pathname, agent.label]);
 
+  const stopSpeaking = useCallback(() => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    setSpeakingMessageId(null);
+  }, []);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
     window.sessionStorage.setItem(MUTE_SESSION_KEY, muted ? '1' : '0');
@@ -239,13 +246,6 @@ export function VoiceAssistant() {
     setShowSuggestedQuestions(true);
     setIntroVisible(false);
   }, [open, location.pathname]);
-
-  const stopSpeaking = useCallback(() => {
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
-    setSpeakingMessageId(null);
-  }, []);
 
   const speak = useCallback(
     (text: string, messageId?: string, onEnd?: () => void) => {
