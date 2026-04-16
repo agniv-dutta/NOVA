@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useEmployees } from "@/contexts/EmployeeContext";
@@ -193,6 +194,65 @@ export function InsightsDashboard() {
           </>
         )}
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">LLM Action Playbook for HR</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {loading || !data?.action_playbook ? (
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-3/5" />
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          ) : (
+            <>
+              <div className="rounded-md border bg-slate-50 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-700">Objective</p>
+                <p className="text-sm text-slate-900 mt-1">{data.action_playbook.objective}</p>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-3">
+                {data.action_playbook.priorities.slice(0, 3).map((priority, idx) => (
+                  <div key={`${priority.metric}-${idx}`} className="rounded-md border p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold">{priority.title}</p>
+                      <Badge variant="outline" className="capitalize">{priority.metric}</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Owner: <span className="font-medium text-foreground">{priority.owner}</span>
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Timeline: <span className="font-medium text-foreground">{priority.timeline}</span>
+                    </p>
+                    <ul className="list-disc pl-4 text-xs text-slate-700 space-y-1">
+                      {priority.actions.slice(0, 2).map((action, actionIdx) => (
+                        <li key={actionIdx}>{action}</li>
+                      ))}
+                    </ul>
+                    <div className="rounded border border-emerald-200 bg-emerald-50 px-2 py-1">
+                      <p className="text-[11px] text-emerald-800">Success signal: {priority.success_signal}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="rounded-md border p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Manager talking points</p>
+                <ul className="mt-2 list-disc pl-5 text-sm text-foreground space-y-1">
+                  {data.action_playbook.manager_talking_points.slice(0, 4).map((point, idx) => (
+                    <li key={idx}>{point}</li>
+                  ))}
+                </ul>
+                <p className="text-xs text-muted-foreground mt-3">
+                  Check-in cadence: <span className="font-medium text-foreground">{data.action_playbook.check_in_cadence}</span>
+                </p>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
       <AskNovaPanel />
     </div>
   );

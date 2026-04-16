@@ -519,7 +519,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        <main className="flex-1 overflow-auto p-4 lg:p-6 pb-20 lg:pb-6 nova-page-fade">{children}</main>
+        <main className="flex-1 overflow-auto p-4 lg:p-6 pb-20 lg:pb-6 nova-page-fade">
+          <div className="mx-auto w-full max-w-[1500px] space-y-4">{children}</div>
+        </main>
 
         {mobileNav.length > 0 && (
           <nav className="fixed bottom-0 inset-x-0 z-30 border-t-2 border-foreground bg-card p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] lg:hidden">

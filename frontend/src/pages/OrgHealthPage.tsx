@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, Printer, Share2, TrendingUp, TrendingDown, AlertTriangle, Sparkles, Info, RefreshCw } from "lucide-react";
+import { Download, Printer, Share2, TrendingUp, TrendingDown, AlertTriangle, Sparkles, Info, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import AnomalyIndicator from "@/components/anomalies/AnomalyIndicator";
 import InterventionRecommendations from "@/components/interventions/InterventionRecommendations";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -220,6 +220,8 @@ export default function OrgHealthPage() {
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [reportStep, setReportStep] = useState("Idle");
   const [benchmark, setBenchmark] = useState<any>(null);
+  const [showMonthlySummary, setShowMonthlySummary] = useState(false);
+  const [showDeepAnalytics, setShowDeepAnalytics] = useState(false);
 
   const canViewAnomalyInsights = hasRole(['hr', 'leadership']);
   const canViewInterventionInsights = hasRole(['manager', 'hr', 'leadership']);
@@ -941,33 +943,39 @@ export default function OrgHealthPage() {
 
         {/* Month-over-Month Summary */}
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Month-over-Month Change Summary</CardTitle>
+            <Button variant="outline" size="sm" onClick={() => setShowMonthlySummary((value) => !value)}>
+              {showMonthlySummary ? <ChevronUp className="h-4 w-4 mr-1" /> : <ChevronDown className="h-4 w-4 mr-1" />}
+              {showMonthlySummary ? "Hide" : "Show"}
+            </Button>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-green-50 rounded-lg">
-                  <p className="text-sm font-semibold text-green-800 mb-2">Improvements</p>
-                  <ul className="text-sm space-y-1 text-green-700">
-                    <li>• Operations sentiment up 4.2%</li>
-                    <li>• Engineering performance up 3.1%</li>
-                    <li>• Overall tenure increased to 3.1 years</li>
-                    <li>• 12 employees promoted</li>
-                  </ul>
-                </div>
-                <div className="p-4 bg-red-50 rounded-lg">
-                  <p className="text-sm font-semibold text-red-800 mb-2">Concerns</p>
-                  <ul className="text-sm space-y-1 text-red-700">
-                    <li>• Sales attrition up 2.3%</li>
-                    <li>• Burnout scores increased across 3 departments</li>
-                    <li>• 5 high performers flagged as flight risk</li>
-                    <li>• Absenteeism up 8% in Engineering</li>
-                  </ul>
+          {showMonthlySummary && (
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-green-50 rounded-lg">
+                    <p className="text-sm font-semibold text-green-800 mb-2">Improvements</p>
+                    <ul className="text-sm space-y-1 text-green-700">
+                      <li>• Operations sentiment up 4.2%</li>
+                      <li>• Engineering performance up 3.1%</li>
+                      <li>• Overall tenure increased to 3.1 years</li>
+                      <li>• 12 employees promoted</li>
+                    </ul>
+                  </div>
+                  <div className="p-4 bg-red-50 rounded-lg">
+                    <p className="text-sm font-semibold text-red-800 mb-2">Concerns</p>
+                    <ul className="text-sm space-y-1 text-red-700">
+                      <li>• Sales attrition up 2.3%</li>
+                      <li>• Burnout scores increased across 3 departments</li>
+                      <li>• 5 high performers flagged as flight risk</li>
+                      <li>• Absenteeism up 8% in Engineering</li>
+                    </ul>
+                  </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
+            </CardContent>
+          )}
         </Card>
 
         <Card>
@@ -1027,29 +1035,36 @@ export default function OrgHealthPage() {
         </Card>
 
         {/* Deep Analytics — charts moved off the HR dashboard live here */}
-        <div className="pt-2">
-          <h2 className="text-2xl font-bold font-heading uppercase tracking-wider text-foreground border-b-2 border-foreground pb-2 mb-4">
-            Deep Analytics
-          </h2>
-        </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-xl font-bold font-heading uppercase tracking-wider">Deep Analytics</CardTitle>
+            <Button variant="outline" size="sm" onClick={() => setShowDeepAnalytics((value) => !value)}>
+              {showDeepAnalytics ? <ChevronUp className="h-4 w-4 mr-1" /> : <ChevronDown className="h-4 w-4 mr-1" />}
+              {showDeepAnalytics ? "Hide Charts" : "Show Charts"}
+            </Button>
+          </CardHeader>
+          {showDeepAnalytics && (
+            <CardContent className="space-y-6">
+              <AttritionPredictionTimeline />
+              <EmployeeTenureDistribution />
+              <EngagementPerformanceQuadrant />
 
-        <AttritionPredictionTimeline />
-        <EmployeeTenureDistribution />
-        <EngagementPerformanceQuadrant />
+              <div className="grid gap-4 lg:grid-cols-2">
+                <SentimentPieChart />
+                <PerformanceScatterPlot />
+              </div>
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          <SentimentPieChart />
-          <PerformanceScatterPlot />
-        </div>
-
-        <BurnoutHeatmap />
-        <BurnoutPropagationMap />
-        <SkillsGapRadar />
-        <CompensationEquityAnalysis />
-        <HiringFunnel />
-        <AbsenteeismPatterns />
-        <ManagerEffectivenessScorecard />
-        <DepartmentRiskHeatmap />
+              <BurnoutHeatmap />
+              <BurnoutPropagationMap />
+              <SkillsGapRadar />
+              <CompensationEquityAnalysis />
+              <HiringFunnel />
+              <AbsenteeismPatterns />
+              <ManagerEffectivenessScorecard />
+              <DepartmentRiskHeatmap />
+            </CardContent>
+          )}
+        </Card>
       </div>
     </div>
   );

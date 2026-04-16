@@ -60,11 +60,28 @@ export type CompositeAnomalyInsight = {
   changed_signals: string[];
 };
 
+export type ActionPriority = {
+  metric: "sentiment" | "burnout" | "retention" | "performance";
+  title: string;
+  timeline: string;
+  owner: string;
+  actions: string[];
+  success_signal: string;
+};
+
+export type ActionPlaybook = {
+  objective: string;
+  priorities: ActionPriority[];
+  manager_talking_points: string[];
+  check_in_cadence: string;
+};
+
 export type InsightsPayload = {
   sentiment: SentimentInsight;
   burnout: BurnoutInsight;
   performance: PerformanceInsight;
   retention: RetentionInsight;
+  action_playbook?: ActionPlaybook;
   composite?: CompositeAnomalyInsight;
 };
 
