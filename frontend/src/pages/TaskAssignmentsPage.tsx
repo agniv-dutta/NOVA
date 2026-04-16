@@ -17,6 +17,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/lib/api";
 import { CheckCircle, XCircle, Clock, Bot, Zap, Settings, UserPlus, RefreshCw, AlertTriangle, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -38,6 +39,8 @@ interface Assignment {
   approved_by: string | null;
   approved_at: string | null;
   rejection_reason: string | null;
+  matched_skills?: string[];
+  missing_skills?: string[];
   created_at: string;
 }
 
@@ -45,6 +48,12 @@ interface AutoApproveSettings {
   auto_approve_assignments: boolean;
   auto_approve_threshold: number;
   auto_post_jobs: boolean;
+}
+
+interface SkillsGapSummary {
+  open_assignments: number;
+  no_internal_match: number;
+  top_skill_gaps: Array<{ skill: string; missing_count: number }>;
 }
 
 const STATUS_CONFIG = {
@@ -66,6 +75,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 export default function TaskAssignmentsPage() {
   useDocumentTitle("NOVA — Task Assignments");
   const { token } = useAuth();
+  const { toast } = useToast();
 
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [settings, setSettings] = useState<AutoApproveSettings>({
@@ -76,6 +86,7 @@ export default function TaskAssignmentsPage() {
   const [loading, setLoading] = useState(true);
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("pending");
+  const [skillsGapSummary, setSkillsGapSummary] = useState<SkillsGapSummary | null>(null);
 
   const [rejectDialogOpen, setRejectDialogOpen] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
@@ -124,6 +135,17 @@ export default function TaskAssignmentsPage() {
     }
   }, [token]);
 
+  const fetchSkillsGapSummary = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/task-assignments/skills-gap-summary`, { headers: authHeader });
+      if (!res.ok) return;
+      const data = await res.json();
+      setSkillsGapSummary(data as SkillsGapSummary);
+    } catch {
+      setSkillsGapSummary(null);
+    }
+  }, [token]);
+
   useEffect(() => {
     void fetchAssignments();
   }, [fetchAssignments]);
@@ -131,7 +153,8 @@ export default function TaskAssignmentsPage() {
   useEffect(() => {
     void fetchSettings();
     void fetchEmployees();
-  }, [fetchSettings, fetchEmployees]);
+    void fetchSkillsGapSummary();
+  }, [fetchSettings, fetchEmployees, fetchSkillsGapSummary]);
 
   const approve = async (id: string) => {
     setActionLoading(id);
@@ -168,6 +191,7 @@ export default function TaskAssignmentsPage() {
   const reassignWithAI = async (id: string) => {
     setReassignLoading(id);
     try {
+      await new Promise((resolve) => window.setTimeout(resolve, 1500));
       const res = await fetch(`${API_BASE_URL}/api/task-assignments/${id}/reassign`, {
         method: "POST",
         headers: authHeader,
@@ -179,6 +203,7 @@ export default function TaskAssignmentsPage() {
         return;
       }
       await fetchAssignments();
+      toast({ title: "AI re-analyzed", description: "Recommendation updated" });
     } finally {
       setReassignLoading(null);
     }
@@ -230,6 +255,13 @@ export default function TaskAssignmentsPage() {
     return "text-red-700 font-bold";
   };
 
+  const matchBadge = (score: number) => {
+    const fit = Math.round(score * 100);
+    if (fit >= 70) return { text: `Strong Match ${fit}%`, className: "bg-emerald-100 text-emerald-800 border-emerald-300" };
+    if (fit >= 40) return { text: `Partial Match ${fit}%`, className: "bg-amber-100 text-amber-800 border-amber-300" };
+    return { text: `Weak Match ${fit}% - Review Carefully`, className: "bg-red-100 text-red-800 border-red-300" };
+  };
+
   const renderAssignment = (a: Assignment) => {
     const cfg = STATUS_CONFIG[a.status] ?? STATUS_CONFIG.pending;
     const Icon = cfg.icon;
@@ -266,15 +298,18 @@ export default function TaskAssignmentsPage() {
 
           {/* Assignee block — shows AI recommendation, no-match banner, or unassigned state */}
           {a.status === "no_match" ? (
-            <div className="border-l-4 border-yellow-400 pl-3 py-2 bg-yellow-50 space-y-2">
+            <div className="border-l-4 border-amber-500 pl-3 py-2 bg-[#fef3c7] space-y-2">
               <div className="flex items-start gap-2">
-                <AlertTriangle className="h-4 w-4 text-yellow-600 shrink-0 mt-0.5" />
+                <AlertTriangle className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
                 <div className="space-y-1 min-w-0">
-                  <p className="text-sm font-semibold text-yellow-800">AI found no matching employee</p>
-                  <p className="text-xs text-yellow-700 leading-relaxed">{a.ai_reasoning}</p>
+                  <p className="text-sm font-bold text-amber-900">AI Talent Analysis</p>
+                  <span className="inline-flex rounded-full bg-amber-200 px-2 py-0.5 text-[11px] font-semibold text-amber-900">
+                    No Internal Match Found - External Hire Recommended
+                  </span>
+                  <p className="text-xs text-amber-900 leading-relaxed">{a.ai_reasoning}</p>
                   <Link
                     to="/job-board"
-                    className="inline-flex items-center gap-1 text-xs font-medium text-yellow-800 underline underline-offset-2 hover:text-yellow-900"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-amber-900 underline underline-offset-2 hover:text-amber-950"
                   >
                     View job listing on Job Board
                     <ExternalLink className="h-3 w-3" />
@@ -302,6 +337,23 @@ export default function TaskAssignmentsPage() {
                   </span>
                 )}
               </div>
+              <div className="flex items-center gap-2 pt-1">
+                <Badge variant="outline" className={matchBadge(a.match_score).className}>{matchBadge(a.match_score).text}</Badge>
+              </div>
+              {(a.matched_skills?.length || a.missing_skills?.length) ? (
+                <div className="space-y-1 pt-1">
+                  {a.matched_skills && a.matched_skills.length > 0 && (
+                    <p className="text-xs text-emerald-700">
+                      Matched skills: {a.matched_skills.map((skill) => `${skill} ✓`).join(", ")}
+                    </p>
+                  )}
+                  {a.missing_skills && a.missing_skills.length > 0 && (
+                    <p className="text-xs text-red-700">
+                      Missing skills: {a.missing_skills.map((skill) => `${skill} ✗`).join(", ")}
+                    </p>
+                  )}
+                </div>
+              ) : null}
               {a.ai_reasoning && (
                 <p className="text-xs text-muted-foreground italic leading-relaxed">
                   {a.ai_reasoning}
@@ -460,6 +512,38 @@ export default function TaskAssignmentsPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {skillsGapSummary && (
+        <Card className="border-2 border-foreground shadow-[2px_2px_0px_#000]">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Talent Pipeline Gaps</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline" className="bg-slate-100 text-slate-800 border-slate-300">
+                Open assignments: {skillsGapSummary.open_assignments}
+              </Badge>
+              <Badge variant="outline" className="bg-amber-100 text-amber-900 border-amber-300">
+                No internal match: {skillsGapSummary.no_internal_match}
+              </Badge>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Top missing skills</p>
+              {skillsGapSummary.top_skill_gaps.length === 0 ? (
+                <p className="text-xs text-muted-foreground">No critical skill gaps detected in current queue.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {skillsGapSummary.top_skill_gaps.map((gap) => (
+                    <Badge key={gap.skill} variant="outline" className="bg-red-50 text-red-800 border-red-200">
+                      {gap.skill} ({gap.missing_count})
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Reject dialog */}
       {rejectDialogOpen && (

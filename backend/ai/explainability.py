@@ -10,6 +10,15 @@ from ai.ml.burnout_classifier import get_feature_contributions
 ScoreType = Literal["burnout", "attrition", "engagement"]
 
 
+FEATURE_LABEL_OVERRIDES: dict[str, tuple[str, str]] = {
+    "after_hours_ratio": ("after_hours_sessions", "Overtime frequency"),
+    "days_since_promotion_normalized": ("last_1on1_days_ago", "Days since last check-in"),
+    "performance_score": ("kpi_score", "Performance score"),
+    "pto_days_unused_normalized": ("leaves_taken_30d", "Recent leave usage"),
+    "sentiment_score_normalized": ("sentiment_score", "Feedback sentiment"),
+}
+
+
 def _deterministic_unit(seed: str, salt: str) -> float:
     digest = hashlib.sha256(f"{seed}:{salt}".encode("utf-8")).hexdigest()
     value = int(digest[:8], 16)
@@ -41,13 +50,18 @@ def _normalize_explanations(contributions: list[dict[str, Any]], top_k: int = 3)
     for item in top:
         contribution = float(item.get("contribution", 0.0))
         direction = "↑ increases risk" if contribution >= 0 else "↓ decreases risk"
+        feature_name = str(item.get("feature", "unknown_feature"))
+        canonical_name, plain_label = FEATURE_LABEL_OVERRIDES.get(
+            feature_name,
+            (feature_name, str(item.get("label", feature_name.replace("_", " ").title()))),
+        )
         normalized.append(
             {
-                "feature": item.get("feature", "unknown_feature"),
+                "feature": canonical_name,
                 "contribution": round(contribution / 100.0, 3),
                 "direction": direction,
-                "plain_english": item.get("explanation")
-                or f"{item.get('label', 'Feature')} contributes {contribution:+.1f}%.",
+                "plain_english": f"{plain_label}: {item.get('explanation') or f'Contribution {contribution:+.1f}%'}",
+                "label": plain_label,
             }
         )
 
@@ -133,7 +147,7 @@ def explain_score(employee_id: str, score_type: ScoreType) -> dict[str, Any]:
 
     if normalized_type == "burnout":
         contributions = get_feature_contributions(_feature_profile(employee_id), top_k=10)
-        top, coverage = _normalize_explanations(contributions, top_k=3)
+        top, coverage = _normalize_explanations(contributions, top_k=5)
         source = "ml_feature_importance_or_fallback"
     else:
         top, coverage = _rule_explanations(employee_id, normalized_type, top_k=3)

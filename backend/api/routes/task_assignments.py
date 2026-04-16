@@ -15,7 +15,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from api.deps import require_role
+from ai.text_cleanup import sanitize_task_title
 from core.database import get_supabase_admin
+from core.demo_work_profiles import ensure_demo_work_profiles
 from models.user import User, UserRole
 
 logger = logging.getLogger(__name__)
@@ -61,7 +63,56 @@ async def list_assignments(
         if status:
             q = q.eq("status", status)
         r = q.execute()
-        return {"assignments": r.data or [], "total": len(r.data or [])}
+        assignments = r.data or []
+
+        assignee_emails = sorted(
+            {
+                str(item.get("recommended_assignee_email"))
+                for item in assignments
+                if item.get("recommended_assignee_email")
+            }
+        )
+        profile_map: dict[str, list[str]] = {}
+        if assignee_emails:
+            profile_rows = sb.table("employee_work_profiles").select("employee_email,skills").in_(
+                "employee_email", assignee_emails
+            ).execute()
+            for row in profile_rows.data or []:
+                profile_map[str(row.get("employee_email", ""))] = list(row.get("skills") or [])
+
+            name_rows = sb.table("users").select("email,full_name").in_("email", assignee_emails).execute()
+            name_map = {str(row.get("email", "")): str(row.get("full_name") or "") for row in (name_rows.data or [])}
+        else:
+            name_map = {}
+
+        normalized: list[dict[str, Any]] = []
+        for item in assignments:
+            required_skills = [str(skill) for skill in (item.get("required_skills") or [])]
+            assignee_email = str(item.get("recommended_assignee_email") or "")
+            assignee_skills = profile_map.get(assignee_email, [])
+
+            matched_skills = [
+                required
+                for required in required_skills
+                if any(required.lower() == have.lower() or required.lower() in have.lower() or have.lower() in required.lower() for have in assignee_skills)
+            ]
+            missing_skills = [skill for skill in required_skills if skill not in matched_skills]
+
+            assignee_name = str(item.get("recommended_assignee_name") or "")
+            if assignee_email and (not assignee_name or assignee_name.lower() == "john doe"):
+                assignee_name = name_map.get(assignee_email, assignee_name)
+
+            normalized.append(
+                {
+                    **item,
+                    "jira_issue_title": sanitize_task_title(str(item.get("jira_issue_title") or "")),
+                    "recommended_assignee_name": assignee_name,
+                    "matched_skills": matched_skills,
+                    "missing_skills": missing_skills,
+                }
+            )
+
+        return {"assignments": normalized, "total": len(normalized)}
     except Exception as exc:
         logger.error("list_assignments error: %s", exc)
         raise HTTPException(status_code=500, detail=str(exc))
@@ -78,6 +129,70 @@ async def pending_count(
         return {"count": r.count or 0}
     except Exception:
         return {"count": 0}
+
+
+@router.get("/skills-gap-summary")
+async def get_skills_gap_summary(
+    current_user: User = Depends(require_role([UserRole.HR, UserRole.LEADERSHIP])),
+):
+    """Summarize the most frequent missing skills in pending/no-match assignments."""
+    sb = get_supabase_admin()
+    try:
+        assignments_r = (
+            sb.table("jira_task_assignments")
+            .select("required_skills,recommended_assignee_email,status")
+            .in_("status", ["pending", "no_match"])
+            .execute()
+        )
+        assignments = assignments_r.data or []
+
+        assignee_emails = sorted(
+            {
+                str(item.get("recommended_assignee_email") or "")
+                for item in assignments
+                if item.get("recommended_assignee_email")
+            }
+        )
+        profile_map: dict[str, list[str]] = {}
+        if assignee_emails:
+            profile_rows = sb.table("employee_work_profiles").select("employee_email,skills").in_(
+                "employee_email", assignee_emails
+            ).execute()
+            for row in profile_rows.data or []:
+                profile_map[str(row.get("employee_email") or "")] = [str(s) for s in (row.get("skills") or [])]
+
+        missing_counts: dict[str, int] = {}
+        total_open = len(assignments)
+        no_match_count = 0
+
+        for item in assignments:
+            status = str(item.get("status") or "")
+            if status == "no_match":
+                no_match_count += 1
+
+            required_skills = [str(skill) for skill in (item.get("required_skills") or [])]
+            assignee_email = str(item.get("recommended_assignee_email") or "")
+            assignee_skills = profile_map.get(assignee_email, [])
+
+            for required in required_skills:
+                if not any(
+                    required.lower() == have.lower() or required.lower() in have.lower() or have.lower() in required.lower()
+                    for have in assignee_skills
+                ):
+                    missing_counts[required] = missing_counts.get(required, 0) + 1
+
+        top_gaps = [
+            {"skill": skill, "missing_count": count}
+            for skill, count in sorted(missing_counts.items(), key=lambda item: item[1], reverse=True)[:8]
+        ]
+
+        return {
+            "open_assignments": total_open,
+            "no_internal_match": no_match_count,
+            "top_skill_gaps": top_gaps,
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 # ── Settings (must be before /{assignment_id} to avoid being swallowed) ───────
@@ -347,6 +462,7 @@ async def reassign_with_ai(
 
     sb = get_supabase_admin()
     try:
+        ensure_demo_work_profiles(sb, minimum_profiles=30)
         r = sb.table("jira_task_assignments").select("*").eq("id", assignment_id).execute()
         if not r.data:
             raise HTTPException(status_code=404, detail="Assignment not found")

@@ -6,18 +6,24 @@ import { protectedGetApi } from "@/lib/api";
 
 type FeatureContribution = {
   feature: string;
-  label: string;
-  value: number;
-  weight: number;
+  label?: string;
   contribution: number;
-  direction: "positive" | "negative";
+  direction?: "positive" | "negative" | string;
   explanation: string;
 };
 
 type ExplainabilityResponse = {
   employee_id: string;
-  top_features: FeatureContribution[];
-  generated_from: string;
+  score_type: "burnout" | "attrition" | "engagement";
+  explanations: Array<{
+    feature: string;
+    label?: string;
+    contribution: number;
+    direction: string;
+    plain_english: string;
+  }>;
+  confidence_coverage: number;
+  source: string;
 };
 
 function hashString(value: string): number {
@@ -98,7 +104,7 @@ function ContributionTooltip({ active, payload }: { active?: boolean; payload?: 
     <div className="bg-white border border-slate-200 rounded-md shadow-sm p-3 max-w-xs">
       <p className="text-sm font-semibold">{row.label}</p>
       <p className="text-xs text-slate-700 mt-1">{row.explanation}</p>
-      <p className="text-xs text-slate-500 mt-1">Weight: {(row.weight * 100).toFixed(1)}%</p>
+      <p className="text-xs text-slate-500 mt-1">Contribution: {Math.abs(row.contribution).toFixed(1)}%</p>
     </div>
   );
 }
@@ -126,12 +132,20 @@ export default function ScoreExplainability({ employeeId, employeeName, open, on
       setLoading(true);
       try {
         const data = await protectedGetApi<ExplainabilityResponse>(
-          `/api/ml/feature-importance/${employeeId}?top_k=10`,
+            `/api/explain/burnout/${employeeId}`,
           token,
         );
         if (mounted) {
-          setRows(data.top_features);
-          setSource(data.generated_from);
+            setRows(
+              (data.explanations || []).map((item) => ({
+                feature: item.feature,
+                label: item.label || item.feature,
+                contribution: Number(item.contribution) * 100,
+                direction: item.contribution >= 0 ? "positive" : "negative",
+                explanation: item.plain_english,
+              })),
+            );
+            setSource(data.source);
           setError("");
         }
       } catch (err) {
@@ -181,7 +195,7 @@ export default function ScoreExplainability({ employeeId, employeeName, open, on
                   <BarChart data={chartData} layout="vertical" margin={{ top: 10, right: 24, left: 48, bottom: 8 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis type="number" domain={["dataMin - 5", "dataMax + 5"]} tick={{ fontSize: 12 }} />
-                    <YAxis type="category" dataKey="label" width={170} tick={{ fontSize: 11 }} />
+                    <YAxis type="category" dataKey="label" width={190} tick={{ fontSize: 11 }} />
                     <Tooltip content={<ContributionTooltip />} />
                     <Bar dataKey="contribution" radius={[2, 2, 2, 2]}>
                       {chartData.map((entry, idx) => (

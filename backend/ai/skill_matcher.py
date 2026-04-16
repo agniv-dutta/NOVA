@@ -19,6 +19,7 @@ from typing import Any
 import numpy as np
 
 from ai.groq_client import groq_chat
+from ai.text_cleanup import cleanup_text
 
 logger = logging.getLogger(__name__)
 
@@ -319,18 +320,25 @@ Return ONLY valid JSON:
         end = content.rfind("}") + 1
         if start != -1 and end > start:
             result = json.loads(content[start:end])
+            cleaned_description = cleanup_text(str(result.get("description", _fallback_jd(task_title, required_skills))))
+            cleaned_reasoning = cleanup_text(str(result.get("reasoning", "")))
             return {
                 "title": str(result.get("title", f"Developer – {required_skills[0] if required_skills else 'General'}")),
-                "description": str(result.get("description", _fallback_jd(task_title, required_skills))),
-                "reasoning": str(result.get("reasoning", "")),
+                "description": cleaned_description["text"],
+                "reasoning": cleaned_reasoning["text"],
+                "manual_review_needed": bool(cleaned_description["needs_manual_review"]),
+                "flagged_terms": cleaned_description["flagged_terms"],
             }
     except Exception as exc:
         logger.warning("Job posting generation failed: %s", exc)
 
+    cleaned_fallback = cleanup_text(_fallback_jd(task_title, skills=required_skills))
     return {
         "title": f"Developer – {required_skills[0] if required_skills else task_title}",
-        "description": _fallback_jd(task_title, required_skills),
+        "description": cleaned_fallback["text"],
         "reasoning": "No matching employee found for the required skill set.",
+        "manual_review_needed": bool(cleaned_fallback["needs_manual_review"]),
+        "flagged_terms": cleaned_fallback["flagged_terms"],
     }
 
 

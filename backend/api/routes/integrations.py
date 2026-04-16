@@ -13,6 +13,14 @@ from models.user import User, UserRole
 router = APIRouter(prefix="/api/integrations", tags=["Integrations"])
 
 
+def _is_live_jira_config(config: dict) -> bool:
+    return bool(
+        (config.get("base_url") or config.get("cloud_url"))
+        and config.get("email")
+        and config.get("api_token")
+    )
+
+
 class IntegrationConfigRequest(BaseModel):
     org_id: str = "demo-org"
     integration_type: str
@@ -91,7 +99,7 @@ async def integration_status(
     try:
         response = (
             supabase.table("integration_configs")
-            .select("integration_type,is_active,last_sync_at")
+            .select("integration_type,is_active,last_sync_at,config")
             .order("created_at", desc=True)
             .limit(20)
             .execute()
@@ -101,6 +109,8 @@ async def integration_status(
             if key in statuses:
                 statuses[key]["connected"] = bool(row.get("is_active"))
                 statuses[key]["last_sync_at"] = row.get("last_sync_at")
+                if key == "jira" and _is_live_jira_config(row.get("config") or {}):
+                    statuses[key]["mode"] = "live_configured"
     except Exception:
         pass
 
@@ -111,10 +121,30 @@ async def integration_status(
 async def trigger_jira_sync(
     _current_user: User = Depends(require_role([UserRole.HR, UserRole.LEADERSHIP])),
 ) -> dict:
+    supabase = get_supabase_admin()
+    mode = "mock"
+    message = "Mock Jira sync started. Configure Jira cloud URL, email, and API token for live mode."
+
+    try:
+        latest = (
+            supabase.table("integration_configs")
+            .select("config,is_active")
+            .eq("integration_type", "jira")
+            .order("created_at", desc=True)
+            .limit(1)
+            .execute()
+        )
+        row = (latest.data or [None])[0]
+        if row and bool(row.get("is_active")) and _is_live_jira_config(row.get("config") or {}):
+            mode = "live_configured"
+            message = "Jira sync requested using saved live credentials."
+    except Exception:
+        pass
+
     return {
         "status": "started",
         "integration": "jira",
-        "mode": "mock",
+        "mode": mode,
         "started_at": datetime.now(timezone.utc).isoformat(),
-        "message": "Mock Jira sync started. Replace connector with real API for production.",
+        "message": message,
     }

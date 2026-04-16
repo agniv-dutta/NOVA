@@ -15,6 +15,32 @@ import httpx
 logger = logging.getLogger(__name__)
 
 
+def _load_jira_credentials_from_integration_config() -> tuple[str, str, str]:
+    """Best-effort credentials fallback from persisted Jira integration config."""
+    try:
+        from core.database import get_supabase_admin
+
+        sb = get_supabase_admin()
+        r = (
+            sb.table("integration_configs")
+            .select("config,is_active")
+            .eq("integration_type", "jira")
+            .order("created_at", desc=True)
+            .limit(1)
+            .execute()
+        )
+        row = (r.data or [None])[0]
+        if not row or not bool(row.get("is_active")):
+            return "", "", ""
+        config = row.get("config") or {}
+        base_url = str(config.get("base_url") or config.get("cloud_url") or "").rstrip("/")
+        email = str(config.get("email") or "")
+        api_token = str(config.get("api_token") or "")
+        return base_url, email, api_token
+    except Exception:
+        return "", "", ""
+
+
 async def assign_jira_issue(issue_key: str, account_id: str) -> bool:
     """
     Assign a JIRA issue to the user identified by `account_id`.
@@ -30,7 +56,13 @@ async def assign_jira_issue(issue_key: str, account_id: str) -> bool:
     api_token = settings.JIRA_API_TOKEN
 
     if not all([base_url, email, api_token]):
-        logger.warning("JIRA assign skipped — JIRA_BASE_URL / JIRA_EMAIL / JIRA_API_TOKEN not configured")
+        cfg_base_url, cfg_email, cfg_token = _load_jira_credentials_from_integration_config()
+        base_url = base_url or cfg_base_url
+        email = email or cfg_email
+        api_token = api_token or cfg_token
+
+    if not all([base_url, email, api_token]):
+        logger.warning("JIRA assign skipped — Jira credentials missing in env and integration config")
         return False
 
     if not account_id:

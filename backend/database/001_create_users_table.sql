@@ -45,7 +45,7 @@ CREATE POLICY "Users can read their own data" ON users
 -- Insert test users (password for all is "secret")
 -- Hashed password: $2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW
 INSERT INTO users (email, full_name, role, hashed_password, disabled) VALUES
-    ('employee@company.com', 'John Doe', 'employee', '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', false),
+    ('employee@company.com', 'Arjun Sharma', 'employee', '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', false),
     ('manager@company.com', 'Jane Manager', 'manager', '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', false),
     ('hr.admin@company.com', 'HR Administrator', 'hr', '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', false),
     ('ceo@company.com', 'CEO Leader', 'leadership', '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', false)

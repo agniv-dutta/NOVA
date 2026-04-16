@@ -23,7 +23,7 @@ def _get_demo_user(email: str) -> Optional[UserInDB]:
     """Return a local demo user when Supabase is temporarily unreachable."""
     normalized_email = email.strip().lower()
     demo_directory = {
-        "employee@company.com": ("John Doe", UserRole.EMPLOYEE),
+        "employee@company.com": ("Arjun Sharma", UserRole.EMPLOYEE),
         "manager@company.com": ("Jane Manager", UserRole.MANAGER),
         "hr.admin@company.com": ("HR Administrator", UserRole.HR),
         "ceo@company.com": ("CEO Leader", UserRole.LEADERSHIP),

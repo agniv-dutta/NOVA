@@ -42,6 +42,7 @@ import {
 interface WorkProfile {
   id: string;
   employee_email: string;
+  full_name?: string;
   github_username: string | null;
   jira_account_id: string | null;
   skills: string[];
@@ -437,8 +438,9 @@ export default function WorkProfilesPage() {
                 <div className="flex items-start justify-between">
                   <div>
                     <CardTitle className="text-sm font-bold truncate max-w-[180px]">
-                      {p.employee_email}
+                      {p.full_name || p.employee_email}
                     </CardTitle>
+                    <p className="text-[10px] text-muted-foreground truncate max-w-[180px]">{p.employee_email}</p>
                     {p.github_username && (
                       <div className="flex items-center gap-1 mt-0.5 text-xs text-muted-foreground">
                         <Github className="h-3 w-3" />
@@ -499,7 +501,8 @@ export default function WorkProfilesPage() {
                   Work Profile
                 </SheetTitle>
                 <div>
-                  <p className="font-semibold text-sm">{selectedProfile.employee_email}</p>
+                  <p className="font-semibold text-sm">{selectedProfile.full_name || selectedProfile.employee_email}</p>
+                  <p className="text-xs text-muted-foreground">{selectedProfile.employee_email}</p>
                   <div className="flex flex-wrap gap-3 mt-0.5">
                     {selectedProfile.github_username && (
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">

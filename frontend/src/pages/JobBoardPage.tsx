@@ -22,8 +22,9 @@ import {
 } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useToast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/lib/api";
-import { Briefcase, CheckCircle, XCircle, Pencil, Bot } from "lucide-react";
+import { Briefcase, CheckCircle, XCircle, Pencil, Bot, AlertTriangle } from "lucide-react";
 
 interface JobPosting {
   id: string;
@@ -35,6 +36,16 @@ interface JobPosting {
   employment_type: string;
   status: "limbo" | "approved" | "closed";
   ai_reasoning: string;
+  internal_match?: {
+    fit_percent: number;
+    recommended_name: string | null;
+    recommended_email: string | null;
+    status: string;
+    ai_reasoning: string;
+    no_internal_match: boolean;
+  };
+  manual_review_needed?: boolean;
+  flagged_terms?: string[];
   approved_by: string | null;
   approved_at: string | null;
   created_at: string;
@@ -56,6 +67,7 @@ const EMPLOYMENT_LABELS: Record<string, string> = {
 export default function JobBoardPage() {
   useDocumentTitle("NOVA — Job Board");
   const { token } = useAuth();
+  const { toast } = useToast();
 
   const [postings, setPostings] = useState<JobPosting[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,6 +81,8 @@ export default function JobBoardPage() {
   const [editWorkplace, setEditWorkplace] = useState("HYBRID");
   const [editEmployment, setEditEmployment] = useState("FULL_TIME");
   const [editLoading, setEditLoading] = useState(false);
+  const [expandedDescriptions, setExpandedDescriptions] = useState<Record<string, boolean>>({});
+  const [publishPreview, setPublishPreview] = useState<JobPosting | null>(null);
 
   const authHeader = { Authorization: `Bearer ${token}` };
 
@@ -99,10 +113,17 @@ export default function JobBoardPage() {
         body: JSON.stringify({}),
       });
       if (!res.ok) throw new Error("Failed to approve");
+      const payload = await res.json();
       await fetchPostings();
+      toast({ title: `Job posted: ${payload.title || "Posting"}` });
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const isRejection = (p: JobPosting) => {
+    if (p.internal_match?.no_internal_match) return true;
+    return p.ai_reasoning?.toLowerCase().includes("no match");
   };
 
   const close = async (id: string) => {
@@ -193,18 +214,49 @@ export default function JobBoardPage() {
         </div>
 
         {/* AI reasoning */}
-        {p.ai_reasoning && (
-          <div className="flex items-start gap-2 text-xs text-muted-foreground border-l-4 border-muted pl-3 py-1">
-            <Bot className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-            <span>{p.ai_reasoning}</span>
+        {(p.ai_reasoning || p.internal_match) && (
+          <div className="rounded-md bg-[#fef3c7] border-l-4 border-amber-500 p-3">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-700 mt-0.5 shrink-0" />
+              <div className="space-y-1 min-w-0 w-full">
+                <p className="text-sm font-bold text-amber-900">AI Talent Analysis</p>
+                {isRejection(p) ? (
+                  <span className="inline-flex rounded-full bg-amber-200 px-2 py-0.5 text-[11px] font-semibold text-amber-900">
+                    No Internal Match Found - External Hire Recommended
+                  </span>
+                ) : (
+                  <div className="space-y-1">
+                    <p className="text-xs text-amber-900 font-semibold">
+                      Best internal match: {p.internal_match?.recommended_name || "Candidate"} - {p.internal_match?.fit_percent ?? 0}% fit
+                    </p>
+                    <div className="h-2 rounded bg-amber-100 overflow-hidden">
+                      <div className="h-full bg-amber-500" style={{ width: `${Math.min(100, Math.max(0, p.internal_match?.fit_percent ?? 0))}%` }} />
+                    </div>
+                    <a href="/work-profiles" className="text-xs text-amber-900 underline underline-offset-2">View candidate profile →</a>
+                  </div>
+                )}
+                {p.ai_reasoning && <p className="text-xs text-amber-900">{p.ai_reasoning}</p>}
+              </div>
+            </div>
           </div>
         )}
 
         {/* Description preview */}
         <div
-          className="text-xs text-muted-foreground line-clamp-3 prose prose-sm max-w-none"
-          dangerouslySetInnerHTML={{ __html: p.description.slice(0, 300) }}
+          className="text-xs text-muted-foreground prose prose-sm max-w-none"
+          dangerouslySetInnerHTML={{
+            __html: (expandedDescriptions[p.id] ? p.description : (p.description.length > 200 ? `${p.description.slice(0, 200)}...` : p.description)),
+          }}
         />
+        {p.description.length > 200 && (
+          <button
+            type="button"
+            className="text-xs text-primary underline underline-offset-2"
+            onClick={() => setExpandedDescriptions((prev) => ({ ...prev, [p.id]: !prev[p.id] }))}
+          >
+            {expandedDescriptions[p.id] ? "Read less" : "Read more"}
+          </button>
+        )}
 
         <div className="flex items-center justify-between pt-1 flex-wrap gap-2">
           <p className="text-xs text-muted-foreground">
@@ -229,7 +281,7 @@ export default function JobBoardPage() {
               <Button
                 size="sm"
                 className="border-2 border-foreground shadow-[2px_2px_0px_#000]"
-                onClick={() => approve(p.id)}
+                onClick={() => setPublishPreview(p)}
                 disabled={actionLoading === p.id}
               >
                 <CheckCircle className="h-3.5 w-3.5 mr-1" />
@@ -333,6 +385,38 @@ export default function JobBoardPage() {
                   disabled={editLoading}
                 >
                   {editLoading ? "Saving…" : "Save Changes"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {publishPreview && (
+        <Dialog open={!!publishPreview} onOpenChange={() => setPublishPreview(null)}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Preview Before Publishing</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <p className="text-sm font-semibold">{publishPreview.title}</p>
+              <div className="flex flex-wrap gap-2">
+                {(publishPreview.required_skills || []).map((skill) => (
+                  <Badge key={skill} variant="outline">{skill}</Badge>
+                ))}
+              </div>
+              <div className="rounded border p-3 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: publishPreview.description }} />
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setPublishPreview(null)}>Cancel</Button>
+                <Button
+                  className="border-2 border-foreground shadow-[2px_2px_0px_#000]"
+                  onClick={async () => {
+                    await approve(publishPreview.id);
+                    setPublishPreview(null);
+                    setActiveTab("approved");
+                  }}
+                >
+                  Confirm & Publish
                 </Button>
               </div>
             </div>

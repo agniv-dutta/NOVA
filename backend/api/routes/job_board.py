@@ -14,6 +14,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from api.deps import require_role
+from ai.text_cleanup import cleanup_text
 from core.database import get_supabase_admin
 from models.user import User, UserRole
 
@@ -23,6 +24,36 @@ router = APIRouter(prefix="/api/job-board", tags=["Job Board"])
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _sanitize_posting_row(row: dict) -> dict:
+    cleaned_description = cleanup_text(str(row.get("description") or ""))
+    cleaned_reasoning = cleanup_text(str(row.get("ai_reasoning") or ""))
+    return {
+        **row,
+        "description": cleaned_description["text"],
+        "ai_reasoning": cleaned_reasoning["text"],
+        "manual_review_needed": bool(cleaned_description["needs_manual_review"]),
+        "flagged_terms": cleaned_description["flagged_terms"],
+    }
+
+
+def _with_internal_match(row: dict, assignment_map: dict[str, dict]) -> dict:
+    assignment_id = str(row.get("jira_task_assignment_id") or "")
+    assignment = assignment_map.get(assignment_id)
+    if not assignment:
+        return row
+
+    match_score = float(assignment.get("match_score") or 0.0)
+    internal_match = {
+        "fit_percent": int(round(match_score * 100)),
+        "recommended_name": assignment.get("recommended_assignee_name"),
+        "recommended_email": assignment.get("recommended_assignee_email"),
+        "status": assignment.get("status"),
+        "ai_reasoning": assignment.get("ai_reasoning") or "",
+        "no_internal_match": str(assignment.get("status") or "") == "no_match" or match_score < 0.4,
+    }
+    return {**row, "internal_match": internal_match}
 
 
 # ── Schemas ───────────────────────────────────────────────────────────────────
@@ -57,7 +88,22 @@ async def list_job_postings(
         if status:
             q = q.eq("status", status)
         r = q.execute()
-        return {"postings": r.data or [], "total": len(r.data or [])}
+        postings = [_sanitize_posting_row(row) for row in (r.data or [])]
+
+        assignment_ids = [
+            str(posting.get("jira_task_assignment_id"))
+            for posting in postings
+            if posting.get("jira_task_assignment_id")
+        ]
+        assignment_map: dict[str, dict] = {}
+        if assignment_ids:
+            ar = sb.table("jira_task_assignments").select(
+                "id,recommended_assignee_name,recommended_assignee_email,match_score,status,ai_reasoning"
+            ).in_("id", assignment_ids).execute()
+            assignment_map = {str(row.get("id")): row for row in (ar.data or [])}
+
+        postings = [_with_internal_match(posting, assignment_map) for posting in postings]
+        return {"postings": postings, "total": len(postings)}
     except Exception as exc:
         logger.error("list_job_postings error: %s", exc)
         raise HTTPException(status_code=500, detail=str(exc))
@@ -71,7 +117,7 @@ async def list_public_job_postings():
         r = sb.table("job_postings").select(
             "id,title,description,required_skills,workplace_type,employment_type,created_at"
         ).eq("status", "approved").order("created_at", desc=True).execute()
-        return {"postings": r.data or []}
+        return {"postings": [_sanitize_posting_row(row) for row in (r.data or [])]}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
@@ -99,7 +145,7 @@ async def get_job_posting(
         r = sb.table("job_postings").select("*").eq("id", posting_id).execute()
         if not r.data:
             raise HTTPException(status_code=404, detail="Job posting not found")
-        return r.data[0]
+        return _sanitize_posting_row(r.data[0])
     except HTTPException:
         raise
     except Exception as exc:

@@ -37,6 +37,7 @@ type MicState = 'idle' | 'listening' | 'processing' | 'speaking';
 
 const PAGE_TO_AGENT: Array<{ match: (path: string) => boolean; agentId: string; label: string }> = [
   { match: (p) => p === '/org-health' || p === '/dashboard', agentId: 'workforce_overview_agent', label: 'Workforce Overview Agent' },
+  { match: (p) => p.startsWith('/job-board') || p.startsWith('/task-assignments') || p.startsWith('/work-profiles'), agentId: 'talent_pipeline_agent', label: 'Talent Pipeline Agent' },
   { match: (p) => p.startsWith('/employees/org-tree'), agentId: 'org_structure_agent', label: 'Org Structure Agent' },
   { match: (p) => p.startsWith('/employees'), agentId: 'employee_intelligence_agent', label: 'Employee Intelligence Agent' },
   { match: (p) => p.startsWith('/hr/appraisals'), agentId: 'appraisal_agent', label: 'Appraisal Agent' },
@@ -89,6 +90,21 @@ const PAGE_SUGGESTIONS: Record<string, string[]> = {
     'What is the average span of control?',
     'Show me the VP Engineering team',
   ],
+  '/job-board': [
+    'How many jobs are awaiting approval?',
+    'Which skills are most in demand externally?',
+    'Are there any internal candidates for open roles?',
+  ],
+  '/task-assignments': [
+    'What skills are we missing most?',
+    'How many open positions need external hires?',
+    'Who are the best candidates for pending tasks?',
+  ],
+  '/work-profiles': [
+    'What skills are we missing most?',
+    'How many open positions need external hires?',
+    'Who are the best candidates for pending tasks?',
+  ],
 };
 
 function resolveAgent(pathname: string) {
@@ -117,6 +133,9 @@ function getSuggestedQuestions(pathname: string, context: Record<string, unknown
   else if (pathname.startsWith('/hr/appraisals')) basePath = '/hr/appraisals';
   else if (pathname.startsWith('/hr/feedback-analyzer')) basePath = '/hr/feedback-analyzer';
   else if (pathname.startsWith('/departments/heatmap')) basePath = '/departments/heatmap';
+  else if (pathname.startsWith('/job-board')) basePath = '/job-board';
+  else if (pathname.startsWith('/task-assignments')) basePath = '/task-assignments';
+  else if (pathname.startsWith('/work-profiles')) basePath = '/work-profiles';
 
   const seeded = PAGE_SUGGESTIONS[basePath] || [];
   if (basePath === '/employees') {

@@ -18,6 +18,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 
 from ai.commit_analyzer import analyze_commit
+from ai.text_cleanup import sanitize_task_title
 from ai.skill_matcher import (
     evaluate_best_candidate,
     extract_required_skills,
@@ -25,6 +26,7 @@ from ai.skill_matcher import (
     generate_job_posting,
 )
 from core.database import get_supabase_admin
+from core.demo_work_profiles import ensure_demo_work_profiles
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/webhook", tags=["Webhooks"])
@@ -49,6 +51,7 @@ def _get_setting(sb, key: str, default: Any = None) -> Any:
 def _get_all_work_profiles(sb) -> list[dict]:
     """Return all work profiles enriched with full_name from the users table."""
     try:
+        ensure_demo_work_profiles(sb, minimum_profiles=30)
         r = sb.table("employee_work_profiles").select("*").execute()
         profiles = r.data or []
         if profiles:
@@ -176,7 +179,7 @@ async def _handle_issue_created(data: dict, sb) -> dict:
     fields = issue.get("fields", {})
 
     issue_key = issue.get("key", "UNKNOWN")
-    title = fields.get("summary", "Untitled")
+    title = sanitize_task_title(fields.get("summary", "Untitled"))
     description = fields.get("description") or title
     priority = (fields.get("priority") or {}).get("name", "Medium")
     issue_type = (fields.get("issuetype") or {}).get("name", "Task")

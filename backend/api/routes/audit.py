@@ -10,9 +10,29 @@ from pydantic import BaseModel, Field
 from api.deps import require_any_authenticated, require_role
 from core.audit import register_access_reason
 from core.database import get_supabase_admin
+from core.privacy import mask_email, mask_free_text, mask_ip
 from models.user import User, UserRole
 
 router = APIRouter(prefix="/api/audit", tags=["Audit"])
+
+
+def _sanitize_audit_row(row: dict, reveal_sensitive: bool) -> dict:
+    if reveal_sensitive:
+        return row
+
+    sanitized = {**row}
+    user_id = str(sanitized.get("user_id") or "")
+    ip_address = str(sanitized.get("ip_address") or "")
+    reason = str(sanitized.get("reason") or "")
+    resource_id = str(sanitized.get("resource_id") or "")
+
+    sanitized["user_id"] = mask_email(user_id)
+    sanitized["ip_address"] = mask_ip(ip_address)
+    sanitized["reason"] = mask_free_text(reason)
+    if "@" in resource_id:
+        sanitized["resource_id"] = mask_email(resource_id)
+    sanitized["pii_guard_applied"] = True
+    return sanitized
 
 
 class AccessReasonRequest(BaseModel):
@@ -44,6 +64,7 @@ async def list_audit_logs(
     user_id: str | None = Query(default=None),
     start_ts: datetime | None = Query(default=None),
     end_ts: datetime | None = Query(default=None),
+    reveal_sensitive: bool = Query(default=False),
     limit: int = Query(default=200, ge=1, le=1000),
     _current_user: User = Depends(require_role([UserRole.LEADERSHIP])),
 ) -> dict:
@@ -69,7 +90,7 @@ async def list_audit_logs(
             query = query.lte("timestamp", end_ts.isoformat())
 
         response = query.execute()
-        rows = response.data or []
+        rows = [_sanitize_audit_row(row, reveal_sensitive=reveal_sensitive) for row in (response.data or [])]
         return {"items": rows, "count": len(rows)}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed to read audit logs: {exc}") from exc

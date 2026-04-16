@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD012 MD022 MD031 MD032 MD033 MD034 MD036 MD040 MD051 MD058 MD060 -->
+
 <h1 align="center">🚀 NOVA: AI-Powered Organizational Wellness & Risk Intelligence Platform</h1>
 
 <p align="center">
@@ -451,11 +453,30 @@ GET    /api/recognition/{employee_id}                   Recognition history + 90
 
 ### Integrations
 ```
-GET    /api/integrations/jira/metrics/{employee_id}  Jira metrics per employee (mock-backed)
+GET    /api/integrations/jira/metrics/{employee_id}  Jira metrics per employee
 GET    /api/integrations/jira/team/{department}      Team-level Jira health aggregate
 POST   /api/integrations/config                      Save integration config (HR/Leadership)
 GET    /api/integrations/status                      Connected/disconnected integration statuses
-POST   /api/integrations/jira/sync                  Trigger Jira sync (manual)
+POST   /api/integrations/jira/sync                   Trigger Jira sync (manual; mock or live_configured mode)
+```
+
+### Talent Pipeline (Task Assignments + Job Board)
+```
+GET    /api/task-assignments                         List assignments by status with matched/missing skills
+GET    /api/task-assignments/pending-count           Sidebar badge count
+GET    /api/task-assignments/skills-gap-summary      Org-level top missing skills in open queue
+POST   /api/task-assignments/{id}/reassign           Re-run AI matching against current work profiles
+POST   /api/task-assignments/{id}/assign             Manual HR assignment override
+GET    /api/job-postings                             Review/publish external job postings
+```
+
+### Events, Correlations, and Audit
+```
+POST   /events                                       Persist historical event annotation
+GET    /events                                       List events for trend context
+GET    /events/correlations                          Compute event-to-metric correlations
+POST   /api/audit/reason                             Attach access-reason to next sensitive read
+GET    /api/audit/logs                               Leadership audit log retrieval (PII-masked by default)
 ```
 
 ### Organization Hierarchy & Directory
@@ -810,17 +831,17 @@ curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
 - Org Wellbeing and Burnout Heatmap employee cards now sourced from the canonical employee context (no mixed placeholder roster)
 - Specialized voice agents for Department Heatmap and Org Structure pages, including route-aware context prefetching
 - Voice assistant UX polish: first-session onboarding nudge, page-specific suggested questions, speaking waveform, and resilient text-only fallback handling
+- Work Profiles auto-seeding for demo reliability: guaranteed minimum talent pool + deterministic commit history
+- Talent pipeline skill-gap summarization endpoint and UI card for open assignment coverage planning
+- PII boundary hardening in audit retrieval: masked user identifiers, masked IPs, and redacted free-text by default
+- Jira live-configuration mode detection with persisted integration credential fallback for assignment sync
 
-### 🔄 **In Progress**
-- ML feature importance visualization
-- Historical trend persistence with correlation tagging
-- Production hardening of Jira connector from mock pipeline to live API token flow
-
-### ⏳ **Planned (Roadmap)**
-- Org-graph burnout propagation map enhancements
-- k-anonymity privacy layer
-- PII boundary service
-- Advanced audit logging
+### ✅ **Final Polish Completion (April 2026)**
+- ML explainability wiring upgraded to `/api/explain/*` flows in employee score drilldowns
+- Historical events and correlation endpoints fully integrated in backend routes
+- k-anonymity enforcement active for sensitive small-team narrative outputs
+- PII boundary guards and advanced audit controls wired into API and middleware
+- Talent pipeline UX upgraded end-to-end (task matching, no-match handling, job board publish flow)
 
 ---
 
@@ -832,18 +853,17 @@ curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
 - RBAC and authentication
 - Intervention engine with 8 recommendation types
 
-### Phase 2: Intelligence (Current)
+### Phase 2: Intelligence (✅ COMPLETE)
 - Structured AI summaries with robust fallback handling
 - Temporal-weighted anomaly composite with explainability panels
-- ML classifier with feature importance visualization
+- ML explainability drilldowns and contribution narratives
 - Manager 360 trend quality scoring and manager coaching feedback loop refinements
 
-### Phase 3: Enterprise (Q2 2026)
-- Advanced privacy & compliance (k-anonymity, PII vault)
+### Phase 3: Enterprise (Q2-Q3 2026)
 - Multi-org support
 - Custom intervention types
 - External data integrations (Slack, Google Calendar, HiBob)
-- Live Jira REST v3 integration rollout (replacing seeded mock provider)
+- Expanded live Jira REST v3 rollout and webhook hardening
 
 ### Phase 4: Scale (Q3+ 2026)
 - Competitor benchmarking database expansion (real datasets beyond simulated medians)

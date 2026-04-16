@@ -14,6 +14,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from api.deps import get_current_active_user, require_role
+from core.demo_work_profiles import ensure_demo_work_profiles
 from core.database import get_supabase_admin
 from models.user import User, UserRole
 
@@ -57,10 +58,19 @@ async def list_work_profiles(
     """List all employee work profiles."""
     sb = get_supabase_admin()
     try:
+        # Keep demo environments populated for realistic talent matching demos.
+        ensure_demo_work_profiles(sb, minimum_profiles=30)
         r = sb.table("employee_work_profiles").select(
             "id,employee_email,github_username,jira_account_id,skills,total_commits,avg_code_quality,profile_summary,last_commit_at,updated_at"
         ).order("updated_at", desc=True).execute()
-        return {"profiles": r.data or [], "total": len(r.data or [])}
+        profiles = r.data or []
+        if profiles:
+            emails = [p["employee_email"] for p in profiles]
+            users_r = sb.table("users").select("email,full_name").in_("email", emails).execute()
+            name_map = {u["email"]: u.get("full_name") or "" for u in (users_r.data or [])}
+            for profile in profiles:
+                profile["full_name"] = name_map.get(profile.get("employee_email", ""), "")
+        return {"profiles": profiles, "total": len(profiles)}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
@@ -76,6 +86,8 @@ async def get_my_profile(
         if not r.data:
             return {"profile": None, "message": "No work profile yet. Register your GitHub username to get started."}
         profile = r.data[0]
+        user_r = sb.table("users").select("full_name").eq("email", current_user.email).execute()
+        profile["full_name"] = (user_r.data or [{}])[0].get("full_name", "")
         # Exclude heavy embedding vector from response
         profile.pop("skill_embeddings", None)
         return {"profile": profile}
@@ -109,7 +121,10 @@ async def get_work_profile(
         ).eq("employee_email", email).execute()
         if not r.data:
             raise HTTPException(status_code=404, detail="Work profile not found for this employee")
-        return r.data[0]
+        profile = r.data[0]
+        user_r = sb.table("users").select("full_name").eq("email", email).execute()
+        profile["full_name"] = (user_r.data or [{}])[0].get("full_name", "")
+        return profile
     except HTTPException:
         raise
     except Exception as exc:

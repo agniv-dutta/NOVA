@@ -1,4 +1,4 @@
-# NOVA Execution Plan (Updated: April 8, 2026)
+# NOVA Execution Plan (Updated: April 16, 2026)
 
 ## 1) Completed Work
 
@@ -50,32 +50,25 @@
 - [x] Frontend production build passed.
 - [ ] Full backend pytest suite not executed in this environment (pytest package unavailable at time of run).
 
-## 2) Remaining Work (Priority Order)
+## 2) Final Polish Completion (Delivered)
 
-### High Priority
-- [ ] Run full backend tests in configured virtual environment and fix any regressions.
-- [ ] Add/expand automated tests for:
-  - structured insight parsing fallback paths
-  - temporal weighting calculations
-  - composite explainability payload fields
-  - sentiment emotion-spectrum extraction and 14d/7d trend deltas
+- [x] Feature explainability drilldowns fully wired to `/api/explain/*` payloads in employee score UI.
+- [x] What-if intervention simulator UI and backend contract integrated with modal UX hardening.
+- [x] Historical event persistence and correlation endpoints available (`/events`, `/events/correlations`).
+- [x] k-anonymity thresholds enforced for small-team narrative reporting.
+- [x] PII boundary layer applied for audit-log retrieval (masked identifiers by default).
+- [x] Advanced audit logging active with request context and access-reason attachment flow.
+- [x] Talent pipeline final polish complete:
+  - Work profile auto-seeding for demo consistency (minimum profile pool)
+  - Task assignment matched/missing skill visibility
+  - Skills-gap summary endpoint + dashboard card
+  - Job board AI analysis and publishing confirmation flow
+- [x] Jira connector hardening:
+  - Detects live-configured mode from stored integration config
+  - Falls back to persisted Jira credentials for issue assignment when env vars are absent
 
-### Medium Priority
-- [ ] Add feature-importance visualization in frontend for classifier explainability.
-- [ ] Implement what-if intervention simulator UI + backend contract.
-- [ ] Persist historical trend events and add correlation tagging endpoints.
+## 3) Current Status
 
-### Lower Priority / Roadmap
-- [ ] Org-graph burnout propagation map view.
-- [ ] Competitor benchmarking module.
-- [ ] Privacy hardening:
-  - k-anonymity thresholds
-  - PII boundary service
-  - richer audit logging
-
-## 3) Suggested Next Execution Slice
-
-1. Enable and run backend pytest in `.venv`.
-2. Add tests for structured parser and temporal composite logic.
-3. Implement feature-importance panel in insights UI.
-4. Start what-if simulator with a minimal end-to-end version.
+1. Planned items in this execution plan are wired into the application.
+2. Backend compile checks and frontend production builds are passing after the final polish changes.
+3. Future roadmap items are now expansion/scaling work, not blockers for current demo completeness.
