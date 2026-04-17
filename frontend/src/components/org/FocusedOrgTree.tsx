@@ -88,7 +88,7 @@ function findPathByName(root: OrgNode, query: string): string[] {
 function getRiskBorder(employee?: { burnoutRisk?: number; attritionRisk?: number }): string {
   const risk = Math.max(employee?.burnoutRisk ?? 0, employee?.attritionRisk ?? 0);
   if (risk >= 75) return "#ef4444";
-  if (risk >= 50) return "#f59e0b";
+  if (risk >= 50) return "#3b82f6";
   return "#22c55e";
 }
 
@@ -98,7 +98,7 @@ function getRiskLabel(employee?: { burnoutRisk?: number; attritionRisk?: number 
 }
 
 function levelStyles(level: number): { fill: string; border: string; text: string } {
-  if (level === 1) return { fill: "#fffbe6", border: "#F5C518", text: "#111827" };
+  if (level === 1) return { fill: "#e8f4ff", border: "#60A5FA", text: "#111827" };
   if (level === 2) return { fill: "#111827", border: "#111827", text: "#ffffff" };
   if (level === 3) return { fill: "#374151", border: "#374151", text: "#ffffff" };
   return { fill: "#f9fafb", border: "#d1d5db", text: "#111827" };
@@ -382,7 +382,7 @@ function TreeCanvas({
                 const isHighlightedDepartment = isNodeVisibleByDepartment(node.data, selectedDepartment);
                 const isSearchMatch = searchQuery.trim().length > 0 && node.data.name.toLowerCase().includes(searchQuery.trim().toLowerCase());
                 const riskBorder = riskOverlay ? getRiskBorder(employee) : styles.border;
-                const borderColor = isSearchMatch ? "#f5c518" : riskBorder;
+                const borderColor = isSearchMatch ? "#60A5FA" : riskBorder;
                 const opacity = selectedDepartment === "All" || isHighlightedDepartment ? 1 : 0.3;
                 const riskLabel = getRiskLabel(employee);
                 const chip = roleChip(node.data);
@@ -427,7 +427,7 @@ function TreeCanvas({
                           cx={NODE_WIDTH / 2}
                           cy={NODE_HEIGHT - 2}
                           r="9"
-                          fill={expanded ? "#F5C518" : "#e5e7eb"}
+                          fill={expanded ? "#60A5FA" : "#e5e7eb"}
                           stroke="#6b7280"
                           strokeWidth="1"
                         />
@@ -587,14 +587,14 @@ function splitTitleLines(value: string): [string, string] {
 
 function roleChip(node: OrgNode): { label: string; fill: string; stroke: string; textColor: string } {
   if (node.org_level === 1) {
-    return { label: "C-SUITE", fill: "#F5C518", stroke: "#111827", textColor: "#111827" };
+    return { label: "C-SUITE", fill: "#60A5FA", stroke: "#111827", textColor: "#111827" };
   }
   if (node.org_level === 2) {
     return { label: `VP · ${node.department.toUpperCase()}`, fill: "#111827", stroke: "#111827", textColor: "#ffffff" };
   }
   const palette: Record<string, { fill: string; stroke: string; textColor: string }> = {
     Engineering: { fill: "#e0f2fe", stroke: "#7dd3fc", textColor: "#0c4a6e" },
-    Sales: { fill: "#fef3c7", stroke: "#fcd34d", textColor: "#78350f" },
+    Sales: { fill: "#e0f2fe", stroke: "#93c5fd", textColor: "#1e3a8a" },
     HR: { fill: "#ffe4e6", stroke: "#fda4af", textColor: "#881337" },
     Design: { fill: "#f3e8ff", stroke: "#d8b4fe", textColor: "#581c87" },
     Finance: { fill: "#dcfce7", stroke: "#86efac", textColor: "#14532d" },

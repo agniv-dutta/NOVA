@@ -27,7 +27,7 @@ export default function EngagementPerformanceQuadrant() {
   const getQuadrantColor = (quadrant: QuadrantEmployee['quadrant']): string => {
     switch (quadrant) {
       case 'stars': return "#22c55e";
-      case 'engaged-underperformers': return "#eab308";
+      case 'engaged-underperformers': return "#3b82f6";
       case 'disengaged-high-performers': return "#f97316";
       case 'at-risk': return "#ef4444";
     }

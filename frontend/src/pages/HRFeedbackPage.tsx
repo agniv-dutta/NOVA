@@ -30,6 +30,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { useThemePalette } from "@/lib/theme";
 
 type FeedbackItem = {
   id: string;
@@ -115,8 +116,6 @@ const FEEDBACK_TYPES: Array<FeedbackItem["feedback_type"]> = [
   "peer_review",
 ];
 
-const PIE_COLORS = ["#16a34a", "#6b7280", "#dc2626"];
-
 function humanizeFeedbackType(value: string): string {
   return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
@@ -170,6 +169,7 @@ export default function HRFeedbackPage() {
   useDocumentTitle('NOVA — Feedback Analyzer');
   const { token } = useAuth();
   const { toast } = useToast();
+  const palette = useThemePalette();
 
   const [items, setItems] = useState<FeedbackItem[]>([]);
   const [page, setPage] = useState(1);
@@ -413,6 +413,11 @@ export default function HRFeedbackPage() {
       { name: "Negative", value: dist.negative },
     ];
   }, [batchResult]);
+
+  const pieColors = useMemo(
+    () => [palette.chart2, palette.mutedForeground, palette.chart4],
+    [palette.chart2, palette.mutedForeground, palette.chart4],
+  );
 
   const themeBarData = useMemo(() => {
     if (!batchResult) return [];
@@ -754,7 +759,7 @@ export default function HRFeedbackPage() {
                     <PieChart>
                       <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={74} label>
                         {pieData.map((entry, index) => (
-                          <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                          <Cell key={entry.name} fill={pieColors[index % pieColors.length]} />
                         ))}
                       </Pie>
                       <RechartsTooltip />
@@ -768,7 +773,7 @@ export default function HRFeedbackPage() {
                       <XAxis type="number" />
                       <YAxis dataKey="theme" type="category" width={90} />
                       <RechartsTooltip />
-                      <Bar dataKey="count" fill="#0f766e" radius={[0, 6, 6, 0]} />
+                      <Bar dataKey="count" fill={palette.chart3} radius={[0, 6, 6, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -801,7 +806,7 @@ export default function HRFeedbackPage() {
                 </div>
 
                 {singleResult.sarcasm_detected && (
-                  <div className="rounded-md border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-900">
+                  <div className="rounded-md border border-risk-medium/60 bg-risk-medium-bg p-3 text-sm text-foreground">
                     Sarcasm detected with {(singleResult.sarcasm_confidence * 100).toFixed(0)}% confidence. Actual sentiment may differ from surface text.
                     <div className="mt-2">
                       Surface sentiment: {singleResult.sentiment.surface_polarity.toFixed(2)} | Sarcasm-adjusted sentiment: {singleResult.sentiment.sarcasm_adjusted_polarity.toFixed(2)}
@@ -815,7 +820,7 @@ export default function HRFeedbackPage() {
                       <PolarGrid />
                       <PolarAngleAxis dataKey="emotion" />
                       <PolarRadiusAxis domain={[0, 1]} />
-                      <Radar dataKey="value" stroke="#0f766e" fill="#14b8a6" fillOpacity={0.5} />
+                      <Radar dataKey="value" stroke={palette.chart3} fill={palette.chart5} fillOpacity={0.5} />
                       <RechartsTooltip />
                     </RadarChart>
                   </ResponsiveContainer>

@@ -109,7 +109,7 @@ export default function SentimentBreakdown({ text, employeeName, emotionBreakdow
               <p className="text-sm text-muted-foreground mb-1">Sentiment Score</p>
               <p className="text-4xl font-bold" style={{ 
                 color: parseInt(overallSentiment) >= 60 ? '#22c55e' : 
-                       parseInt(overallSentiment) >= 40 ? '#eab308' : '#ef4444' 
+                       parseInt(overallSentiment) >= 40 ? '#3b82f6' : '#ef4444' 
               }}>
                 {overallSentiment}
               </p>

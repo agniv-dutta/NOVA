@@ -47,7 +47,7 @@ function lerpColor(a: [number, number, number], b: [number, number, number], t: 
 }
 
 const RED: [number, number, number] = [239, 68, 68];
-const YELLOW: [number, number, number] = [234, 179, 8];
+const YELLOW: [number, number, number] = [96, 165, 250];
 const GREEN: [number, number, number] = [34, 197, 94];
 
 function cellColor(value: number, isNegative: boolean): string {
@@ -150,7 +150,7 @@ export default function DeptHeatmapPage() {
             type="button"
             onClick={() => setSortByEfficiency((prev) => !prev)}
             className={`inline-flex items-center gap-1 border-2 border-foreground px-2 py-1 text-[10px] font-bold uppercase tracking-wider shadow-[2px_2px_0px_#000] ${
-              sortByEfficiency ? 'bg-[#FFE500]' : 'bg-background'
+              sortByEfficiency ? 'bg-[#60A5FA]' : 'bg-background'
             }`}
           >
             <ArrowUpDown className="h-3 w-3" />
@@ -208,7 +208,7 @@ export default function DeptHeatmapPage() {
               <div
                 className="h-3 w-48 border-2 border-foreground"
                 style={{
-                  background: 'linear-gradient(to right, #ef4444, #eab308, #22c55e)',
+                  background: 'linear-gradient(to right, #ef4444, #3b82f6, #22c55e)',
                 }}
               />
               <span className="text-[10px] font-bold">
@@ -256,7 +256,7 @@ function HeatmapRow({
     <>
       <div
         className={`flex flex-col justify-center border-l-4 px-2 py-1 ${
-          isSelected ? 'border-[#FFE500] bg-[#FFF9D6]' : 'border-transparent'
+          isSelected ? 'border-[#60A5FA] bg-[#E8F4FF]' : 'border-transparent'
         }`}
       >
         <p className="text-sm font-bold">{dept}</p>
@@ -293,7 +293,7 @@ function HeatmapRow({
                 onMouseEnter={() => onHoverDimension(dim)}
                 onMouseLeave={() => onHoverDimension(null)}
                 className={`flex h-14 items-center justify-center border-2 border-foreground text-sm font-bold transition-transform hover:scale-105 ${
-                  isSelected ? 'ring-2 ring-[#FFE500]' : ''
+                  isSelected ? 'ring-2 ring-[#60A5FA]' : ''
                 }`}
                 style={{
                   backgroundColor: cellColor(value, isNeg),

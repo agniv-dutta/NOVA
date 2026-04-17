@@ -19,6 +19,26 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@NOVA" />
     <meta name="twitter:image" content="/favicon.svg" />
+
+    <script>
+      (function () {
+        try {
+          var storageKey = "nova-theme";
+          var storedTheme = localStorage.getItem(storageKey);
+          var theme = storedTheme === "light" || storedTheme === "dark"
+            ? storedTheme
+            : "light";
+
+          if (theme === "dark") {
+            document.documentElement.classList.add("dark");
+          } else {
+            document.documentElement.classList.remove("dark");
+          }
+        } catch (_) {
+          // Ignore storage/bootstrap errors and fall back to default theme.
+        }
+      })();
+    </script>
   </head>
 
   <body>

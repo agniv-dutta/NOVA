@@ -40,19 +40,31 @@ interface AnomalyIndicatorProps {
   employeeName?: string;
 }
 
-const severityColors: Record<string, { badge: string; icon: string; bg: string }> = {
-  low: { badge: 'bg-blue-100 text-blue-800', icon: 'text-blue-500', bg: 'bg-blue-50' },
+const severityColors: Record<string, { badge: string; icon: string; bg: string; border: string }> = {
+  low: {
+    badge: 'border border-risk-low/40 bg-risk-low-bg text-foreground',
+    icon: 'text-risk-low',
+    bg: 'bg-risk-low-bg',
+    border: 'border-l-risk-low',
+  },
   medium: {
-    badge: 'bg-yellow-100 text-yellow-800',
-    icon: 'text-yellow-500',
-    bg: 'bg-yellow-50',
+    badge: 'border border-risk-medium/40 bg-risk-medium-bg text-foreground',
+    icon: 'text-risk-medium',
+    bg: 'bg-risk-medium-bg',
+    border: 'border-l-risk-medium',
   },
   high: {
-    badge: 'bg-orange-100 text-orange-800',
-    icon: 'text-orange-500',
-    bg: 'bg-orange-50',
+    badge: 'border border-risk-high/40 bg-risk-high-bg text-foreground',
+    icon: 'text-risk-high',
+    bg: 'bg-risk-high-bg',
+    border: 'border-l-risk-high',
   },
-  critical: { badge: 'bg-red-100 text-red-800', icon: 'text-red-600', bg: 'bg-red-50' },
+  critical: {
+    badge: 'border border-destructive/40 bg-destructive/20 text-foreground',
+    icon: 'text-destructive',
+    bg: 'bg-destructive/20',
+    border: 'border-l-destructive',
+  },
 };
 
 const AnomalyIndicator: React.FC<AnomalyIndicatorProps> = ({
@@ -122,7 +134,7 @@ const AnomalyIndicator: React.FC<AnomalyIndicatorProps> = ({
             {`${anomalyCount} Anomal${anomalyCount === 1 ? 'y' : 'ies'} Detected`}
           </button>
           {expanded && (
-            <div className="rounded border border-orange-200 bg-white p-3 space-y-2">
+            <div className="space-y-2 rounded border border-border bg-card p-3">
               {detailRows.length === 0 ? (
                 <p className="text-xs text-muted-foreground">No anomaly detail rows available.</p>
               ) : (
@@ -136,11 +148,11 @@ const AnomalyIndicator: React.FC<AnomalyIndicatorProps> = ({
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">Detected date: {new Date().toLocaleDateString()}</p>
                     <p className="text-xs mt-1">Employee: {employeeName || employeeId || 'Selected employee'}</p>
-                    <p className="text-xs text-slate-700 mt-1">{item.explanation}</p>
+                    <p className="mt-1 text-xs text-foreground">{item.explanation}</p>
                     {employeeId && (
                       <Link
                         to={`/insights/${employeeId}`}
-                        className="inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-800 mt-1"
+                        className="mt-1 inline-flex items-center gap-1 text-xs text-primary hover:opacity-80"
                       >
                         View Employee <ExternalLink className="h-3 w-3" />
                       </Link>
@@ -157,7 +169,7 @@ const AnomalyIndicator: React.FC<AnomalyIndicatorProps> = ({
       return <p className="text-sm text-muted-foreground">{emptyStateMessage}</p>;
     }
     return (
-      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold bg-emerald-50 text-emerald-700">
+      <div className="inline-flex items-center gap-2 rounded-full bg-risk-low-bg px-3 py-1 text-sm font-semibold text-foreground">
         <Users className="w-4 h-4" />
         No active anomalies
       </div>
@@ -170,15 +182,7 @@ const AnomalyIndicator: React.FC<AnomalyIndicatorProps> = ({
       {/* Composite Result */}
       {composite && (
         <div
-          className={`border-l-4 p-4 rounded-r-lg ${severityColors[composite.severity].bg} border-l-4 border-l-${
-            composite.severity === 'critical'
-              ? 'red-500'
-              : composite.severity === 'high'
-              ? 'orange-500'
-              : composite.severity === 'medium'
-              ? 'yellow-500'
-              : 'blue-500'
-          }`}
+          className={`rounded-r-lg border-l-4 p-4 ${severityColors[composite.severity].bg} ${severityColors[composite.severity].border}`}
         >
           <div className="flex items-start gap-3">
             <AlertTriangle
@@ -199,8 +203,8 @@ const AnomalyIndicator: React.FC<AnomalyIndicatorProps> = ({
                     <span
                       className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                         scoreDelta > 0
-                          ? 'bg-red-100 text-red-700'
-                          : 'bg-emerald-100 text-emerald-700'
+                          ? 'border border-risk-high/40 bg-risk-high-bg text-foreground'
+                          : 'border border-risk-low/40 bg-risk-low-bg text-foreground'
                       }`}
                     >
                       {scoreDelta > 0 ? (
@@ -221,14 +225,14 @@ const AnomalyIndicator: React.FC<AnomalyIndicatorProps> = ({
                 {composite.severity.toUpperCase()}
               </span>
               {composite.temporal_weight_applied && (
-                <p className="text-xs mt-1 text-orange-700">Temporal weighting applied</p>
+                <p className="mt-1 text-xs text-risk-medium">Temporal weighting applied</p>
               )}
 
               {contributionBars.length > 0 && (
                 <div className="mt-3">
                   <Popover>
                     <PopoverTrigger asChild>
-                      <button className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-800">
+                      <button className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:opacity-80">
                         <Info className="h-3.5 w-3.5" /> Risk Score Breakdown
                       </button>
                     </PopoverTrigger>
@@ -243,9 +247,9 @@ const AnomalyIndicator: React.FC<AnomalyIndicatorProps> = ({
                               <span>{bar.label}</span>
                               <span>{bar.value.toFixed(1)}%</span>
                             </div>
-                            <div className="h-2 w-full rounded bg-slate-200">
+                            <div className="h-2 w-full rounded bg-muted">
                               <div
-                                className="h-2 rounded bg-blue-600"
+                                className="h-2 rounded bg-chart-1"
                                 style={{ width: `${Math.max(0, Math.min(bar.value, 100))}%` }}
                               />
                             </div>
@@ -258,12 +262,12 @@ const AnomalyIndicator: React.FC<AnomalyIndicatorProps> = ({
               )}
 
               {typeof composite.score_today === 'number' && typeof composite.score_7d_ago === 'number' && (
-                <div className="mt-3 rounded border border-slate-200 bg-white/80 p-2">
+                <div className="mt-3 rounded border border-border bg-card/80 p-2">
                   <p className="text-xs font-semibold">Why did this score change?</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     Today: {(composite.score_today * 100).toFixed(1)}% vs 7d ago: {(composite.score_7d_ago * 100).toFixed(1)}%
                   </p>
-                  <ul className="mt-1 list-disc pl-4 text-xs text-slate-700">
+                  <ul className="mt-1 list-disc pl-4 text-xs text-foreground">
                     {(composite.changed_signals && composite.changed_signals.length > 0
                       ? composite.changed_signals
                       : ['No significant component changes detected']).slice(0, 3).map((item, idx) => (
@@ -271,7 +275,7 @@ const AnomalyIndicator: React.FC<AnomalyIndicatorProps> = ({
                     ))}
                   </ul>
                   {composite.recency_boost_reason && (
-                    <p className="mt-1 text-xs text-orange-700">{composite.recency_boost_reason}</p>
+                    <p className="mt-1 text-xs text-risk-medium">{composite.recency_boost_reason}</p>
                   )}
                 </div>
               )}
@@ -282,9 +286,9 @@ const AnomalyIndicator: React.FC<AnomalyIndicatorProps> = ({
 
       {/* Individual Anomalies */}
       <div className="space-y-2">
-        <h4 className="font-semibold text-sm text-gray-700">Detailed Analysis</h4>
+        <h4 className="text-sm font-semibold text-foreground">Detailed Analysis</h4>
         {anomalies.length === 0 ? (
-          <p className="text-sm text-gray-500">{emptyStateMessage}</p>
+          <p className="text-sm text-muted-foreground">{emptyStateMessage}</p>
         ) : (
           <div className="space-y-2">
             {anomalies.map((anomaly, idx) => {
@@ -296,16 +300,8 @@ const AnomalyIndicator: React.FC<AnomalyIndicatorProps> = ({
                   key={idx}
                   className={`p-3 rounded border-l-2 ${
                     anomaly.data?.detected
-                      ? `${severityColors[severity].bg} border-l-${
-                          severity === 'critical'
-                            ? 'red-500'
-                            : severity === 'high'
-                            ? 'orange-500'
-                            : severity === 'medium'
-                            ? 'yellow-500'
-                            : 'blue-500'
-                        }`
-                      : 'bg-gray-50 border-l-gray-300'
+                      ? `${severityColors[severity].bg} ${severityColors[severity].border}`
+                      : 'border-l-border bg-muted/30'
                   }`}
                 >
                   <div className="flex items-start gap-2">
@@ -313,7 +309,7 @@ const AnomalyIndicator: React.FC<AnomalyIndicatorProps> = ({
                       className={`mt-0.5 flex-shrink-0 w-4 h-4 ${
                         anomaly.data?.detected
                           ? severityColors[severity].icon
-                          : 'text-gray-400'
+                          : 'text-muted-foreground'
                       }`}
                     />
                     <div className="flex-1">
@@ -330,12 +326,12 @@ const AnomalyIndicator: React.FC<AnomalyIndicatorProps> = ({
                         )}
                       </div>
                       {anomaly.data?.description && (
-                        <p className="text-sm mt-1 text-gray-600">
+                        <p className="mt-1 text-sm text-muted-foreground">
                           {anomaly.data.description}
                         </p>
                       )}
                       {anomaly.data?.detected && anomaly.data?.z_score && (
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="mt-1 text-xs text-muted-foreground">
                           Z-score: {anomaly.data.z_score.toFixed(2)} σ
                         </p>
                       )}

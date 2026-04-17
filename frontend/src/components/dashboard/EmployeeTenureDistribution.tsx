@@ -22,8 +22,8 @@ export default function EmployeeTenureDistribution() {
 
   const getBarColor = (risk: number): string => {
     if (risk >= 35) return "#ef4444"; // red
-    if (risk >= 25) return "#f59e0b"; // amber
-    if (risk >= 15) return "#eab308"; // yellow
+    if (risk >= 25) return "#3b82f6"; // amber
+    if (risk >= 15) return "#3b82f6"; // yellow
     return "#22c55e"; // green
   };
 

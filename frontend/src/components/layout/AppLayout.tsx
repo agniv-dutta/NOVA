@@ -31,6 +31,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/types/auth';
 import { Badge } from '@/components/ui/badge';
 import { protectedGetApi } from '@/lib/api';
+import { ThemeToggle } from '@/components/theme/theme-toggle';
 
 type NavItem = {
   to: string;
@@ -381,7 +382,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className={`flex min-h-screen w-full ${showDemoBanner ? 'pt-6' : ''}`}>
       {showDemoBanner && (
-        <div className="fixed inset-x-0 top-0 z-[60] h-6 border-b border-[#111] bg-[#F5C518] px-3 text-[11px] font-medium text-black flex items-center justify-between">
+        <div className="fixed inset-x-0 top-0 z-[60] flex h-6 items-center justify-between border-b border-foreground bg-primary px-3 text-[11px] font-medium text-primary-foreground">
           <span>🎯 NOVA — Grand Finale Demo | Data is synthetic for demonstration purposes</span>
           <button type="button" className="px-1" onClick={() => setShowDemoBanner(false)} aria-label="Dismiss demo banner">×</button>
         </div>
@@ -405,7 +406,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             onClick={() => setSidebarOpen(false)}
             className="flex min-w-0 items-center gap-3 lg:w-full lg:justify-center lg:gap-0 lg:group-hover:justify-start lg:group-hover:gap-3 lg:group-focus-within:justify-start lg:group-focus-within:gap-3"
           >
-            <div className="flex h-9 w-9 items-center justify-center border-2 border-foreground bg-primary shadow-[2px_2px_0px_#000]">
+            <div className="flex h-9 w-9 items-center justify-center border-2 border-foreground bg-primary shadow-sm">
               <Brain className="h-5 w-5 text-primary-foreground" />
             </div>
             <div className="min-w-0 overflow-hidden transition-all duration-200 lg:max-w-0 lg:opacity-0 lg:group-hover:max-w-[10rem] lg:group-hover:opacity-100 lg:group-focus-within:max-w-[10rem] lg:group-focus-within:opacity-100">
@@ -475,36 +476,39 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex-1">
             <h2 className="text-lg font-bold font-heading">{pageTitle}</h2>
           </div>
-          {user && (
-            <div className="flex items-center gap-2 border-2 border-foreground bg-card px-2 py-1 shadow-[2px_2px_0px_#000]">
-              {user.avatar_url ? (
-                <img
-                  src={user.avatar_url}
-                  alt={user.full_name}
-                  className="h-6 w-6 border border-foreground object-cover"
-                />
-              ) : (
-                <div className="flex h-6 w-6 items-center justify-center border border-foreground bg-primary text-[10px] font-bold text-primary-foreground">
-                  {user.full_name.charAt(0).toUpperCase()}
-                </div>
-              )}
-              <span className="hidden sm:inline max-w-[140px] truncate text-xs font-bold">
-                {user.full_name}
-              </span>
-              <button
-                type="button"
-                onClick={() => void logout()}
-                className="inline-flex items-center gap-1 border-2 border-foreground bg-[#FFE500] px-2 py-1 text-[10px] font-bold uppercase tracking-wider transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[2px_2px_0px_#000]"
-              >
-                <LogOut className="h-3 w-3" />
-                <span className="hidden sm:inline">Logout</span>
-              </button>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            {user && (
+              <div className="flex items-center gap-2 border-2 border-foreground bg-card px-2 py-1 shadow-brutal-sm">
+                {user.avatar_url ? (
+                  <img
+                    src={user.avatar_url}
+                    alt={user.full_name}
+                    className="h-6 w-6 border border-foreground object-cover"
+                  />
+                ) : (
+                  <div className="flex h-6 w-6 items-center justify-center border border-foreground bg-primary text-[10px] font-bold text-primary-foreground">
+                    {user.full_name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <span className="hidden max-w-[140px] truncate text-xs font-bold sm:inline">
+                  {user.full_name}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => void logout()}
+                  className="inline-flex items-center gap-1 border-2 border-foreground bg-primary px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-foreground transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-brutal-sm"
+                >
+                  <LogOut className="h-3 w-3" />
+                  <span className="hidden sm:inline">Logout</span>
+                </button>
+              </div>
+            )}
+          </div>
         </header>
 
         {deferredPrompt && (
-          <div className="mx-4 mt-3 rounded border border-cyan-300 bg-cyan-50 px-3 py-2 text-xs flex items-center justify-between gap-2 lg:hidden">
+          <div className="mx-4 mt-3 flex items-center justify-between gap-2 rounded border border-border bg-muted px-3 py-2 text-xs text-foreground lg:hidden">
             <span>Install NOVA for a faster mobile experience.</span>
             <Button
               size="sm"
@@ -538,7 +542,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   className={({ isActive }) =>
                     `flex flex-col items-center justify-center py-2 border-2 ${
                       isActive
-                        ? 'border-foreground bg-[#FFE500] shadow-[2px_2px_0px_#000]'
+                        ? 'border-foreground bg-primary text-primary-foreground shadow-brutal-sm'
                         : 'border-transparent hover:border-foreground'
                     }`
                   }

@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AppraisalSuggestion } from "@/types/appraisal";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { clearAgentContext, patchAgentContext } from "@/lib/agentBus";
+import { useThemePalette } from "@/lib/theme";
 
 type EmployeeDetailResponse = {
   employee_id: string;
@@ -32,13 +33,14 @@ type EmployeeDetailResponse = {
 };
 
 function scoreColor(value: number): string {
-  if (value >= 70) return "text-red-600";
-  if (value >= 40) return "text-amber-600";
-  return "text-green-600";
+  if (value >= 70) return "text-risk-high";
+  if (value >= 40) return "text-risk-medium";
+  return "text-risk-low";
 }
 
 export default function EmployeeProfilePage() {
   useDocumentTitle('NOVA — Employee Profile');
+  const palette = useThemePalette();
   const { employeeId } = useParams<{ employeeId: string }>();
   const { getEmployee } = useEmployees();
   const { token, hasRole } = useAuth();
@@ -215,7 +217,7 @@ export default function EmployeeProfilePage() {
                         <XAxis dataKey="date" hide />
                         <YAxis hide />
                         <Tooltip />
-                        <Line dataKey="score" stroke="#0ea5e9" dot={false} strokeWidth={2} />
+                        <Line dataKey="score" stroke={palette.chart5} dot={false} strokeWidth={2} />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
@@ -236,10 +238,10 @@ export default function EmployeeProfilePage() {
                   <Badge
                     className={
                       (employeeDetail?.data_quality_score ?? 0) >= 80
-                        ? "bg-emerald-100 text-emerald-800"
+                        ? "border border-risk-low/40 bg-risk-low-bg text-foreground"
                         : (employeeDetail?.data_quality_score ?? 0) >= 50
-                          ? "bg-amber-100 text-amber-800"
-                          : "bg-red-100 text-red-800"
+                          ? "border border-risk-medium/40 bg-risk-medium-bg text-foreground"
+                          : "border border-risk-high/40 bg-risk-high-bg text-foreground"
                     }
                   >
                     {employeeDetail ? `${employeeDetail.data_quality_score}%` : `${employee.dataQualityScore ?? 0}%`}
@@ -342,9 +344,9 @@ export default function EmployeeProfilePage() {
                   </div>
 
                   {latestAppraisal.status === "finalized" && latestAppraisal.hr_decision && (
-                    <div className="rounded border-l-4 border-emerald-500 bg-emerald-50 p-3">
-                      <p className="text-xs font-semibold uppercase text-emerald-700">Finalized HR Decision</p>
-                      <p className="text-sm mt-1 text-emerald-900">{latestAppraisal.hr_decision}</p>
+                    <div className="rounded border-l-4 border-risk-low bg-risk-low-bg p-3">
+                      <p className="text-xs font-semibold uppercase text-foreground">Finalized HR Decision</p>
+                      <p className="text-sm mt-1 text-foreground">{latestAppraisal.hr_decision}</p>
                     </div>
                   )}
 

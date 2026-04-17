@@ -4,11 +4,11 @@ import { Calendar, ExternalLink, GitBranch, X } from 'lucide-react';
 import type { OrgNode } from '@/hooks/useOrgHierarchy';
 
 const DEPT_COLORS: Record<string, string> = {
-  Engineering: '#3b82f6',
-  Sales: '#f97316',
-  HR: '#ec4899',
-  Design: '#8b5cf6',
-  Finance: '#14b8a6',
+  Engineering: 'hsl(var(--chart-1))',
+  Sales: 'hsl(var(--chart-3))',
+  HR: 'hsl(var(--chart-4))',
+  Design: 'hsl(var(--chart-5))',
+  Finance: 'hsl(var(--chart-2))',
 };
 
 function initials(name: string): string {
@@ -21,9 +21,9 @@ function initials(name: string): string {
 
 function dotColor(value: number, isNegative = false): string {
   const effective = isNegative ? 1 - value : value;
-  if (effective >= 0.66) return '#22c55e';
-  if (effective >= 0.33) return '#eab308';
-  return '#ef4444';
+  if (effective >= 0.66) return 'hsl(var(--risk-low))';
+  if (effective >= 0.33) return 'hsl(var(--risk-medium))';
+  return 'hsl(var(--risk-high))';
 }
 
 type Props = {
@@ -62,13 +62,13 @@ export default function NodeDetailPopover({
     };
   }, [onClose]);
 
-  const deptColor = DEPT_COLORS[node.department] ?? '#64748b';
+  const deptColor = DEPT_COLORS[node.department] ?? 'hsl(var(--muted-foreground))';
   const directReports = node.children?.length ?? 0;
 
   return (
     <div
       ref={ref}
-      className="absolute z-20 w-[280px] border-2 border-foreground bg-card shadow-[4px_4px_0px_#000]"
+      className="absolute z-20 w-[280px] border-2 border-foreground bg-card shadow-md"
       style={{ left: x, top: y }}
     >
       <div className="flex items-start justify-between border-b-2 border-foreground p-3">
@@ -138,14 +138,14 @@ export default function NodeDetailPopover({
         <button
           type="button"
           onClick={() => navigate(`/employees/${node.id}/profile`)}
-          className="flex items-center justify-between border-2 border-foreground bg-[#FFE500] px-2 py-1 text-xs font-bold uppercase tracking-wider shadow-[2px_2px_0px_#000]"
+          className="flex items-center justify-between border-2 border-foreground bg-primary px-2 py-1 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-sm"
         >
           View Full Profile <ExternalLink className="h-3 w-3" />
         </button>
         <button
           type="button"
           onClick={() => onScheduleOneOnOne(node)}
-          className="flex items-center justify-between border-2 border-foreground bg-background px-2 py-1 text-xs font-bold uppercase tracking-wider shadow-[2px_2px_0px_#000]"
+          className="flex items-center justify-between border-2 border-foreground bg-background px-2 py-1 text-xs font-bold uppercase tracking-wider shadow-sm"
         >
           Schedule 1:1 <Calendar className="h-3 w-3" />
         </button>
@@ -153,7 +153,7 @@ export default function NodeDetailPopover({
           <button
             type="button"
             onClick={() => onViewSubtree(node.id)}
-            className="flex items-center justify-between border-2 border-foreground bg-background px-2 py-1 text-xs font-bold uppercase tracking-wider shadow-[2px_2px_0px_#000]"
+            className="flex items-center justify-between border-2 border-foreground bg-background px-2 py-1 text-xs font-bold uppercase tracking-wider shadow-sm"
           >
             View Subtree <GitBranch className="h-3 w-3" />
           </button>

@@ -68,7 +68,7 @@ const HEIGHT = 560;
 const departmentColor = d3
   .scaleOrdinal<string, string>()
   .domain(["Engineering", "Sales", "Marketing", "Operations"])
-  .range(["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b"]);
+  .range(["#3b82f6", "#8b5cf6", "#10b981", "#3b82f6"]);
 
 export default function BurnoutPropagationMap() {
   const { token } = useAuth();
@@ -84,7 +84,7 @@ export default function BurnoutPropagationMap() {
       d3
         .scaleLinear<string>()
         .domain([0, 0.5, 1])
-        .range(["#22c55e", "#eab308", "#ef4444"])
+        .range(["#22c55e", "#3b82f6", "#ef4444"])
         .clamp(true),
     []
   );

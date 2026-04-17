@@ -186,8 +186,8 @@ export default function AttritionPredictionTimeline() {
                   <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                 </linearGradient>
                 <linearGradient id="opsConfidence" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" />
@@ -280,7 +280,7 @@ export default function AttritionPredictionTimeline() {
               <Line 
                 type="monotone" 
                 dataKey="operations" 
-                stroke="#f59e0b" 
+                stroke="#3b82f6" 
                 strokeWidth={2}
                 name="Operations"
                 dot={{ r: 4 }}

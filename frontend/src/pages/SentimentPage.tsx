@@ -17,6 +17,7 @@ import {
 } from 'recharts';
 import { AlertTriangle } from 'lucide-react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useThemePalette } from '@/lib/theme';
 
 const EMOTION_DIMENSIONS = [
   'stress',
@@ -32,6 +33,7 @@ const EMOTION_SHIFT_THRESHOLD = 0.3;
 export default function SentimentPage() {
   useDocumentTitle('NOVA — Sentiment Analyzer');
   const [latestResult, setLatestResult] = useState<SentimentResult | null>(null);
+  const palette = useThemePalette();
 
   const radarData = useMemo(() => {
     const emotions = latestResult?.emotions;
@@ -74,15 +76,15 @@ export default function SentimentPage() {
             <div className="h-[340px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={radarData}>
-                  <PolarGrid stroke="#e5e7eb" />
-                  <PolarAngleAxis dataKey="emotion" tick={{ fill: '#64748b', fontSize: 12 }} />
-                  <PolarRadiusAxis angle={90} domain={[0, 1]} tick={{ fill: '#64748b', fontSize: 10 }} />
+                  <PolarGrid stroke={palette.border} />
+                  <PolarAngleAxis dataKey="emotion" tick={{ fill: palette.mutedForeground, fontSize: 12 }} />
+                  <PolarRadiusAxis angle={90} domain={[0, 1]} tick={{ fill: palette.mutedForeground, fontSize: 10 }} />
                   <RechartsTooltip formatter={(value: number) => value.toFixed(2)} />
                   <Radar
                     name="Emotion Intensity"
                     dataKey="value"
-                    stroke="#0f766e"
-                    fill="#14b8a6"
+                    stroke={palette.chart3}
+                    fill={palette.chart5}
                     fillOpacity={0.5}
                     strokeWidth={2}
                   />

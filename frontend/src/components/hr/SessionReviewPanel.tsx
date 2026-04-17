@@ -270,7 +270,7 @@ export default function SessionReviewPanel() {
                       <Legend />
                       <Line type="monotone" dataKey="stress" stroke="#ef4444" strokeWidth={2} />
                       <Line type="monotone" dataKey="confidence" stroke="#22c55e" strokeWidth={2} />
-                      <Line type="monotone" dataKey="hesitation" stroke="#eab308" strokeWidth={2} />
+                      <Line type="monotone" dataKey="hesitation" stroke="#3b82f6" strokeWidth={2} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>

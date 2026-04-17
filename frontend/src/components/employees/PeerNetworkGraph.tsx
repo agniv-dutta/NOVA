@@ -8,12 +8,14 @@ import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import html2canvas from "html2canvas";
 import { useEmployees } from "@/contexts/EmployeeContext";
+import { useThemePalette } from "@/lib/theme";
 
 export default function PeerNetworkGraph() {
   const svgRef = useRef<SVGSVGElement>(null);
   const chartRef = useRef<HTMLDivElement>(null);
   const [selectedDept, setSelectedDept] = useState<string>("all");
   const [hoveredNode, setHoveredNode] = useState<NetworkNode | null>(null);
+  const palette = useThemePalette();
   const { employees } = useEmployees();
   const { nodes, links } = useMemo(() => {
     const roster = employees.slice(0, 15).map((employee) => ({
@@ -170,7 +172,7 @@ export default function PeerNetworkGraph() {
       .attr("markerHeight", 6)
       .append("path")
       .attr("d", "M0,-5L10,0L0,5")
-      .attr("fill", "#94a3b8");
+      .attr("fill", palette.mutedForeground);
 
     // Create links
     const link = contentLayer.append("g")
@@ -178,7 +180,7 @@ export default function PeerNetworkGraph() {
       .selectAll("line")
       .data(filteredLinks)
       .enter().append("line")
-      .attr("stroke", "#94a3b8")
+      .attr("stroke", palette.mutedForeground)
       .attr("stroke-opacity", (d: any) => d.strength)
       .attr("stroke-width", (d: any) => Math.sqrt(d.strength) * 3)
       .attr("marker-end", "url(#arrowhead)");
@@ -201,11 +203,11 @@ export default function PeerNetworkGraph() {
       .attr("r", (d: any) => 10 + (d.influence / 100) * 20)
       .attr("fill", (d: any) => {
         const risk = metrics.propagationRisk.get(d.id) || 0;
-        if (risk > 0.65) return "#ef4444";
-        if (risk >= 0.4) return "#eab308";
-        return "#22c55e";
+        if (risk > 0.65) return palette.riskHigh;
+        if (risk >= 0.4) return palette.riskMedium;
+        return palette.riskLow;
       })
-      .attr("stroke", "#fff")
+      .attr("stroke", palette.background)
       .attr("stroke-width", 2)
       .on("mouseenter", function(event, d: any) {
         setHoveredNode(d);
@@ -224,7 +226,7 @@ export default function PeerNetworkGraph() {
       .attr("text-anchor", "middle")
       .attr("font-size", "11px")
       .attr("font-weight", "500")
-      .attr("fill", "#1f2937");
+      .attr("fill", palette.foreground);
 
     // Add influence score badges
     node.append("text")
@@ -234,7 +236,7 @@ export default function PeerNetworkGraph() {
       .attr("text-anchor", "middle")
       .attr("font-size", "10px")
       .attr("font-weight", "bold")
-      .attr("fill", "#fff");
+      .attr("fill", palette.background);
 
     // Update positions on simulation tick
     simulation.on("tick", () => {
@@ -268,7 +270,17 @@ export default function PeerNetworkGraph() {
     return () => {
       simulation.stop();
     };
-  }, [selectedDept, nodes, links]);
+  }, [
+    selectedDept,
+    nodes,
+    links,
+    palette.background,
+    palette.foreground,
+    palette.mutedForeground,
+    palette.riskHigh,
+    palette.riskLow,
+    palette.riskMedium,
+  ]);
 
   // Calculate isolated employees (low connectivity)
   const calculateIsolatedEmployees = () => {
@@ -302,20 +314,20 @@ export default function PeerNetworkGraph() {
       <CardContent>
         <div ref={chartRef} className="relative">
           {/* Legend */}
-          <div className="absolute top-4 left-4 bg-white/90 backdrop-blur p-3 rounded-lg border shadow-sm z-10">
+          <div className="absolute left-4 top-4 z-10 rounded-lg border border-border bg-card/95 p-3 shadow-sm backdrop-blur">
             <p className="text-xs font-semibold mb-2">Node Size = Influence</p>
             <p className="text-xs font-semibold mb-2">Color = Propagation Risk</p>
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                <div className="h-3 w-3 rounded-full bg-risk-low"></div>
                 <span className="text-xs">Low Risk</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                <div className="h-3 w-3 rounded-full bg-risk-medium"></div>
                 <span className="text-xs">Medium Risk</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                <div className="h-3 w-3 rounded-full bg-risk-high"></div>
                 <span className="text-xs">High Risk</span>
               </div>
             </div>
@@ -323,7 +335,7 @@ export default function PeerNetworkGraph() {
 
           {/* Hovered node info */}
           {hoveredNode && (
-            <div className="absolute top-4 right-4 bg-white border p-3 rounded-lg shadow-lg z-10">
+            <div className="absolute right-4 top-4 z-10 rounded-lg border border-border bg-popover p-3 shadow-lg">
               <p className="font-semibold">{hoveredNode.name}</p>
               <p className="text-sm text-muted-foreground">{hoveredNode.department}</p>
               <div className="mt-2 space-y-1">
@@ -358,30 +370,30 @@ export default function PeerNetworkGraph() {
           )}
 
           {/* D3 SVG */}
-          <div className="bg-gray-50 rounded-lg p-4 border">
+          <div className="rounded-lg border bg-muted/30 p-4">
             <svg ref={svgRef}></svg>
           </div>
         </div>
 
         {/* Isolated Employees Alert */}
         {isolatedEmployees.length > 0 && (
-          <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-md">
-            <p className="text-sm font-semibold text-orange-800 mb-2">
+          <div className="mt-4 rounded-md border border-risk-medium/50 bg-risk-medium-bg p-3">
+            <p className="mb-2 text-sm font-semibold text-foreground">
               {isolatedEmployees.length} Isolated Employees Detected (Flight Risk Signal)
             </p>
             <div className="flex flex-wrap gap-2">
               {isolatedEmployees.slice(0, 5).map((emp, i) => (
-                <Badge key={i} variant="outline" className="text-orange-700 border-orange-300">
+                <Badge key={i} variant="outline" className="border-risk-medium/50 text-foreground">
                   {emp.name}
                 </Badge>
               ))}
               {isolatedEmployees.length > 5 && (
-                <Badge variant="outline" className="text-orange-700 border-orange-300">
+                <Badge variant="outline" className="border-risk-medium/50 text-foreground">
                   +{isolatedEmployees.length - 5} more
                 </Badge>
               )}
             </div>
-            <p className="text-xs text-orange-700 mt-2">
+            <p className="mt-2 text-xs text-muted-foreground">
               Low connectivity correlates with increased attrition risk. Consider team-building initiatives.
             </p>
           </div>
@@ -389,26 +401,26 @@ export default function PeerNetworkGraph() {
 
         {/* Statistics */}
         <div className="mt-4 grid grid-cols-4 gap-4">
-          <div className="text-center p-3 bg-gray-50 rounded-lg">
-            <p className="text-2xl font-bold text-gray-900">
+          <div className="rounded-lg bg-muted/40 p-3 text-center">
+            <p className="text-2xl font-bold text-foreground">
               {nodes.length}
             </p>
             <p className="text-xs text-muted-foreground">Total Employees</p>
           </div>
-          <div className="text-center p-3 bg-gray-50 rounded-lg">
-            <p className="text-2xl font-bold text-blue-600">
+          <div className="rounded-lg bg-muted/40 p-3 text-center">
+            <p className="text-2xl font-bold" style={{ color: palette.chart1 }}>
               {links.length}
             </p>
             <p className="text-xs text-muted-foreground">Connections</p>
           </div>
-          <div className="text-center p-3 bg-gray-50 rounded-lg">
-            <p className="text-2xl font-bold text-orange-600">
+          <div className="rounded-lg bg-muted/40 p-3 text-center">
+            <p className="text-2xl font-bold" style={{ color: palette.riskMedium }}>
               {isolatedEmployees.length}
             </p>
             <p className="text-xs text-muted-foreground">Isolated (≤2 connections)</p>
           </div>
-          <div className="text-center p-3 bg-gray-50 rounded-lg">
-            <p className="text-2xl font-bold text-green-600">
+          <div className="rounded-lg bg-muted/40 p-3 text-center">
+            <p className="text-2xl font-bold" style={{ color: palette.riskLow }}>
               {(links.length / nodes.length).toFixed(1)}
             </p>
             <p className="text-xs text-muted-foreground">Avg Connections/Person</p>

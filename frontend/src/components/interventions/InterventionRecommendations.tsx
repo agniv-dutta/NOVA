@@ -201,7 +201,7 @@ const InterventionRecommendations: React.FC<InterventionRecommendationsProps> = 
       <div className={`border-l-4 p-4 rounded-r-lg ${urgencyColors[overallUrgency]}`}>
         <div className="flex items-center gap-3 mb-2">
           {urgencyIcons[overallUrgency]}
-          <h3 className="font-semibold text-[#F5C518]">Intervention Recommendations for {employeeName}</h3>
+          <h3 className="font-semibold text-[#60A5FA]">Intervention Recommendations for {employeeName}</h3>
         </div>
         <p className="text-sm opacity-90 mb-2">{urgencyBadgeText[overallUrgency]}</p>
         <p className="text-sm italic">{reasoning}</p>

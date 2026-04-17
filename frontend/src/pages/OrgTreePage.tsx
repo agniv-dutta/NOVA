@@ -18,11 +18,11 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
 const DEPT_COLORS: Record<string, string> = {
-  Engineering: '#3b82f6',
-  Sales: '#f97316',
-  HR: '#ec4899',
-  Design: '#8b5cf6',
-  Finance: '#14b8a6',
+  Engineering: 'hsl(var(--chart-1))',
+  Sales: 'hsl(var(--chart-3))',
+  HR: 'hsl(var(--chart-4))',
+  Design: 'hsl(var(--chart-5))',
+  Finance: 'hsl(var(--chart-2))',
 };
 
 const NODE_WIDTH = 160;
@@ -80,17 +80,17 @@ function ancestorIds(root: OrgNode, targetId: string): Set<string> {
 }
 
 function nodeBorderColor(node: OrgNode, riskOverlay: boolean): string {
-  if (!riskOverlay) return '#94a3b8';
-  if (node.is_at_risk) return '#ef4444';
-  if (node.engagement_score < 0.5) return '#f59e0b';
-  return '#22c55e';
+  if (!riskOverlay) return 'hsl(var(--muted-foreground))';
+  if (node.is_at_risk) return 'hsl(var(--risk-high))';
+  if (node.engagement_score < 0.5) return 'hsl(var(--risk-medium))';
+  return 'hsl(var(--risk-low))';
 }
 
 function nodeFillColor(node: OrgNode, riskOverlay: boolean, highlighted: boolean): string {
-  if (highlighted) return '#FFF9D6';
-  if (!riskOverlay) return '#f8fafc';
-  if (node.is_at_risk) return '#fef2f2';
-  return '#ffffff';
+  if (highlighted) return 'hsl(var(--primary) / 0.24)';
+  if (!riskOverlay) return 'hsl(var(--muted) / 0.35)';
+  if (node.is_at_risk) return 'hsl(var(--risk-high-bg))';
+  return 'hsl(var(--card))';
 }
 
 export default function OrgTreePage() {
@@ -234,7 +234,7 @@ export default function OrgTreePage() {
       .append('path')
       .attr('d', (d) => linkGen(d as unknown as d3.HierarchyPointLink<OrgNode>))
       .attr('fill', 'none')
-      .attr('stroke', '#d1d5db')
+      .attr('stroke', 'hsl(var(--border))')
       .attr('stroke-width', 1.5);
 
     const nodeGroup = contentLayer
@@ -256,7 +256,9 @@ export default function OrgTreePage() {
         nodeFillColor(d.data, riskOverlay, d.data.id === highlightedId),
       )
       .attr('stroke', (d) =>
-        d.data.id === highlightedId ? '#FFE500' : nodeBorderColor(d.data, riskOverlay),
+        d.data.id === highlightedId
+          ? 'hsl(var(--primary))'
+          : nodeBorderColor(d.data, riskOverlay),
       )
       .attr('stroke-width', (d) => (d.data.id === highlightedId ? 3 : 2))
       .on('click', (event, d) => {
@@ -276,7 +278,7 @@ export default function OrgTreePage() {
       .attr('y', 22)
       .attr('font-size', '14px')
       .attr('font-weight', '700')
-      .attr('fill', '#0f172a')
+      .attr('fill', 'hsl(var(--foreground))')
       .text((d) =>
         d.data.name.length > 18 ? `${d.data.name.slice(0, 17)}…` : d.data.name,
       );
@@ -286,7 +288,7 @@ export default function OrgTreePage() {
       .attr('x', 10)
       .attr('y', 40)
       .attr('font-size', '12px')
-      .attr('fill', '#64748b')
+      .attr('fill', 'hsl(var(--muted-foreground))')
       .text((d) => (d.data.role.length > 20 ? `${d.data.role.slice(0, 19)}…` : d.data.role));
 
     nodeGroup
@@ -296,7 +298,7 @@ export default function OrgTreePage() {
       .attr('width', (d) => d.data.department.length * 6 + 12)
       .attr('height', 14)
       .attr('rx', 3)
-      .attr('fill', (d) => DEPT_COLORS[d.data.department] ?? '#64748b');
+      .attr('fill', (d) => DEPT_COLORS[d.data.department] ?? 'hsl(var(--muted-foreground))');
 
     nodeGroup
       .append('text')
@@ -304,7 +306,7 @@ export default function OrgTreePage() {
       .attr('y', 60)
       .attr('font-size', '9px')
       .attr('font-weight', '700')
-      .attr('fill', '#fff')
+      .attr('fill', 'hsl(var(--background))')
       .text((d) => d.data.department.toUpperCase());
 
     // Collapse/expand toggle at the bottom center of the card for nodes with
@@ -335,14 +337,15 @@ export default function OrgTreePage() {
       .call((g) => {
         g.append('circle')
           .attr('r', 10)
-          .attr('fill', '#fff')
-          .attr('stroke', '#1A1A1A')
+          .attr('fill', 'hsl(var(--card))')
+          .attr('stroke', 'hsl(var(--border))')
           .attr('stroke-width', 2);
         g.append('text')
           .attr('text-anchor', 'middle')
           .attr('dominant-baseline', 'middle')
           .attr('font-size', '10px')
           .attr('font-weight', '700')
+          .attr('fill', 'hsl(var(--foreground))')
           .text((d: any) => (collapsed.has(d.data.id) ? '▶' : '▼'));
       });
   }, [visibleTree, riskOverlay, highlightedId, data, collapsed]);
@@ -369,7 +372,7 @@ export default function OrgTreePage() {
   if (error || !data) {
     return (
       <div className="flex h-[60vh] flex-col items-center justify-center gap-2 text-center">
-        <AlertTriangle className="h-8 w-8 text-[#FF1744]" />
+        <AlertTriangle className="h-8 w-8 text-destructive" />
         <p className="text-sm font-bold">Unable to load hierarchy</p>
         <p className="text-xs text-muted-foreground">{error ?? 'Unknown error'}</p>
       </div>
@@ -378,7 +381,7 @@ export default function OrgTreePage() {
 
   return (
     <div className="space-y-4">
-      <Card className="border-2 border-foreground shadow-[4px_4px_0px_#000] bg-card">
+      <Card className="border-2 border-foreground bg-card shadow-md">
         <div className="flex flex-wrap items-center gap-3 border-b-2 border-foreground p-3">
           <div className="flex-1 min-w-[200px]">
             <h2 className="text-base font-bold font-heading uppercase tracking-wider">
@@ -406,7 +409,7 @@ export default function OrgTreePage() {
             <Button
               type="button"
               size="sm"
-              className="h-8 border-2 border-foreground bg-[#FFE500] text-foreground font-bold shadow-[2px_2px_0px_#000]"
+              className="h-8 border-2 border-foreground bg-primary text-primary-foreground font-bold shadow-sm"
               onClick={handleSearch}
             >
               Find
@@ -454,7 +457,7 @@ export default function OrgTreePage() {
             <Button
               type="button"
               size="sm"
-              className="h-8 border-2 border-foreground bg-[#FFE500] font-bold shadow-[2px_2px_0px_#000]"
+              className="h-8 border-2 border-foreground bg-primary font-bold text-primary-foreground shadow-sm"
               onClick={() => setRootId(null)}
             >
               <Home className="mr-1 h-3 w-3" /> Root
@@ -462,7 +465,7 @@ export default function OrgTreePage() {
           )}
         </div>
 
-        <div className="relative bg-[#f8fafc]">
+        <div className="relative bg-muted/30">
           <svg ref={svgRef} className="h-[700px] w-full" />
           {popover && (
             <NodeDetailPopover

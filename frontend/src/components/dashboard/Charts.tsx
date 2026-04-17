@@ -117,7 +117,7 @@ export function DepartmentRiskHeatmap() {
   const getRiskBg = (value: number) => {
     const level = getRiskLevel(value);
     if (level === 'low') return 'bg-[#00C853] text-[#1A1A1A] border-2 border-foreground';
-    if (level === 'medium') return 'bg-[#FFB300] text-[#1A1A1A] border-2 border-foreground';
+    if (level === 'medium') return 'bg-[#3B82F6] text-[#1A1A1A] border-2 border-foreground';
     return 'bg-[#FF1744] text-white border-2 border-foreground';
   };
 

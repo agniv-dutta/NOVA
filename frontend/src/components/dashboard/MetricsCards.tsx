@@ -79,7 +79,7 @@ export function MetricsCards() {
         value={burnoutRisk}
         subtitle="Employees at high risk"
         icon={<AlertTriangle className="h-5 w-5 text-[#1A1A1A]" />}
-        accentColor="#FFB300"
+        accentColor="#3B82F6"
         tooltip="Employees with burnout risk score ≥ 60%"
         delay={2}
       />

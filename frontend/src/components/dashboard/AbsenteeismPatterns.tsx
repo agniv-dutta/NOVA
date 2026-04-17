@@ -160,10 +160,10 @@ export default function AbsenteeismPatterns() {
                 yAxisId="right"
                 type="monotone" 
                 dataKey="burnoutScore" 
-                stroke="#f59e0b" 
+                stroke="#3b82f6" 
                 strokeWidth={3}
                 name="Burnout Score"
-                dot={{ r: 5, fill: '#f59e0b' }}
+                dot={{ r: 5, fill: '#3b82f6' }}
               />
             </ComposedChart>
           </ResponsiveContainer>

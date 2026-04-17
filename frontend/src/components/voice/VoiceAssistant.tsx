@@ -575,7 +575,7 @@ export function VoiceAssistant() {
       {!open && (
         <div className="fixed bottom-6 right-6 z-[1000] flex flex-col items-end gap-2">
           {introVisible && (
-            <div className="max-w-[260px] rounded-lg border-2 border-foreground bg-white px-3 py-2 text-xs shadow-[3px_3px_0px_#000]">
+            <div className="max-w-[260px] rounded-lg border-2 border-foreground bg-card px-3 py-2 text-xs text-foreground shadow-sm">
               Hi! I'm NOVA Assistant. Click to ask me anything about your workforce data.
             </div>
           )}
@@ -584,21 +584,20 @@ export function VoiceAssistant() {
             onClick={() => setOpen(true)}
             title={`Ask NOVA Assistant (${shortcutLabel})`}
             aria-label="Open NOVA Assistant"
-            className={`nova-voice-fab relative flex h-14 w-14 items-center justify-center rounded-full border-2 border-foreground shadow-[2px_2px_0px_#000] transition-transform hover:-translate-y-0.5 ${
+            className={`nova-voice-fab relative flex h-14 w-14 items-center justify-center rounded-full border-2 border-foreground shadow-sm transition-transform hover:-translate-y-0.5 ${
               introBouncing ? 'nova-intro-bounce' : ''
-            }`}
-            style={{ backgroundColor: '#F5C518' }}
+            } bg-[hsl(var(--assistant-brand))] text-[hsl(var(--assistant-brand-foreground))]`}
           >
             <span
               className="absolute inset-0 rounded-full"
               style={{ animation: 'nova-voice-pulse 2.4s ease-out infinite' }}
             />
-            <Mic className="h-6 w-6 text-black" />
+            <Mic className="h-6 w-6" />
             <style>{`
               @keyframes nova-voice-pulse {
-                0% { box-shadow: 0 0 0 0 rgba(245, 197, 24, 0.55); }
-                70% { box-shadow: 0 0 0 16px rgba(245, 197, 24, 0); }
-                100% { box-shadow: 0 0 0 0 rgba(245, 197, 24, 0); }
+                0% { box-shadow: 0 0 0 0 hsl(var(--assistant-brand) / 0.55); }
+                70% { box-shadow: 0 0 0 16px hsl(var(--assistant-brand) / 0); }
+                100% { box-shadow: 0 0 0 0 hsl(var(--assistant-brand) / 0); }
               }
               @keyframes nova-intro-bounce {
                 0%, 100% { transform: translateY(0); }
@@ -616,17 +615,17 @@ export function VoiceAssistant() {
 
       {open && (
         <div
-          className="fixed bottom-6 right-6 z-[1000] flex flex-col border border-[#e5e7eb] bg-white"
-          style={{ width: 360, height: 500, boxShadow: '0 8px 32px rgba(0,0,0,0.18)', borderRadius: 12, overflow: 'hidden' }}
+          className="fixed bottom-6 right-6 z-[1000] flex flex-col overflow-hidden rounded-xl border border-border bg-[hsl(var(--assistant-surface))] text-foreground"
+          style={{ width: 360, height: 500, boxShadow: '0 8px 32px hsl(var(--shadow-color) / 0.2)' }}
         >
-          <div className="h-1 w-full bg-[#F5C518]" />
-          <header className="flex items-center gap-2 border-b-2 border-foreground bg-[#F5C518] px-3 py-2">
-            <div className="flex h-8 w-8 items-center justify-center border-2 border-foreground bg-black">
-              <Bot className="h-4 w-4 text-[#F5C518]" />
+          <div className="h-1 w-full bg-[hsl(var(--assistant-brand))]" />
+          <header className="flex items-center gap-2 border-b-2 border-foreground bg-[hsl(var(--assistant-brand))] px-3 py-2 text-[hsl(var(--assistant-brand-foreground))]">
+            <div className="flex h-8 w-8 items-center justify-center border-2 border-foreground bg-[hsl(var(--assistant-brand-foreground))]">
+              <Bot className="h-4 w-4 text-[hsl(var(--assistant-brand))]" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold leading-tight">NOVA Assistant</p>
-              <p className="text-[10px] uppercase tracking-wider text-black/70 truncate">
+              <p className="truncate text-[10px] uppercase tracking-wider opacity-70">
                 {agent.label}
               </p>
             </div>
@@ -634,7 +633,7 @@ export function VoiceAssistant() {
               type="button"
               onClick={() => setMuted((v) => !v)}
               title={muted ? 'Unmute voice' : 'Mute voice'}
-              className="mr-1 flex h-7 w-7 items-center justify-center border-2 border-foreground bg-white text-black hover:bg-black hover:text-white"
+              className="mr-1 flex h-7 w-7 items-center justify-center border-2 border-foreground bg-[hsl(var(--assistant-surface))] text-foreground hover:bg-foreground hover:text-background"
             >
               {muted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
             </button>
@@ -642,15 +641,21 @@ export function VoiceAssistant() {
               type="button"
               onClick={() => setOpen(false)}
               aria-label="Minimize"
-              className="flex h-7 w-7 items-center justify-center border-2 border-foreground bg-white text-black hover:bg-black hover:text-white"
+              className="flex h-7 w-7 items-center justify-center border-2 border-foreground bg-[hsl(var(--assistant-surface))] text-foreground hover:bg-foreground hover:text-background"
             >
               <Minus className="h-4 w-4" />
             </button>
           </header>
 
-          <div className={`flex-1 overflow-y-auto px-3 py-3 bg-white transition-colors duration-500 ${clearFlash ? 'bg-yellow-50' : ''}`}>
+          <div
+            className={`flex-1 overflow-y-auto px-3 py-3 transition-colors duration-500 ${
+              clearFlash
+                ? 'bg-primary/20'
+                : 'bg-[hsl(var(--assistant-surface))]'
+            }`}
+          >
             {agentSwitchToast && (
-              <div className="mx-auto mb-2 w-fit rounded-full bg-gray-100 px-3 py-1 text-[11px] italic text-gray-700 nova-agent-switch-pill">
+              <div className="nova-agent-switch-pill mx-auto mb-2 w-fit rounded-full bg-muted px-3 py-1 text-[11px] italic text-muted-foreground">
                 🔄 {agentSwitchToast}
               </div>
             )}
@@ -673,7 +678,7 @@ export function VoiceAssistant() {
                     className={`flex gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}
                   >
                     {!isUser && (
-                      <div className="flex h-6 w-6 shrink-0 items-center justify-center border border-foreground bg-white">
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center border border-foreground bg-card">
                         <Bot className="h-3.5 w-3.5" />
                       </div>
                     )}
@@ -681,8 +686,8 @@ export function VoiceAssistant() {
                       <div
                         className={`px-3 py-2 text-xs leading-snug whitespace-pre-wrap border ${
                           isUser
-                            ? 'bg-[#F5C518] text-black border-[#F5C518] rounded-[16px_16px_4px_16px]'
-                            : 'bg-[#f9fafb] text-[#111] border-[#e5e7eb] rounded-[16px_16px_16px_4px]'
+                            ? 'rounded-[16px_16px_4px_16px] border-[hsl(var(--assistant-brand))] bg-[hsl(var(--assistant-brand))] text-[hsl(var(--assistant-brand-foreground))]'
+                            : 'rounded-[16px_16px_16px_4px] border-[hsl(var(--assistant-border))] bg-[hsl(var(--assistant-surface-muted))] text-foreground'
                         }`}
                       >
                         {m.content}
@@ -707,8 +712,10 @@ export function VoiceAssistant() {
                                 key={`${m.id}-act-${idx}`}
                                 type="button"
                                 onClick={() => handleAction(action)}
-                                className={`inline-flex items-center gap-1 border-2 border-foreground px-2 py-1 text-[10px] font-bold uppercase tracking-wider shadow-[2px_2px_0px_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] ${
-                                  isSchedule ? 'bg-[#F5C518] text-black' : 'bg-white text-black'
+                                className={`inline-flex items-center gap-1 border-2 border-foreground px-2 py-1 text-[10px] font-bold uppercase tracking-wider shadow-sm hover:translate-x-[-1px] hover:translate-y-[-1px] ${
+                                  isSchedule
+                                    ? 'bg-[hsl(var(--assistant-brand))] text-[hsl(var(--assistant-brand-foreground))]'
+                                    : 'bg-[hsl(var(--assistant-surface))] text-foreground'
                                 }`}
                               >
                                 {isSchedule && <CalendarCheck className="h-3 w-3" />}
@@ -724,10 +731,10 @@ export function VoiceAssistant() {
               })}
               {micState === 'processing' && (
                 <div className="flex gap-2 justify-start">
-                  <div className="flex h-6 w-6 shrink-0 items-center justify-center border border-foreground bg-white">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center border border-foreground bg-card">
                     <Bot className="h-3.5 w-3.5" />
                   </div>
-                  <div className="border-2 border-foreground bg-white px-2.5 py-1.5 text-xs">
+                  <div className="border-2 border-foreground bg-card px-2.5 py-1.5 text-xs">
                     <span className="inline-flex gap-1">
                       <span className="nova-dot" />
                       <span className="nova-dot" style={{ animationDelay: '0.2s' }} />
@@ -754,7 +761,7 @@ export function VoiceAssistant() {
               .nova-wave-bar {
                 width: 3px;
                 height: 4px;
-                background: #F5C518;
+                background: hsl(var(--assistant-brand));
                 display: inline-block;
                 transform-origin: bottom;
               }
@@ -795,7 +802,7 @@ export function VoiceAssistant() {
           </div>
 
           {error && (
-            <div className="px-3 py-1 text-[11px] text-red-700 bg-red-50 border-t border-red-200 flex items-center justify-between gap-2">
+            <div className="flex items-center justify-between gap-2 border-t border-risk-high/50 bg-risk-high-bg px-3 py-1 text-[11px] text-foreground">
               <span className="truncate">{error}</span>
               <button type="button" onClick={() => setError(null)} aria-label="Dismiss">
                 <X className="h-3 w-3" />
@@ -813,12 +820,12 @@ export function VoiceAssistant() {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 placeholder="Type your question..."
-                className="flex-1 border-2 border-foreground bg-white px-2 py-1 text-xs focus:outline-none"
+                className="flex-1 border-2 border-foreground bg-[hsl(var(--assistant-surface-muted))] px-2 py-1 text-xs focus:outline-none"
               />
               <button
                 type="submit"
                 disabled={!inputValue.trim() || micState === 'processing'}
-                className="flex h-8 w-8 items-center justify-center border-2 border-foreground bg-[#F5C518] disabled:opacity-40"
+                className="flex h-8 w-8 items-center justify-center border-2 border-foreground bg-[hsl(var(--assistant-brand))] text-[hsl(var(--assistant-brand-foreground))] disabled:opacity-40"
                 aria-label="Send"
               >
                 <Send className="h-4 w-4" />
@@ -835,9 +842,9 @@ export function VoiceAssistant() {
                       setInputValue(question);
                       void sendMessage(question);
                     }}
-                    className="inline-flex items-center gap-2 rounded-full border border-[#d1d5db] bg-white px-3 py-1.5 text-[12px] text-gray-600 hover:bg-[#fef9c3]"
+                    className="inline-flex items-center gap-2 rounded-full border border-[hsl(var(--assistant-border))] bg-[hsl(var(--assistant-surface-muted))] px-3 py-1.5 text-[12px] text-muted-foreground hover:bg-primary/20"
                   >
-                    <Lightbulb className="h-3.5 w-3.5 text-[#d4a400]" />
+                    <Lightbulb className="h-3.5 w-3.5 text-primary" />
                     {question}
                   </button>
                 ))}
@@ -867,12 +874,12 @@ export function VoiceAssistant() {
                 title={speechSupported ? `Shortcut: ${shortcutLabel}` : 'Speech not supported'}
                 className={`relative flex h-10 w-10 items-center justify-center border-2 border-foreground transition-colors ${
                   micState === 'listening'
-                    ? 'bg-red-500 text-white'
+                    ? 'bg-destructive text-destructive-foreground'
                     : micState === 'speaking'
-                    ? 'bg-blue-500 text-white'
+                    ? 'bg-accent text-accent-foreground'
                     : micState === 'processing'
-                    ? 'bg-gray-300 text-black'
-                    : 'bg-gray-100 text-black hover:bg-[#F5C518]'
+                    ? 'bg-muted text-muted-foreground'
+                    : 'bg-[hsl(var(--assistant-surface-muted))] text-foreground hover:bg-[hsl(var(--assistant-brand))] hover:text-[hsl(var(--assistant-brand-foreground))]'
                 } ${!speechSupported ? 'opacity-40 cursor-not-allowed' : ''}`}
               >
                 {micState === 'speaking' ? (
@@ -881,14 +888,14 @@ export function VoiceAssistant() {
                   <Mic className="h-4 w-4" />
                 )}
                 {micState === 'listening' && (
-                  <span className="absolute inset-0 rounded-none ring-2 ring-red-400 animate-pulse" />
+                  <span className="absolute inset-0 rounded-none ring-2 ring-destructive/70 animate-pulse" />
                 )}
               </button>
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
                 {micLabel}
               </p>
               {!speechSupported && (
-                <p className="text-[10px] text-amber-700 font-medium">{TEXT_ONLY_NOTICE}</p>
+                <p className="text-[10px] font-medium text-risk-medium">{TEXT_ONLY_NOTICE}</p>
               )}
               <p className="text-[9px] text-muted-foreground/70">
                 Press mic or type your question · {shortcutLabel}

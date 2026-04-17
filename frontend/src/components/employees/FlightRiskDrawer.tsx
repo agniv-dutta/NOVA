@@ -129,8 +129,8 @@ export default function FlightRiskDrawer({ employeeId, employeeName, open, onClo
 
   const getRiskColor = (score: number): string => {
     if (score >= 70) return "#ef4444";
-    if (score >= 50) return "#f59e0b";
-    if (score >= 30) return "#eab308";
+    if (score >= 50) return "#3b82f6";
+    if (score >= 30) return "#3b82f6";
     return "#22c55e";
   };
 

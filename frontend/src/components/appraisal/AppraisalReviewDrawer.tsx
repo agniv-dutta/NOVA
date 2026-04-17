@@ -57,7 +57,7 @@ function categoryBadgeClass(category: string): string {
 function riskGaugeStyle(score: number): React.CSSProperties {
   const safe = Math.max(0, Math.min(100, score));
   return {
-    background: `conic-gradient(#FFE500 ${safe * 3.6}deg, #e5e7eb 0deg)`,
+    background: `conic-gradient(#60A5FA ${safe * 3.6}deg, #e5e7eb 0deg)`,
   };
 }
 
@@ -277,7 +277,7 @@ export function AppraisalReviewDrawer({
                     Save Changes
                   </Button>
                   <Button
-                    className="bg-[#FFE500] text-black hover:bg-[#f5dc00]"
+                    className="bg-[#60A5FA] text-black hover:bg-[#3B82F6]"
                     onClick={() => void handleSave("finalized")}
                     disabled={saving}
                   >

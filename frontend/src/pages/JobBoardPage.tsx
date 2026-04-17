@@ -215,7 +215,7 @@ export default function JobBoardPage() {
 
         {/* AI reasoning */}
         {(p.ai_reasoning || p.internal_match) && (
-          <div className="rounded-md bg-[#fef3c7] border-l-4 border-amber-500 p-3">
+          <div className="rounded-md bg-[#e0f2fe] border-l-4 border-amber-500 p-3">
             <div className="flex items-start gap-2">
               <AlertTriangle className="h-4 w-4 text-amber-700 mt-0.5 shrink-0" />
               <div className="space-y-1 min-w-0 w-full">

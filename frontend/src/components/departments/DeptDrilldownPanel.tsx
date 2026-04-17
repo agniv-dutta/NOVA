@@ -61,7 +61,7 @@ export default function DeptDrilldownPanel({ department, data, loading, error }:
   if (!department) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
-        <div className="flex h-20 w-20 items-center justify-center border-2 border-foreground bg-[#FFE500] shadow-[4px_4px_0px_#000]">
+        <div className="flex h-20 w-20 items-center justify-center border-2 border-foreground bg-[#60A5FA] shadow-[4px_4px_0px_#000]">
           <LayoutGrid className="h-10 w-10 text-foreground" />
         </div>
         <p className="max-w-xs text-sm font-bold uppercase tracking-wider text-muted-foreground">
@@ -96,7 +96,7 @@ export default function DeptDrilldownPanel({ department, data, loading, error }:
       name: 'efficiency',
       value: efficiencyPct,
       fill:
-        efficiencyPct >= 70 ? '#22c55e' : efficiencyPct >= 50 ? '#eab308' : '#ef4444',
+        efficiencyPct >= 70 ? '#22c55e' : efficiencyPct >= 50 ? '#3b82f6' : '#ef4444',
     },
   ];
 
@@ -216,7 +216,7 @@ export default function DeptDrilldownPanel({ department, data, loading, error }:
               key={emp.id}
               className="flex items-center gap-3 border-2 border-foreground bg-card p-2 shadow-[2px_2px_0px_#000]"
             >
-              <div className="flex h-10 w-10 items-center justify-center border-2 border-foreground bg-[#FFE500] text-sm font-bold">
+              <div className="flex h-10 w-10 items-center justify-center border-2 border-foreground bg-[#60A5FA] text-sm font-bold">
                 {initials(emp.name)}
               </div>
               <div className="flex-1 min-w-0">
@@ -250,7 +250,7 @@ export default function DeptDrilldownPanel({ department, data, loading, error }:
               className="border-2 border-foreground bg-card p-2 shadow-[2px_2px_0px_#000]"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center border-2 border-foreground bg-[#FFE500] text-sm font-bold">
+                <div className="flex h-10 w-10 items-center justify-center border-2 border-foreground bg-[#60A5FA] text-sm font-bold">
                   {initials(emp.name)}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -260,7 +260,7 @@ export default function DeptDrilldownPanel({ department, data, loading, error }:
                 <Badge className="border-2 border-foreground bg-[#FF1744] text-white">
                   Burnout {toPercent(emp.burnout_score)}
                 </Badge>
-                <Badge className="border-2 border-foreground bg-[#FFB300] text-black">
+                <Badge className="border-2 border-foreground bg-[#3B82F6] text-black">
                   Attrition {toPercent(emp.attrition_risk)}
                 </Badge>
               </div>
@@ -271,7 +271,7 @@ export default function DeptDrilldownPanel({ department, data, loading, error }:
                 <Button
                   size="sm"
                   variant="outline"
-                  className="border-2 border-foreground bg-[#FFE500] text-xs font-bold shadow-[2px_2px_0px_#000]"
+                  className="border-2 border-foreground bg-[#60A5FA] text-xs font-bold shadow-[2px_2px_0px_#000]"
                   onClick={() => navigate(`/employees/${emp.id}/profile`)}
                 >
                   Take Action <ArrowRight className="ml-1 h-3 w-3" />

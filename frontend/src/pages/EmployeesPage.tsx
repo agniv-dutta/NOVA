@@ -13,14 +13,14 @@ export default function EmployeesPage() {
         <div className="inline-flex border-2 border-foreground shadow-[2px_2px_0px_#000]">
           <button
             type="button"
-            className="inline-flex items-center gap-1 bg-[#FFE500] px-3 py-1.5 text-xs font-bold uppercase tracking-wider"
+            className="inline-flex items-center gap-1 bg-[#60A5FA] px-3 py-1.5 text-xs font-bold uppercase tracking-wider"
             disabled
           >
             <List className="h-3 w-3" /> List View
           </button>
           <Link
             to="/employees/org-tree"
-            className="inline-flex items-center gap-1 border-l-2 border-foreground bg-background px-3 py-1.5 text-xs font-bold uppercase tracking-wider hover:bg-[#FFF9D6]"
+            className="inline-flex items-center gap-1 border-l-2 border-foreground bg-background px-3 py-1.5 text-xs font-bold uppercase tracking-wider hover:bg-[#E8F4FF]"
           >
             <Network className="h-3 w-3" /> Tree View
           </Link>

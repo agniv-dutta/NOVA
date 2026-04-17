@@ -298,7 +298,7 @@ export default function TaskAssignmentsPage() {
 
           {/* Assignee block — shows AI recommendation, no-match banner, or unassigned state */}
           {a.status === "no_match" ? (
-            <div className="border-l-4 border-amber-500 pl-3 py-2 bg-[#fef3c7] space-y-2">
+            <div className="border-l-4 border-amber-500 pl-3 py-2 bg-[#e0f2fe] space-y-2">
               <div className="flex items-start gap-2">
                 <AlertTriangle className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
                 <div className="space-y-1 min-w-0">

@@ -9,11 +9,11 @@ type WeeklyBriefCardProps = {
 
 const urgencyAccent: Record<string, string> = {
   immediate: '#FF1744',
-  this_week: '#FFB300',
+  this_week: '#3B82F6',
   monitor: '#00C853',
 };
 
-function Pill({ children, color = '#FFE500' }: { children: React.ReactNode; color?: string }) {
+function Pill({ children, color = '#60A5FA' }: { children: React.ReactNode; color?: string }) {
   return (
     <span
       className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border-2 border-foreground shadow-[2px_2px_0px_#000]"
@@ -28,20 +28,20 @@ export default function WeeklyBriefCard({ scope = 'org', teamId = null }: Weekly
   const { token } = useAuth();
   const { data, loading, error } = useWeeklyBrief({ token, scope, teamId });
 
-  const urgencyColor = data ? urgencyAccent[data.structured_insight.urgency] ?? '#FFE500' : '#FFE500';
+  const urgencyColor = data ? urgencyAccent[data.structured_insight.urgency] ?? '#60A5FA' : '#60A5FA';
 
   return (
     <div className="metric-card relative">
       <div
         className="h-1 -mx-5 -mt-5 mb-4 border-b-2 border-foreground"
-        style={{ backgroundColor: '#FFE500' }}
+        style={{ backgroundColor: '#60A5FA' }}
       />
 
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="flex items-center gap-2">
           <div
             className="flex h-9 w-9 items-center justify-center border-2 border-foreground shadow-[2px_2px_0px_#000]"
-            style={{ backgroundColor: '#FFE500' }}
+            style={{ backgroundColor: '#60A5FA' }}
           >
             <Sparkles className="h-4 w-4 text-[#1A1A1A]" aria-hidden />
           </div>
@@ -105,7 +105,7 @@ export default function WeeklyBriefCard({ scope = 'org', teamId = null }: Weekly
                 <li key={idx} className="flex gap-2">
                   <span
                     className="inline-block h-4 w-4 shrink-0 text-center text-[10px] font-bold leading-4 border-2 border-foreground"
-                    style={{ backgroundColor: '#FFE500' }}
+                    style={{ backgroundColor: '#60A5FA' }}
                   >
                     {idx + 1}
                   </span>
