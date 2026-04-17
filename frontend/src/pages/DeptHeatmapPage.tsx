@@ -6,7 +6,6 @@ import {
   type EfficiencyDimension,
 } from '@/hooks/useDepartmentHeatmap';
 import DeptDrilldownPanel from '@/components/departments/DeptDrilldownPanel';
-import PeerNetworkGraph from '@/components/employees/PeerNetworkGraph';
 import { Card } from '@/components/ui/card';
 import { patchAgentContext } from '@/lib/agentBus';
 import {
@@ -222,11 +221,6 @@ export default function DeptHeatmapPage() {
             </div>
           </div>
         </Card>
-
-        <PeerNetworkGraph
-          departmentFilter={selectedDept ?? undefined}
-          className="border-2 border-foreground shadow-[4px_4px_0px_#000] bg-card"
-        />
       </div>
 
       <Card className="border-2 border-foreground shadow-[4px_4px_0px_#000] lg:col-span-2 bg-card">
