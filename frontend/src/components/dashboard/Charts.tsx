@@ -1,5 +1,5 @@
 import { useEmployees } from '@/contexts/EmployeeContext';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, ZAxis } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, ZAxis, ReferenceLine } from 'recharts';
 import { getSentimentLabel } from '@/utils/sentimentAnalysis';
 import { Department, DepartmentRisk, getRiskLevel } from '@/types/employee';
 import { motion } from 'framer-motion';
@@ -26,33 +26,35 @@ export function SentimentPieChart() {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: 0.2 }}
-      className="chart-container"
+      className="chart-container h-full flex flex-col"
     >
-      <h3 className="mb-4 text-sm font-bold font-heading text-foreground uppercase tracking-wider">Sentiment Distribution</h3>
-      <ResponsiveContainer width="100%" height={260}>
-        <PieChart>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            innerRadius={60}
-            outerRadius={90}
-            paddingAngle={4}
-            dataKey="value"
-            stroke="#000000"
-            strokeWidth={2}
-          >
-            {data.map((entry) => (
-              <Cell key={entry.name} fill={SENTIMENT_COLORS[entry.name as keyof typeof SENTIMENT_COLORS]} />
-            ))}
-          </Pie>
-          <Tooltip
-            contentStyle={{ border: '2px solid #000', boxShadow: '4px 4px 0px #000', backgroundColor: '#FFFFFF', borderRadius: 0 }}
-            formatter={(value: number) => [`${value} employees`, '']}
-          />
-          <Legend verticalAlign="bottom" iconType="square" iconSize={10} />
-        </PieChart>
-      </ResponsiveContainer>
+      <h3 className="text-sm font-bold font-heading text-foreground uppercase tracking-wider">Sentiment Distribution</h3>
+      <div className="flex-1 flex items-center justify-center">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="48%"
+              innerRadius={60}
+              outerRadius={90}
+              paddingAngle={4}
+              dataKey="value"
+              stroke="#000000"
+              strokeWidth={2}
+            >
+              {data.map((entry) => (
+                <Cell key={entry.name} fill={SENTIMENT_COLORS[entry.name as keyof typeof SENTIMENT_COLORS]} />
+              ))}
+            </Pie>
+            <Tooltip
+              contentStyle={{ border: '2px solid #000', boxShadow: '4px 4px 0px #000', backgroundColor: '#FFFFFF', borderRadius: 0 }}
+              formatter={(value: number) => [`${value} employees`, '']}
+            />
+            <Legend verticalAlign="bottom" align="center" iconType="square" iconSize={10} />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
     </motion.div>
   );
 }
@@ -67,6 +69,16 @@ export function PerformanceScatterPlot() {
     risk: e.burnoutRisk,
   }));
 
+  const lowRiskCount = data.filter((item) => item.risk < 50).length;
+  const mediumRiskCount = data.filter((item) => item.risk >= 50 && item.risk < 75).length;
+  const highRiskCount = data.filter((item) => item.risk >= 75).length;
+
+  const getRiskColor = (risk: number) => {
+    if (risk >= 75) return '#FF1744';
+    if (risk >= 50) return '#FFB300';
+    return '#4ECDC4';
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -78,18 +90,72 @@ export function PerformanceScatterPlot() {
       <ResponsiveContainer width="100%" height={320}>
         <ScatterChart margin={{ top: 8, right: 16, bottom: 8, left: 8 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#000000" strokeOpacity={0.15} />
-          <XAxis dataKey="performance" name="Performance" type="number" domain={[0, 100]} tick={{ fontSize: 11 }} stroke="#1A1A1A" />
-          <YAxis dataKey="engagement" name="Engagement" type="number" domain={[0, 100]} tick={{ fontSize: 11 }} stroke="#1A1A1A" />
+          <XAxis
+            dataKey="performance"
+            name="Performance"
+            type="number"
+            domain={[0, 100]}
+            tick={{ fontSize: 11 }}
+            stroke="#1A1A1A"
+            label={{ value: 'Performance Score', position: 'insideBottom', offset: -2, fontSize: 11 }}
+          />
+          <YAxis
+            dataKey="engagement"
+            name="Engagement"
+            type="number"
+            domain={[0, 100]}
+            tick={{ fontSize: 11 }}
+            stroke="#1A1A1A"
+            label={{ value: 'Engagement Score', angle: -90, position: 'insideLeft', offset: 6, fontSize: 11 }}
+          />
           <ZAxis dataKey="risk" range={[30, 200]} name="Burnout Risk" />
+          <ReferenceLine x={50} stroke="#1A1A1A" strokeDasharray="4 4" strokeOpacity={0.45} />
+          <ReferenceLine y={50} stroke="#1A1A1A" strokeDasharray="4 4" strokeOpacity={0.45} />
           <Tooltip
             contentStyle={{ border: '2px solid #000', boxShadow: '4px 4px 0px #000', backgroundColor: '#FFFFFF', borderRadius: 0 }}
-            formatter={(value: number, name: string) => [value, name]}
-            labelFormatter={() => ''}
+            formatter={(value: number, name: string, props: any) => {
+              if (name === 'risk') return [`${value}%`, 'Burnout Risk'];
+              if (name === 'performance') return [value, 'Performance'];
+              if (name === 'engagement') return [value, 'Engagement'];
+              return [value, name];
+            }}
+            labelFormatter={(_, payload: any[]) => payload?.[0]?.payload?.name || ''}
             cursor={{ strokeDasharray: '3 3' }}
           />
-          <Scatter data={data} fill="#4ECDC4" stroke="#000000" strokeWidth={1} fillOpacity={0.8} />
+          <Scatter
+            data={data}
+            stroke="#000000"
+            strokeWidth={1}
+            fillOpacity={0.85}
+            shape={(props: any) => {
+              const { cx, cy, size, payload } = props;
+              const radius = Math.sqrt(size / Math.PI);
+              return (
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={radius}
+                  fill={getRiskColor(payload.risk)}
+                  stroke="#000000"
+                  strokeWidth={1}
+                  fillOpacity={0.85}
+                />
+              );
+            }}
+          />
         </ScatterChart>
       </ResponsiveContainer>
+      <div className="mt-3 flex flex-wrap items-center gap-4 text-xs">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full border border-foreground bg-[#4ECDC4]" /> Low Risk ({lowRiskCount})
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full border border-foreground bg-[#FFB300]" /> Medium Risk ({mediumRiskCount})
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full border border-foreground bg-[#FF1744]" /> High Risk ({highRiskCount})
+        </span>
+      </div>
     </motion.div>
   );
 }
