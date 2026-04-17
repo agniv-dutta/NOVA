@@ -44,7 +44,15 @@ export default function WeeklyBriefCard({ scope = 'org', teamId = null }: Weekly
     if (!data) return;
 
     const raw = window.localStorage.getItem(storageKey);
-    const cached = raw ? JSON.parse(raw) : null;
+    let cached: { current?: typeof data; previous?: typeof data } | null = null;
+    if (raw) {
+      try {
+        cached = JSON.parse(raw) as { current?: typeof data; previous?: typeof data };
+      } catch {
+        cached = null;
+        window.localStorage.removeItem(storageKey);
+      }
+    }
     if (cached?.current?.week_of && cached.current.week_of !== data.week_of) {
       setPreviousBrief(cached.current);
       window.localStorage.setItem(

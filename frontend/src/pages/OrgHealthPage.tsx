@@ -566,6 +566,21 @@ export default function OrgHealthPage() {
       : null,
   ].filter(Boolean) as AlertItem[];
 
+  const interventions = useMemo(() => {
+    return roiRecommendations.map((item, idx) => ({
+      rank: idx + 1,
+      intervention: item.intervention_name,
+      description: item.description,
+      targetGroup: item.target_group,
+      employeeCount: item.target_employee_count,
+      estimatedCost: item.intervention_cost_inr,
+      potentialSavings: item.projected_savings_inr,
+      roiPercent: item.roi_percent,
+      urgency: item.urgency,
+      savingsBasis: item.savings_basis,
+    }));
+  }, [roiRecommendations]);
+
   const quickActions: QuickAction[] = [
     {
       label: 'Schedule Sessions',
@@ -592,21 +607,6 @@ export default function OrgHealthPage() {
       icon: ClipboardList,
     },
   ];
-
-  const interventions = useMemo(() => {
-    return roiRecommendations.map((item, idx) => ({
-      rank: idx + 1,
-      intervention: item.intervention_name,
-      description: item.description,
-      targetGroup: item.target_group,
-      employeeCount: item.target_employee_count,
-      estimatedCost: item.intervention_cost_inr,
-      potentialSavings: item.projected_savings_inr,
-      roiPercent: item.roi_percent,
-      urgency: item.urgency,
-      savingsBasis: item.savings_basis,
-    }));
-  }, [roiRecommendations]);
 
   const getTrendIcon = (trend: string) => {
     if (trend === 'up') return <TrendingUp className="h-4 w-4 text-green-600" />;
