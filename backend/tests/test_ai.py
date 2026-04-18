@@ -1,11 +1,14 @@
 import json
 
+import numpy as np
 import pytest
 from httpx import AsyncClient
 
 from ai.burnout import assess_burnout
+from ai.ml.burnout_classifier import BurnoutClassifier
 from ai.retention import assess_retention
 from ai.schemas import BurnoutRequest, RetentionRequest
+from core.data_schema import EmployeeDataInput
 from core.security import create_access_token
 from main import app
 from models.user import UserInDB, UserRole
@@ -96,6 +99,50 @@ async def test_burnout_rule_score_without_llm(monkeypatch: pytest.MonkeyPatch):
 
     assert result.risk_score == 1.0
     assert result.risk_level == "critical"
+
+
+def test_employee_data_input_normalizes_boundary_values():
+    payload = EmployeeDataInput(
+        employee_id="  emp-7  ",
+        role_family="  TECH  ",
+        kpi_score=" 82.5 ",
+        sentiment_score=" -0.25 ",
+        engagement_score=" 91.0 ",
+        manager_relationship_score=" 0.8 ",
+        team_dynamics_score=" 0.7 ",
+        growth_satisfaction_score=" 0.6 ",
+        tenure_months=18,
+        absenteeism_days_90d=2,
+    )
+
+    normalized = payload.normalized_model_payload()
+
+    assert normalized["employee_id"] == "emp-7"
+    assert normalized["role_family"] == "tech"
+    assert normalized["kpi_score"] == 82.5
+    assert normalized["sentiment_score"] == -0.25
+    assert payload.data_quality_score > 0
+
+
+def test_burnout_classifier_rejects_bad_labels_and_reports_calibration():
+    classifier = BurnoutClassifier()
+    X = np.array([[0.1, 0.2], [0.8, 0.9], [0.3, 0.4]], dtype=float)
+    y = np.array([0, 1, 2], dtype=int)
+
+    with pytest.raises(ValueError, match="binary labels"):
+        classifier.fit(X, y, ["load", "sentiment"])
+
+    classifier.fit(
+        X=np.array([[0.1, 0.2], [0.8, 0.9], [0.3, 0.4]], dtype=float),
+        y=np.array([0, 1, 1], dtype=int),
+        feature_names=["load", "sentiment"],
+    )
+
+    report = classifier.get_training_quality_report()
+
+    assert report["sample_count"] == 3
+    assert report["training_accuracy"] >= 0.0
+    assert "bucket_summary" in report
 
 
 @pytest.mark.anyio
