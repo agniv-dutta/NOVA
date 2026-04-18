@@ -215,6 +215,29 @@
     @apply relative flex items-center gap-3 border-l-4 border-transparent px-3 py-2.5 text-sm font-medium transition-all duration-100;
     color: hsl(var(--sidebar-foreground));
     border-radius: 0;
+    line-height: 1;
+  }
+
+  .sidebar-link-icon-slot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+  }
+
+  .sidebar-link-icon,
+  .sidebar-link > span:first-child svg {
+    display: block;
+    margin: 0;
+  }
+
+  .sidebar-section-toggle {
+    line-height: 1;
+  }
+
+  .sidebar-section-chevron {
+    display: block;
+    margin: 0;
   }
 
   .sidebar-link:hover {
