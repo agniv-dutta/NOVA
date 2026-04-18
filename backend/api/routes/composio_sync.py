@@ -1,8 +1,8 @@
 """
-Manual sync trigger — HR / Leadership only.
+Manual sync trigger - HR / Leadership only.
 
-POST /api/composio/sync/trigger  — kick off async data pull for selected apps
-GET  /api/composio/sync/signals  — query stored signals for an employee
+POST /api/composio/sync/trigger - kick off async data pull for selected apps
+GET  /api/composio/sync/signals - query stored signals for an employee
 """
 from __future__ import annotations
 
@@ -100,7 +100,7 @@ async def get_signals(
 ):
     """
     Returns aggregated signal counts for an employee.
-    Only metadata counts are returned — no raw content.
+    Only metadata counts are returned - no raw content.
     """
     svc = IngestionService(org_id=org_id, entity_id=org_id)
     aggregates = svc.compute_signal_aggregates(employee_email, days=days)
@@ -154,7 +154,7 @@ async def _run_sync(org_id: str, entity_id: str, apps: list[str], since_hours: i
             elif app == "gmail":
                 results["gmail"] = await svc.sync_gmail(since_hours)
             elif app == "gcal":
-                # gcal requires employee email — skip here, use scheduler per-employee
+                # gcal requires employee email - skip here, use scheduler per-employee
                 results["gcal"] = "skipped (use per-employee sync)"
             elif app == "github":
                 results["github"] = "skipped (use per-employee sync with repos list)"

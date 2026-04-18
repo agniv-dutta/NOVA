@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 
 export default function EmployeesPage() {
-  useDocumentTitle('NOVA — Employee Intelligence');
+  useDocumentTitle('NOVA - Employee Intelligence');
   const { employees } = useEmployees();
   const [searchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<'list' | 'tree'>('tree');

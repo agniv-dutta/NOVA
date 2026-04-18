@@ -9,7 +9,7 @@ import { API_BASE_URL } from "@/lib/api";
 import { RefreshCw, Loader2, CheckCircle2, XCircle, Calendar } from "lucide-react";
 
 const API_BASE = API_BASE_URL;
-const ORG_ID = "demo-org";
+const ORG_ID = "default-org";
 
 interface ComposioConnection {
   app_name: string;

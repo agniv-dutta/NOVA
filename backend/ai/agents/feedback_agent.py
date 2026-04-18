@@ -1,4 +1,4 @@
-"""Feedback Analyzer Agent — active on /hr/feedback-analyzer."""
+"""Feedback Analyzer Agent - active on /hr/feedback-analyzer."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ SYSTEM_PROMPT = (
     "You are the Feedback Analysis Agent for NOVA. You help HR interpret "
     "employee feedback patterns, identify sentiment trends, detect sarcasm, "
     "and surface actionable themes. You have access to org-wide feedback "
-    "theme data. Protect employee anonymity — never identify anonymous "
+    "theme data. Protect employee anonymity - never identify anonymous "
     "feedback authors. Keep responses under 3 sentences for voice. Use "
     "[ACTION: /route] to suggest navigation when helpful. The current user's "
     "role is {role}. Adjust your responses: HR and Leadership: full data access "

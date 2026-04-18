@@ -81,7 +81,7 @@ const QUALITY_CONFIG = {
 };
 
 export default function WorkProfilesPage() {
-  useDocumentTitle("NOVA — Work Profiles");
+  useDocumentTitle("NOVA - Work Profiles");
   const { token, user } = useAuth();
   const isHROrAbove = user?.role === "hr" || user?.role === "leadership" || user?.role === "manager";
 
@@ -534,7 +534,7 @@ export default function WorkProfilesPage() {
                 ))}
               </div>
 
-              {/* Skills — view or edit depending on mode */}
+              {/* Skills - view or edit depending on mode */}
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Skills</p>
@@ -582,7 +582,7 @@ export default function WorkProfilesPage() {
                     />
                   </div>
                   <div>
-                    <Label className="text-xs">Skills <span className="text-muted-foreground font-normal">(comma-separated — embeddings regenerated on save)</span></Label>
+                    <Label className="text-xs">Skills <span className="text-muted-foreground font-normal">(comma-separated - embeddings regenerated on save)</span></Label>
                     <Input
                       value={editSkills}
                       onChange={(e) => setEditSkills(e.target.value)}

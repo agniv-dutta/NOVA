@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export default function DashboardPage() {
-  useDocumentTitle('NOVA — Analytics Dashboard');
+  useDocumentTitle('NOVA - Analytics Dashboard');
   const { user } = useAuth();
 
   if (user?.role === 'employee') return <Navigate to="/your-data" replace />;

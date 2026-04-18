@@ -138,7 +138,7 @@ export function EmployeeTable({ employees, search, deptFilter, riskFilter }: Emp
     >
       <div ref={tableTopRef} className="flex items-center justify-between gap-3">
         <p className="text-xs text-muted-foreground">
-          Showing {startIndex}–{endIndex} of {filtered.length}{' '}
+          Showing {startIndex} - {endIndex} of {filtered.length}{' '}
           {hasActiveFilter ? 'filtered results' : 'employees'}
         </p>
         <Button variant="outline" size="sm" onClick={exportCSV} className="gap-1.5">

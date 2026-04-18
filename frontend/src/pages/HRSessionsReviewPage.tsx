@@ -5,7 +5,7 @@ import { protectedPostApi } from '@/lib/api';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export default function HRSessionsReviewPage() {
-  useDocumentTitle('NOVA — Sessions to Review');
+  useDocumentTitle('NOVA - Sessions to Review');
   const { token } = useAuth();
 
   return (
@@ -15,19 +15,7 @@ export default function HRSessionsReviewPage() {
           <h1 className="text-2xl font-bold">Sessions to Review</h1>
           <p className="text-sm text-muted-foreground">Track scheduled/in-progress sessions and review completed mandatory feedback sessions for ingestion.</p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            onClick={async () => {
-              if (!token) return;
-              const confirmed = window.confirm('Regenerate demo review sessions now? This will reseed the review queue.');
-              if (!confirmed) return;
-              await protectedPostApi('/api/feedback/sessions/seed-demo', token, {});
-              window.location.reload();
-            }}
-          >
-            Load Demo Reviews
-          </Button>
-        </div>
+        <div className="flex flex-wrap gap-2" />
       </div>
       <SessionReviewPanel />
     </div>

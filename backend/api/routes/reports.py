@@ -84,7 +84,7 @@ async def get_org_health_report(
 Scope = Literal["org", "team"]
 
 
-# K-anonymity floor — brief aggregation must cover at least this many people
+# K-anonymity floor - brief aggregation must cover at least this many people
 # to avoid exposing individual-inferable signals at small team sizes.
 _WEEKLY_BRIEF_MIN_TEAM_SIZE = 5
 
@@ -230,8 +230,8 @@ def _weekly_brief_structured_insight(ctx: dict[str, Any]):
         confidence = "medium"
     else:
         signals = [
-            f"Sales EMEA risk at 81 — pipeline pressure + 1:1 cadence gap",
-            f"Payments Core risk at 74 — post-crunch fatigue pattern",
+            f"Sales EMEA risk at 81 - pipeline pressure + 1:1 cadence gap",
+            f"Payments Core risk at 74 - post-crunch fatigue pattern",
             f"Intervention portfolio healthy (success rate {ctx['intervention_success_rate']}%, {ctx['interventions_in_flight']} active)",
         ]
         action = "Restore 1:1 cadence in Sales EMEA this week; protect focus time in Payments Core."
@@ -239,7 +239,7 @@ def _weekly_brief_structured_insight(ctx: dict[str, Any]):
         confidence = "medium"
 
     return build_fallback_structured_insight(
-        summary=f"Weekly brief — {ctx['scope']} scope, week of {ctx['week_of']}.",
+        summary=f"Weekly brief - {ctx['scope']} scope, week of {ctx['week_of']}.",
         key_signals=signals,
         recommended_action=action,
         confidence=confidence,
@@ -258,7 +258,7 @@ async def get_weekly_brief(
     week_offset: int = Query(0, ge=0, le=12),
     current_user: User = Depends(require_role([UserRole.HR, UserRole.LEADERSHIP, UserRole.MANAGER])),
 ) -> dict:
-    """Narrative Weekly Brief — 50-word People-Ops-advisor-style workforce pulse."""
+    """Narrative Weekly Brief - 50-word People-Ops-advisor-style workforce pulse."""
     # Managers are scoped to team briefs only; org briefs require HR/Leadership.
     effective_scope: Scope = scope
     if current_user.role == UserRole.MANAGER:
@@ -266,7 +266,7 @@ async def get_weekly_brief(
 
     ctx = _aggregate_weekly_brief_context(effective_scope, team_id, week_offset)
 
-    # k-anonymity floor for team briefs — refuse to narrate if the team is too
+    # k-anonymity floor for team briefs - refuse to narrate if the team is too
     # small to aggregate safely. The structured_insight contract is still
     # honored so the frontend can render a graceful empty state.
     if effective_scope == "team" and ctx.get("team_size", 0) < _WEEKLY_BRIEF_MIN_TEAM_SIZE:

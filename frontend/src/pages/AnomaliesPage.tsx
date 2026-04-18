@@ -33,7 +33,7 @@ const severityClass: Record<string, string> = {
 };
 
 export default function AnomaliesPage() {
-  useDocumentTitle('NOVA — Anomaly Alerts');
+  useDocumentTitle('NOVA - Anomaly Alerts');
   const { employees } = useEmployees();
   const { token } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -161,7 +161,7 @@ export default function AnomaliesPage() {
           {!loading && rows.length === 0 && (
             <div className="rounded border border-emerald-300 bg-emerald-50 p-4 text-center text-emerald-800">
               <p className="font-semibold">All caught up!</p>
-              <p className="text-sm">No anomalies are currently detected in this demo run.</p>
+              <p className="text-sm">No anomalies are currently detected across monitored signals.</p>
             </div>
           )}
         </CardContent>

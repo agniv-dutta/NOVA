@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const NotFound = () => {
-  useDocumentTitle('NOVA — Page Not Found');
+  useDocumentTitle('NOVA - Page Not Found');
   const location = useLocation();
 
   useEffect(() => {

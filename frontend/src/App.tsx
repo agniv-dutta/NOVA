@@ -314,7 +314,7 @@ const App = () => (
               <Route
                 path="/audit-logs"
                 element={
-                  <ProtectedRoute allowedRoles={["hr", "leadership"]}>
+                  <ProtectedRoute allowedRoles={["leadership"]}>
                     <AppLayout>
                       <AuditLogPage />
                     </AppLayout>

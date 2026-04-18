@@ -45,7 +45,7 @@ function levelColor(level: string): string {
 }
 
 export default function EmployeePersonalPage() {
-  useDocumentTitle('NOVA — Your Data');
+  useDocumentTitle('NOVA - Your Data');
   const { token } = useAuth();
 
   const [data, setData] = useState<PersonalDataResponse | null>(null);

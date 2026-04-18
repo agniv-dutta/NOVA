@@ -78,7 +78,7 @@ export function EmployeeDetailDialog({ employee, onClose }: Props) {
                     ({manager.id})
                   </span>
                 ) : (
-                  <span>Reports to: — (Organization Head)</span>
+                  <span>Reports to: - (Organization Head)</span>
                 )}
               </p>
             </div>

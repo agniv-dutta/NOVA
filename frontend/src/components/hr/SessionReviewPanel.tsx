@@ -171,21 +171,8 @@ export default function SessionReviewPanel() {
                 <p className="font-semibold">All caught up!</p>
               </div>
               <p>
-                Use the Schedule Sessions tab to create a recorded feedback session, or seed demo data to populate the queue immediately.
+                Use the Schedule Sessions tab to create a recorded feedback session. Completed sessions will appear here for review.
               </p>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  onClick={async () => {
-                    if (!token) return;
-                    const confirmed = window.confirm('Regenerate demo review sessions now? This will reseed the review queue.');
-                    if (!confirmed) return;
-                    await protectedPostApi('/api/feedback/sessions/seed-demo', token, {});
-                    await fetchPending();
-                  }}
-                >
-                  Seed Demo Reviews
-                </Button>
-              </div>
             </div>
           )}
         </CardContent>

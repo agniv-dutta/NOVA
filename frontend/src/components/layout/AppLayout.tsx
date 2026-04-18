@@ -24,6 +24,7 @@ import {
   GitCommit,
   Briefcase,
   ListChecks,
+  ChevronDown,
 } from 'lucide-react';
 import { useEmployees } from '@/contexts/EmployeeContext';
 import { useEffect, useMemo, useState } from 'react';
@@ -90,6 +91,13 @@ function resolvePageTitle(pathname: string, navItems: NavItem[], role?: UserRole
   return 'NOVA Workspace';
 }
 
+function pathMatchesNavItem(pathname: string, itemPath: string): boolean {
+  if (itemPath === '/') {
+    return pathname === '/';
+  }
+  return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
+}
+
 function buildNavSections(role: UserRole, insightsEmployeeId: string): NavSection[] {
   switch (role) {
     case 'manager':
@@ -142,7 +150,6 @@ function buildNavSections(role: UserRole, insightsEmployeeId: string): NavSectio
           title: 'Admin',
           items: [
             { to: '/anomalies', icon: AlertTriangle, label: 'Anomaly Alerts' },
-            { to: '/audit-logs', icon: FileText, label: 'Audit Logs' },
           ],
         },
       ];
@@ -240,6 +247,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const [pendingJobCount, setPendingJobCount] = useState(0);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isDarkTheme, setIsDarkTheme] = useState(false);
+  const [openSectionTitle, setOpenSectionTitle] = useState<string | null>(null);
 
   const insightsEmployeeId = employees[0]?.id ?? 'emp-123';
 
@@ -380,6 +388,27 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     }));
   }, [navSections, pendingSessionReviewCount, upcomingSessionCount, draftAppraisalCount, pendingAssignmentCount, pendingJobCount]);
 
+  useEffect(() => {
+    if (navSectionsWithBadges.length === 0) {
+      setOpenSectionTitle(null);
+      return;
+    }
+
+    const activeSection = navSectionsWithBadges.find((section) =>
+      section.items.some((item) => pathMatchesNavItem(location.pathname, item.to)),
+    )?.title;
+
+    setOpenSectionTitle((current) => {
+      if (activeSection) {
+        return activeSection;
+      }
+      if (current && navSectionsWithBadges.some((section) => section.title === current)) {
+        return current;
+      }
+      return navSectionsWithBadges[0].title;
+    });
+  }, [location.pathname, navSectionsWithBadges]);
+
   const flatItemsForHeader = useMemo(() => navSectionsWithBadges.flatMap((s) => s.items), [
     navSectionsWithBadges,
   ]);
@@ -394,7 +423,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen w-full">
 
       <aside
-        className={`app-sidebar group fixed left-0 top-0 z-50 flex h-screen w-64 flex-col overflow-hidden border-r-2 border-foreground bg-card transition-transform duration-200 lg:sticky lg:top-0 lg:w-[84px] lg:overflow-hidden lg:translate-x-0 lg:transition-[width] lg:duration-200 lg:hover:w-64 lg:focus-within:w-64 ${
+        className={`app-sidebar group fixed left-0 top-0 z-50 flex h-[100dvh] w-64 flex-col overflow-hidden border-r-2 border-foreground bg-card transition-transform duration-200 lg:sticky lg:top-0 lg:w-[84px] lg:overflow-hidden lg:translate-x-0 lg:transition-[width] lg:duration-200 lg:hover:w-64 lg:focus-within:w-64 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -418,42 +447,56 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </button>
         </div>
 
-        <nav className="flex-1 overflow-hidden p-2">
+        <nav className="flex-1 overflow-hidden p-3 space-y-3">
           {navSectionsWithBadges.map((section) => (
-            <div
-              key={section.title}
-              className="space-y-1"
-            >
-              <p className="overflow-hidden px-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground transition-all duration-200 lg:max-h-0 lg:opacity-0 lg:group-hover:max-h-6 lg:group-hover:opacity-100 lg:group-focus-within:max-h-6 lg:group-focus-within:opacity-100">
-                {section.title}
-              </p>
-              {section.items.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.to === '/'}
-                  onClick={() => setSidebarOpen(false)}
-                  title={item.label}
-                  className={({ isActive }) =>
-                    `sidebar-link lg:mx-auto lg:h-11 lg:w-11 lg:justify-center lg:gap-0 lg:px-0 lg:py-0 lg:group-hover:mx-0 lg:group-hover:h-auto lg:group-hover:w-full lg:group-hover:justify-start lg:group-hover:gap-3 lg:group-hover:px-3 lg:group-hover:py-2.5 lg:group-focus-within:mx-0 lg:group-focus-within:h-auto lg:group-focus-within:w-full lg:group-focus-within:justify-start lg:group-focus-within:gap-3 lg:group-focus-within:px-3 lg:group-focus-within:py-2.5 ${isActive ? 'sidebar-link-active' : ''}`
-                  }
-                >
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                    <item.icon className="h-4 w-4 shrink-0" />
-                  </span>
-                  <span className="overflow-hidden whitespace-nowrap transition-all duration-200 lg:max-w-0 lg:opacity-0 lg:group-hover:max-w-[10rem] lg:group-hover:opacity-100 lg:group-focus-within:max-w-[10rem] lg:group-focus-within:opacity-100">
-                    {item.label}
-                  </span>
-                  {item.badgeCount !== undefined && item.badgeCount > 0 && (
-                    <Badge
-                      variant="destructive"
-                      className="ml-auto overflow-hidden text-[10px] transition-all duration-200 lg:max-w-0 lg:px-0 lg:opacity-0 lg:group-hover:max-w-8 lg:group-hover:px-1.5 lg:group-hover:opacity-100 lg:group-focus-within:max-w-8 lg:group-focus-within:px-1.5 lg:group-focus-within:opacity-100"
+            <div key={section.title} className="space-y-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setOpenSectionTitle((current) => (current === section.title ? null : section.title))
+                }
+                className="sidebar-section-toggle flex w-full items-center justify-between overflow-hidden rounded-sm px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground transition-all duration-200 lg:max-h-0 lg:opacity-0 lg:group-hover:max-h-8 lg:group-hover:opacity-100 lg:group-focus-within:max-h-8 lg:group-focus-within:opacity-100"
+                aria-expanded={openSectionTitle === section.title}
+              >
+                <span>{section.title}</span>
+                <ChevronDown
+                  className={`h-3 w-3 transition-transform ${
+                    openSectionTitle === section.title ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
+
+              {openSectionTitle === section.title && (
+                <div className="space-y-1.5">
+                  {section.items.map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      end={item.to === '/'}
+                      onClick={() => setSidebarOpen(false)}
+                      title={item.label}
+                      className={({ isActive }) =>
+                        `sidebar-link lg:mx-auto lg:h-11 lg:w-11 lg:justify-center lg:gap-0 lg:px-0 lg:py-0 lg:group-hover:mx-0 lg:group-hover:h-auto lg:group-hover:w-full lg:group-hover:justify-start lg:group-hover:gap-3 lg:group-hover:px-3 lg:group-hover:py-2.5 lg:group-focus-within:mx-0 lg:group-focus-within:h-auto lg:group-focus-within:w-full lg:group-focus-within:justify-start lg:group-focus-within:gap-3 lg:group-focus-within:px-3 lg:group-focus-within:py-2.5 ${isActive ? 'sidebar-link-active' : ''}`
+                      }
                     >
-                      {item.badgeCount}
-                    </Badge>
-                  )}
-                </NavLink>
-              ))}
+                      <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+                        <item.icon className="h-4 w-4 shrink-0" />
+                      </span>
+                      <span className="overflow-hidden whitespace-nowrap transition-all duration-200 lg:max-w-0 lg:opacity-0 lg:group-hover:max-w-[10rem] lg:group-hover:opacity-100 lg:group-focus-within:max-w-[10rem] lg:group-focus-within:opacity-100">
+                        {item.label}
+                      </span>
+                      {item.badgeCount !== undefined && item.badgeCount > 0 && (
+                        <Badge
+                          variant="destructive"
+                          className="ml-auto overflow-hidden text-[10px] transition-all duration-200 lg:max-w-0 lg:px-0 lg:opacity-0 lg:group-hover:max-w-8 lg:group-hover:px-1.5 lg:group-hover:opacity-100 lg:group-focus-within:max-w-8 lg:group-focus-within:px-1.5 lg:group-focus-within:opacity-100"
+                        >
+                          {item.badgeCount}
+                        </Badge>
+                      )}
+                    </NavLink>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </nav>

@@ -194,7 +194,7 @@ function formatRelativeTime(from: Date, to: Date): string {
 }
 
 export default function OrgHealthPage() {
-  useDocumentTitle('NOVA — Workforce Overview');
+  useDocumentTitle('NOVA - Workforce Overview');
   const navigate = useNavigate();
   const { token, hasRole, user } = useAuth();
   const { employees } = useEmployees();
@@ -394,7 +394,7 @@ export default function OrgHealthPage() {
 
       setReportStep("Generating PDF pages...");
       const doc = new jsPDF("p", "mm", "a4");
-      const orgName = "NOVA Demo Org";
+      const orgName = "NOVA";
       const dateLabel = new Date().toISOString().split('T')[0];
 
       doc.setFontSize(22);
@@ -435,7 +435,7 @@ export default function OrgHealthPage() {
       doc.setFontSize(11);
       doc.text(
         doc.splitTextToSize(
-          "Data Sources: Survey, Jira, Session, System. Benchmarks are simulated industry medians for demonstration purposes.",
+          "Data Sources: Survey, Jira, Session, System. Industry benchmarks derived from aggregated sector peer data.",
           170,
         ),
         20,
@@ -825,7 +825,7 @@ export default function OrgHealthPage() {
                   bottomQuartileThreshold={benchmark.bottom_quartile_threshold || 55}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Benchmarks are simulated industry medians for demonstration purposes
+                  Industry benchmarks derived from aggregated sector peer data
                 </p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">

@@ -35,7 +35,7 @@ export default function CareersPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = "Careers — NOVA";
+    document.title = "Careers - NOVA";
     fetch(`${API_BASE_URL}/api/job-board/public`)
       .then((r) => r.json())
       .then((d) => setPostings(d.postings ?? []))
@@ -76,7 +76,7 @@ export default function CareersPage() {
           <div className="flex flex-col items-center justify-center py-24 border-2 border-dashed border-foreground text-center rounded-none">
             <Briefcase className="h-10 w-10 text-muted-foreground mb-3" />
             <p className="font-semibold text-lg">No open positions right now</p>
-            <p className="text-sm text-muted-foreground mt-1">Check back soon — we grow fast.</p>
+            <p className="text-sm text-muted-foreground mt-1">Check back soon - we grow fast.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -134,7 +134,7 @@ export default function CareersPage() {
                       >
                         <Button className="mt-2 border-2 border-foreground shadow-[2px_2px_0px_#000] w-full sm:w-auto">
                           <Mail className="h-4 w-4 mr-2" />
-                          Apply — send resume &amp; cover letter to careers@gingerlabs.ai
+                          Apply - send resume &amp; cover letter to careers@gingerlabs.ai
                         </Button>
                       </a>
                     </>

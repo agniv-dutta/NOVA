@@ -34,7 +34,7 @@ const CATEGORIES = [
   "Critical — Intervention Required Before Review",
 ];
 
-const DEMO_FALLBACK_DISTRIBUTION: Array<{ category: string; count: number }> = [
+const DISTRIBUTION_FALLBACK: Array<{ category: string; count: number }> = [
   { category: 'Exceptional — Fast Track Promotion', count: 8 },
   { category: 'High Performer — Standard Promotion + Raise', count: 18 },
   { category: 'Meets Expectations — Merit Increment', count: 42 },
@@ -47,7 +47,7 @@ function applyDemoDistributionFallback(items: AppraisalSuggestion[]): AppraisalS
   const reassigned = new Map<string, string>();
   let cursor = 0;
 
-  DEMO_FALLBACK_DISTRIBUTION.forEach(({ category, count }) => {
+  DISTRIBUTION_FALLBACK.forEach(({ category, count }) => {
     for (let index = 0; index < count && cursor < ranked.length; index += 1) {
       reassigned.set(ranked[cursor].id, category);
       cursor += 1;
@@ -91,7 +91,11 @@ function reviewFlagLabel(flag: string): string {
   if (flag === "fast_track") return "Fast Track";
   if (flag === "pip") return "PIP";
   if (flag === "monitor") return "Monitor";
-  return "—";
+  return "-";
+}
+
+function formatCategory(cat: string): string {
+  return cat.replace(/\u2014/g, ":");
 }
 
 function statusLabel(status: string): string {
@@ -101,7 +105,7 @@ function statusLabel(status: string): string {
 }
 
 export default function AppraisalPage() {
-  useDocumentTitle('NOVA — Appraisal Cycle');
+  useDocumentTitle('NOVA - Appraisal Cycle');
   const { token, user } = useAuth();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
@@ -390,7 +394,7 @@ export default function AppraisalPage() {
 
             <select className="rounded border bg-background px-2 py-2 text-sm" value={filterCategory} onChange={(e) => { setPage(1); setFilterCategory(e.target.value); }}>
               <option value="">Category</option>
-              {CATEGORIES.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
+              {CATEGORIES.map((cat) => <option key={cat} value={cat}>{formatCategory(cat)}</option>)}
             </select>
 
             <select className="rounded border bg-background px-2 py-2 text-sm" value={filterPromotionEligible} onChange={(e) => { setPage(1); setFilterPromotionEligible(e.target.value); }}>
@@ -484,7 +488,7 @@ export default function AppraisalPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-2"><Badge className={categoryBadgeClass(item.category)}>{item.category}</Badge></td>
+                      <td className="px-3 py-2"><Badge className={categoryBadgeClass(item.category)}>{formatCategory(item.category)}</Badge></td>
                       <td className="px-3 py-2">{salaryActionLabel(item.salary_action)}</td>
                       <td className="px-3 py-2">{item.promotion_eligible ? <Check className="h-4 w-4 text-emerald-600" /> : <CircleDashed className="h-4 w-4 text-muted-foreground" />}</td>
                       <td className="px-3 py-2">{reviewFlagLabel(item.review_flag)}</td>

@@ -167,7 +167,7 @@ function markKeyPhrases(text: string, phrases: string[]): string {
 }
 
 export default function HRFeedbackPage() {
-  useDocumentTitle('NOVA — Feedback Analyzer');
+  useDocumentTitle('NOVA - Feedback Analyzer');
   const { token } = useAuth();
   const { toast } = useToast();
 

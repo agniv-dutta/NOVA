@@ -6,43 +6,43 @@
   :root {
     /* Neo-Brutalist Palette */
     --background: 45 100% 95%;
-    /* #FFF8E7 — Cream */
+    /* #FFF8E7 - Cream */
     --foreground: 0 0% 10%;
-    /* #1A1A1A — Ink Black */
+    /* #1A1A1A - Ink Black */
 
     --card: 0 0% 100%;
-    /* #FFFFFF — White */
+    /* #FFFFFF - White */
     --card-foreground: 0 0% 10%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
 
     --primary: 54 100% 50%;
-    /* #FFE500 — Electric Yellow */
+    /* #FFE500 - Electric Yellow */
     --primary-foreground: 0 0% 10%;
 
     --secondary: 342 100% 71%;
-    /* #FF6B9D — Hot Pink */
+    /* #FF6B9D - Hot Pink */
     --secondary-foreground: 0 0% 10%;
 
     --muted: 0 0% 94%;
-    /* #F0F0F0 — Light Gray */
+    /* #F0F0F0 - Light Gray */
     --muted-foreground: 0 0% 29%;
-    /* #4A4A4A — Graphite */
+    /* #4A4A4A - Graphite */
 
     --accent: 175 60% 55%;
-    /* #4ECDC4 — Sky Blue */
+    /* #4ECDC4 - Sky Blue */
     --accent-foreground: 0 0% 10%;
 
     --destructive: 351 100% 55%;
-    /* #FF1744 — Danger Red */
+    /* #FF1744 - Danger Red */
     --destructive-foreground: 0 0% 100%;
 
     --border: 0 0% 0%;
-    /* #000000 — Hard Black */
+    /* #000000 - Hard Black */
     --input: 0 0% 0%;
     --ring: 175 60% 55%;
-    /* #4ECDC4 — Sky Blue (focus) */
+    /* #4ECDC4 - Sky Blue (focus) */
 
     --radius: 0px;
 
@@ -52,7 +52,7 @@
     --shadow-lg: 6px 6px 0px #000000;
     --shadow-xl: 8px 8px 0px #000000;
 
-    /* Risk colors — adjusted for light mode */
+    /* Risk colors - adjusted for light mode */
     --risk-low: 152 100% 39%;
     /* #00C853 */
     --risk-low-foreground: 0 0% 10%;
@@ -256,7 +256,11 @@
   }
 
   @media (min-width: 1024px) {
-    .app-sidebar,
+    .app-sidebar {
+      overflow: hidden !important;
+      overscroll-behavior: none;
+    }
+
     .app-sidebar nav {
       overflow: hidden !important;
       overscroll-behavior: none;
@@ -292,7 +296,7 @@
       margin-top: 0 !important;
     }
 
-    .app-sidebar:not(:hover):not(:focus-within) nav > div > p {
+    .app-sidebar:not(:hover):not(:focus-within) nav > div > .sidebar-section-toggle {
       display: none;
     }
 

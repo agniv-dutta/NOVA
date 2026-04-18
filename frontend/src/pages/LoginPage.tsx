@@ -12,7 +12,7 @@ function getLandingPath(role: UserRole): string {
 }
 
 export default function LoginPage() {
-  useDocumentTitle("NOVA — Sign In");
+  useDocumentTitle("NOVA - Sign In");
   const { login, signInWithGoogle, completeGoogleSignIn, isAuthenticated, isLoading, user } = useAuth();
 
   const isGoogleConfigured = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);

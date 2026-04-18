@@ -85,7 +85,7 @@ export function generateInterventions(
 
   return interventions.length > 0
     ? interventions
-    : ["Continue current engagement plan — no immediate action needed"];
+    : ["Continue current engagement plan - no immediate action needed"];
 }
 
 type CompositeRiskInputs = {
@@ -197,7 +197,7 @@ export function getContributingFactors(employee: {
   }
 
   if (employee.tenure < 6) {
-    factors.push({ factor: 'New Employee', impact: 'medium', detail: `Only ${employee.tenure} months tenure — still in onboarding phase` });
+    factors.push({ factor: 'New Employee', impact: 'medium', detail: `Only ${employee.tenure} months tenure - still in onboarding phase` });
   }
 
   return factors.sort((a, b) => {

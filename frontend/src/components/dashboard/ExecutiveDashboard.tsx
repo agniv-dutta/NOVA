@@ -41,7 +41,7 @@ const ROI_TILES = [
 export default function ExecutiveDashboard() {
   const { employees } = useEmployees();
 
-  // Department-level aggregation only (k-anonymity floor respected — no names).
+  // Department-level aggregation only (k-anonymity floor respected - no names).
   const departmentRollup = useMemo(() => {
     const byDept = new Map<string, { count: number; burnoutSum: number; attritionSum: number }>();
     for (const emp of employees) {

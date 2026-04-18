@@ -73,7 +73,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 };
 
 export default function TaskAssignmentsPage() {
-  useDocumentTitle("NOVA — Task Assignments");
+  useDocumentTitle("NOVA - Task Assignments");
   const { token } = useAuth();
   const { toast } = useToast();
 
@@ -296,7 +296,7 @@ export default function TaskAssignmentsPage() {
             ))}
           </div>
 
-          {/* Assignee block — shows AI recommendation, no-match banner, or unassigned state */}
+          {/* Assignee block - shows AI recommendation, no-match banner, or unassigned state */}
           {a.status === "no_match" ? (
             <div className="border-l-4 border-amber-500 pl-3 py-2 bg-[#fef3c7] space-y-2">
               <div className="flex items-start gap-2">
@@ -362,7 +362,7 @@ export default function TaskAssignmentsPage() {
             </div>
           ) : (
             <div className="border-l-4 border-muted pl-3 py-1 bg-muted/30">
-              <p className="text-xs text-muted-foreground italic">No assignee — use Assign to select an employee.</p>
+              <p className="text-xs text-muted-foreground italic">No assignee - use Assign to select an employee.</p>
             </div>
           )}
 

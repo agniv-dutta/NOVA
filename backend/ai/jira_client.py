@@ -46,7 +46,7 @@ async def assign_jira_issue(issue_key: str, account_id: str) -> bool:
     Assign a JIRA issue to the user identified by `account_id`.
 
     Uses Basic auth (email:api_token).  Returns True on success, False on
-    any error — callers should treat JIRA sync as best-effort and never fail
+    any error - callers should treat JIRA sync as best-effort and never fail
     the NOVA approval flow because of it.
     """
     from core.config import settings
@@ -62,11 +62,11 @@ async def assign_jira_issue(issue_key: str, account_id: str) -> bool:
         api_token = api_token or cfg_token
 
     if not all([base_url, email, api_token]):
-        logger.warning("JIRA assign skipped — Jira credentials missing in env and integration config")
+        logger.warning("JIRA assign skipped - Jira credentials missing in env and integration config")
         return False
 
     if not account_id:
-        logger.warning("JIRA assign skipped — no accountId for issue %s", issue_key)
+        logger.warning("JIRA assign skipped - no accountId for issue %s", issue_key)
         return False
 
     credentials = base64.b64encode(f"{email}:{api_token}".encode()).decode()
@@ -87,7 +87,7 @@ async def assign_jira_issue(issue_key: str, account_id: str) -> bool:
             logger.info("JIRA: assigned %s to accountId=%s", issue_key, account_id)
             return True
         logger.warning(
-            "JIRA assign failed for %s (accountId=%s): HTTP %s — %s",
+            "JIRA assign failed for %s (accountId=%s): HTTP %s - %s",
             issue_key, account_id, res.status_code, res.text[:200],
         )
         return False

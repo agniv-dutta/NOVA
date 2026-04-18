@@ -1,6 +1,6 @@
 """Org-hierarchy endpoints.
 
-RBAC enforcement summary (CLAUDE.md §3 — do not bypass):
+RBAC enforcement summary (CLAUDE.md §3 - do not bypass):
   - Leadership / HR  : see full tree
   - Manager          : see only their own subtree
   - Employee         : see only self + direct manager (a 2-node slice)
@@ -41,7 +41,7 @@ def _user_employee_anchor(user: User, roster: List[Dict[str, object]]) -> Option
 
     Production would resolve via users.employee_id. Until that linkage lands,
     fall back to name/email-prefix matching; if no match, return the CEO as a
-    safe anchor for demo accounts (CLAUDE.md §3 — RBAC still holds below).
+    safe anchor for demo accounts (CLAUDE.md §3 - RBAC still holds below).
     """
     prefix = (user.email or "").split("@", 1)[0].lower()
     full_name = (user.full_name or "").lower()
@@ -136,7 +136,7 @@ async def get_subtree(
     effective_root = _apply_rbac(current_user, roster, requested_root_id=employee_id)
 
     # For managers/employees, RBAC pins them to their own anchor regardless of
-    # the path parameter — preserves the §3 rule that roles cannot peek up or
+    # the path parameter - preserves the §3 rule that roles cannot peek up or
     # across.
     if current_user.role in (UserRole.MANAGER, UserRole.EMPLOYEE):
         if effective_root != employee_id:

@@ -72,7 +72,7 @@ function overallEfficiency(
 }
 
 export default function DeptHeatmapPage() {
-  useDocumentTitle('NOVA — Department Heatmap');
+  useDocumentTitle('NOVA - Department Heatmap');
   const { data, loading, error } = useDepartmentHeatmap();
   const [selectedDept, setSelectedDept] = useState<string | null>(null);
   const [hoveredDimension, setHoveredDimension] = useState<EfficiencyDimension | null>(null);
@@ -286,7 +286,7 @@ function HeatmapRow({
         const isNeg = NEGATIVE_DIMS.has(dim);
         const avg = orgAverages[dim];
         const above = value > avg;
-        const tooltip = `${dept} — ${DIMENSION_LABELS[dim]}: ${Math.round(
+        const tooltip = `${dept} - ${DIMENSION_LABELS[dim]}: ${Math.round(
           value * 100,
         )}%\nOrg average: ${Math.round(avg * 100)}% | ${above ? 'above' : 'below'} average`;
         return (

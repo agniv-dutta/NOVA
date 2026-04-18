@@ -1,4 +1,4 @@
-"""Department Insights Agent — active on /departments/heatmap."""
+"""Department Insights Agent - active on /departments/heatmap."""
 
 from __future__ import annotations
 
@@ -170,7 +170,7 @@ class DepartmentInsightsAgent(BaseAgent):
             reply = (
                 f"{dept}'s {_DIM_LABELS.get(dim, dim)} score is {score * 100:.1f}%, "
                 f"which is {abs(points_below):.1f} points below the org average. "
-                f"The primary driver appears to be elevated workload — avg {dept_hours:.1f} hours/week vs org avg of {org_hours:.1f}."
+                f"The primary driver appears to be elevated workload - avg {dept_hours:.1f} hours/week vs org avg of {org_hours:.1f}."
             )
             return {
                 "reply": reply,

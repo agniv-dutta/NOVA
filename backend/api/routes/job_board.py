@@ -111,7 +111,7 @@ async def list_job_postings(
 
 @router.get("/public")
 async def list_public_job_postings():
-    """Public endpoint — returns only approved job postings (no auth required)."""
+    """Public endpoint - returns only approved job postings (no auth required)."""
     sb = get_supabase_admin()
     try:
         r = sb.table("job_postings").select(
@@ -193,7 +193,7 @@ async def approve_job_posting(
     body: ApproveJobRequest,
     current_user: User = Depends(require_role([UserRole.HR])),
 ):
-    """HR approves a job posting — makes it visible on the public job board."""
+    """HR approves a job posting - makes it visible on the public job board."""
     sb = get_supabase_admin()
     try:
         r = sb.table("job_postings").select("status,title").eq("id", posting_id).execute()

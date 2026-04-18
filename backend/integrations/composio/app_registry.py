@@ -1,7 +1,7 @@
 """
 Declares which Composio apps and actions NOVA uses.
 
-Only metadata-level actions are listed — no message body access.
+Only metadata-level actions are listed - no message body access.
 Action name strings match composio-core's Action enum values.
 """
 

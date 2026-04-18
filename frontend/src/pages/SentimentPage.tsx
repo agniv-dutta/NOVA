@@ -30,7 +30,7 @@ const EMOTION_DIMENSIONS = [
 const EMOTION_SHIFT_THRESHOLD = 0.3;
 
 export default function SentimentPage() {
-  useDocumentTitle('NOVA — Sentiment Analyzer');
+  useDocumentTitle('NOVA - Sentiment Analyzer');
   const [latestResult, setLatestResult] = useState<SentimentResult | null>(null);
 
   const radarData = useMemo(() => {
@@ -117,7 +117,7 @@ export default function SentimentPage() {
                 </Badge>
               </TooltipTrigger>
               <TooltipContent>
-                Positive language flagged as likely sarcastic — adjusted score applied
+                Positive language flagged as likely sarcastic - adjusted score applied
               </TooltipContent>
             </Tooltip>
           </div>

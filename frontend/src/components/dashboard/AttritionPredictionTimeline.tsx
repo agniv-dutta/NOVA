@@ -80,16 +80,16 @@ export default function AttritionPredictionTimeline() {
       sales: 'Sales',
       marketing: 'Marketing',
       operations: 'Operations',
-      engineeringUpper: 'Engineering — Upper Bound',
-      engineeringLower: 'Engineering — Lower Bound',
-      salesUpper: 'Sales — Upper Bound',
-      salesLower: 'Sales — Lower Bound',
-      marketingUpper: 'Marketing — Upper Bound',
-      marketingLower: 'Marketing — Lower Bound',
-      operationsUpper: 'Operations — Upper Bound',
-      operationsLower: 'Operations — Lower Bound',
-      industryUpper: 'Industry — Upper Band',
-      industryLower: 'Industry — Lower Band',
+      engineeringUpper: 'Engineering - Upper Bound',
+      engineeringLower: 'Engineering - Lower Bound',
+      salesUpper: 'Sales - Upper Bound',
+      salesLower: 'Sales - Lower Bound',
+      marketingUpper: 'Marketing - Upper Bound',
+      marketingLower: 'Marketing - Lower Bound',
+      operationsUpper: 'Operations - Upper Bound',
+      operationsLower: 'Operations - Lower Bound',
+      industryUpper: 'Industry - Upper Band',
+      industryLower: 'Industry - Lower Band',
     };
 
     return labels[key] || key;
@@ -343,8 +343,8 @@ export default function AttritionPredictionTimeline() {
               />
               {showIndustry && (
                 <>
-                  <Area type="monotone" dataKey="industryUpper" stroke="none" fill="#9ca3af" fillOpacity={0.12} name="Industry — Upper Band" />
-                  <Area type="monotone" dataKey="industryLower" stroke="none" fill="var(--bg-card)" fillOpacity={1} name="Industry — Lower Band" />
+                  <Area type="monotone" dataKey="industryUpper" stroke="none" fill="#9ca3af" fillOpacity={0.12} name="Industry - Upper Band" />
+                  <Area type="monotone" dataKey="industryLower" stroke="none" fill="var(--bg-card)" fillOpacity={1} name="Industry - Lower Band" />
                   <ReferenceLine
                     y={10}
                     stroke="#ef4444"
@@ -368,7 +368,7 @@ export default function AttritionPredictionTimeline() {
                 stroke="none"
                 fill="var(--bg-card)"
                 fillOpacity={1}
-                name="Engineering — Lower Bound"
+                name="Engineering - Lower Bound"
               />
 
               {/* Forecast lines */}

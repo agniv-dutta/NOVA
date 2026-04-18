@@ -209,7 +209,7 @@ export function AppraisalReviewDrawer({
                 <blockquote className="rounded border-l-4 border-primary bg-muted/40 p-3 text-sm leading-relaxed">
                   {suggestion.summary}
                 </blockquote>
-                <p className="mt-2 text-xs text-muted-foreground">AI-generated — review before finalizing</p>
+                <p className="mt-2 text-xs text-muted-foreground">AI-generated - review before finalizing</p>
               </CardContent>
             </Card>
 

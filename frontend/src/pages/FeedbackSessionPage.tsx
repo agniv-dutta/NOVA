@@ -29,7 +29,7 @@ type FeedbackSession = {
 };
 
 export default function FeedbackSessionPage() {
-  useDocumentTitle('NOVA — Feedback Session');
+  useDocumentTitle('NOVA - Feedback Session');
   const { token } = useAuth();
   const { sessionId } = useParams<{ sessionId: string }>();
   const [stage, setStage] = useState<Stage>('consent');

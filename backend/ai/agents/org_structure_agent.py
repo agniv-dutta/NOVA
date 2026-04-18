@@ -1,4 +1,4 @@
-"""Org Structure Agent — active on /employees/org-tree."""
+"""Org Structure Agent - active on /employees/org-tree."""
 
 from __future__ import annotations
 

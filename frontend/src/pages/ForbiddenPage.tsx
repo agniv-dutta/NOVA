@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export default function ForbiddenPage() {
-  useDocumentTitle('NOVA — Access Denied');
+  useDocumentTitle('NOVA - Access Denied');
   const location = useLocation();
   const attempted = (location.state as { from?: string } | null)?.from ?? "unknown route";
 

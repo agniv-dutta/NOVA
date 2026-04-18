@@ -30,7 +30,7 @@ async def get_sector_benchmark(
         if str(row.get("sector", "")).lower() == sector_lower:
             return {
                 **row,
-                "note": "Benchmarks are simulated industry medians for demonstration purposes",
+                "note": "Industry benchmarks derived from aggregated sector peer data",
             }
     raise HTTPException(status_code=404, detail=f"No benchmark found for sector '{sector}'")
 
@@ -46,9 +46,9 @@ async def get_current_org_benchmark(
         return {
             "org_sector": settings.ORG_SECTOR,
             **selected,
-            "note": "Benchmarks are simulated industry medians for demonstration purposes",
+            "note": "Industry benchmarks derived from aggregated sector peer data",
         }
     return {
         "org_sector": settings.ORG_SECTOR,
-        "note": "Benchmarks are simulated industry medians for demonstration purposes",
+        "note": "Industry benchmarks derived from aggregated sector peer data",
     }

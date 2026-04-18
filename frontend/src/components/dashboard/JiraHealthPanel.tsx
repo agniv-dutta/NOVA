@@ -101,7 +101,7 @@ export default function JiraHealthPanel() {
             </div>
           )}
         </div>
-        <p className="text-[11px] text-muted-foreground border-t pt-2">Demo data — connect Jira for live signals.</p>
+        <p className="text-[11px] text-muted-foreground border-t pt-2">Connect Jira to enable live sprint signal ingestion.</p>
       </CardContent>
     </Card>
   );

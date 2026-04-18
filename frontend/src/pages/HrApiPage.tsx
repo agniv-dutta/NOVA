@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export default function HrApiPage() {
-  useDocumentTitle("NOVA — HR API");
+  useDocumentTitle("NOVA - HR API");
 
   return (
     <div className="min-h-screen bg-[#f7f5ef] px-6 py-14 text-[#111111]">

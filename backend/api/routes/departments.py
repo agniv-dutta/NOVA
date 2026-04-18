@@ -1,7 +1,7 @@
 """Department efficiency heatmap and drilldown endpoints.
 
 Access is restricted to HR and Leadership because the output exposes
-per-department aggregates and named at-risk employees — a privileged view. Aggregations are derived via `core.aggregations` so the
+per-department aggregates and named at-risk employees - a privileged view. Aggregations are derived via `core.aggregations` so the
 heatmap and drilldown share one source of truth.
 """
 

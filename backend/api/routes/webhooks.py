@@ -1,8 +1,8 @@
 """
 NOVA Webhook Routes
 
-POST /api/webhook/jira   — receives Jira issue_created / sprint events
-POST /api/webhook/github — receives GitHub push events
+POST /api/webhook/jira - receives Jira issue_created / sprint events
+POST /api/webhook/github - receives GitHub push events
 
 Both endpoints are intentionally unauthenticated (Jira/GitHub sign the
 payload; you can add HMAC validation later via X-Hub-Signature-256).
@@ -105,7 +105,7 @@ async def _handle_no_match(
     )
 
     ai_note = (
-        f"AI found no matching employee — {reason} "
+        f"AI found no matching employee - {reason} "
         f"A job listing has been created on the Job Board. "
         f"You can manually assign this task to an available employee."
     )
@@ -189,7 +189,7 @@ async def _handle_issue_created(data: dict, sb) -> dict:
     issue_type = (fields.get("issuetype") or {}).get("name", "Task")
     project_name = (fields.get("project") or {}).get("name", "Unknown Project")
 
-    logger.info("Processing Jira issue: %s — %s", issue_key, title)
+    logger.info("Processing Jira issue: %s - %s", issue_key, title)
 
     # 1. Extract required skills
     required_skills = await extract_required_skills(title, description, project_name)
@@ -233,7 +233,7 @@ async def _handle_issue_created(data: dict, sb) -> dict:
             f"LLM rejected all candidates: {reasoning}",
         )
 
-    # Resolve display name — LLM may return null if profile had no full_name
+    # Resolve display name - LLM may return null if profile had no full_name
     if not selected_name:
         try:
             ur = sb.table("users").select("full_name").eq("email", selected_email).execute()
@@ -328,7 +328,7 @@ async def _handle_push(data: dict) -> dict:
     if not github_username:
         return {"status": "ignored", "reason": "no_github_username"}
 
-    # Look up employee by github_username (case-insensitive — GitHub usernames
+    # Look up employee by github_username (case-insensitive - GitHub usernames
     # are case-preserving but case-insensitive, so "AnamayNarkar" and
     # "anamaynarkar" must both match whatever the employee registered).
     try:
@@ -338,7 +338,7 @@ async def _handle_push(data: dict) -> dict:
         profile = None
 
     if not profile:
-        logger.info("No work profile for GitHub user '%s' — ignored", github_username)
+        logger.info("No work profile for GitHub user '%s' - ignored", github_username)
         return {"status": "ignored", "reason": f"No NOVA employee linked to GitHub user '{github_username}'"}
 
     employee_email: str = profile["employee_email"]
@@ -499,7 +499,7 @@ async def handle_slack_event(request: Request):
     body = await request.body()
 
     if not _verify_slack_signature(body, request.headers):
-        logger.warning("[Slack] Webhook signature mismatch — rejected")
+        logger.warning("[Slack] Webhook signature mismatch - rejected")
         raise HTTPException(status_code=401, detail="Invalid Slack signature")
 
     try:
@@ -510,7 +510,7 @@ async def handle_slack_event(request: Request):
     # ── URL verification handshake (Slack sends this once when you add the URL)
     if payload.get("type") == "url_verification":
         challenge = payload.get("challenge", "")
-        logger.info("[Slack] URL verification challenge received — responding")
+        logger.info("[Slack] URL verification challenge received - responding")
         return {"challenge": challenge}
 
     event_type = payload.get("type")
@@ -555,11 +555,11 @@ async def handle_slack_event(request: Request):
             logger.warning("[Slack] users.info failed for %s: %s", slack_user_id, exc)
 
     if not email:
-        logger.info("[Slack] Could not resolve email for user=%s — skipping", slack_user_id)
+        logger.info("[Slack] Could not resolve email for user=%s - skipping", slack_user_id)
         return {"ok": True}
 
     logger.info(
-        "[MessageBuffer] Queueing message — org=%s email=%s channel=%s len=%d",
+        "[MessageBuffer] Queueing message - org=%s email=%s channel=%s len=%d",
         org_id, email, channel_id, len(text),
     )
     try:
@@ -570,8 +570,8 @@ async def handle_slack_event(request: Request):
             "source": "slack",
             "message_text": text,
         }).execute()
-        logger.info("[MessageBuffer] Buffered OK — org=%s email=%s", org_id, email)
+        logger.info("[MessageBuffer] Buffered OK - org=%s email=%s", org_id, email)
     except Exception as exc:
-        logger.warning("[MessageBuffer] Insert failed — org=%s email=%s error=%s", org_id, email, exc)
+        logger.warning("[MessageBuffer] Insert failed - org=%s email=%s error=%s", org_id, email, exc)
 
     return {"ok": True}

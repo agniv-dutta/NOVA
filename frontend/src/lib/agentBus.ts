@@ -45,7 +45,7 @@ export function subscribeOpenAssistant(fn: (p: OpenPayload) => void): () => void
   };
 }
 
-// Schedule-1:1 dispatch — pages with a schedule modal can listen for this.
+// Schedule-1:1 dispatch - pages with a schedule modal can listen for this.
 export type ScheduleOneOnOneDetail = { employeeId: string };
 export type ExpandOrgNodeDetail = { employeeId: string };
 

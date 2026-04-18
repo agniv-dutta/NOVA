@@ -1,9 +1,9 @@
 """
-Composio app connection management — HR / Leadership only.
+Composio app connection management - HR / Leadership only.
 
-POST   /api/composio/connect            — initiate OAuth for an external app
-DELETE /api/composio/disconnect/{org}/{app} — deactivate a connection
-GET    /api/composio/status/{org_id}    — list connection states for an org
+POST   /api/composio/connect - initiate OAuth for an external app
+DELETE /api/composio/disconnect/{org}/{app} - deactivate a connection
+GET    /api/composio/status/{org_id} - list connection states for an org
 """
 from __future__ import annotations
 
@@ -100,11 +100,11 @@ async def connect_app(
 ):
     """
     Initiates the Composio OAuth flow for an external app.
-    Returns a redirect_url — the HR admin opens it to complete authorization.
+    Returns a redirect_url - the HR admin opens it to complete authorization.
     If an active connection already exists, returns it immediately without creating a new one.
     If a pending connection exists (redirect_url available), returns that so the user can resume.
     """
-    # Check if already connected or pending — avoid creating duplicate OAuth flows
+    # Check if already connected or pending - avoid creating duplicate OAuth flows
     try:
         existing = get_connection_state(payload.org_id, payload.app_name)
         if existing.get("is_active"):

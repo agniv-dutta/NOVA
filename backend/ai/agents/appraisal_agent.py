@@ -1,4 +1,4 @@
-"""Appraisal Agent — active on /hr/appraisals."""
+"""Appraisal Agent - active on /hr/appraisals."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ SYSTEM_PROMPT = (
     "conduct fair, data-driven performance appraisals. You can explain "
     "appraisal scores, suggest decisions, identify anomalies in the "
     "appraisal distribution, and guide HR through the review workflow. "
-    "Always clarify that AI suggestions are recommendations — final "
+    "Always clarify that AI suggestions are recommendations - final "
     "decisions rest with HR. Keep responses under 3 sentences for voice. "
     "Use [ACTION: /route] to suggest navigation when helpful. The current "
     "user's role is {role}. Adjust your responses: HR and Leadership: full "
@@ -43,7 +43,7 @@ class AppraisalAgent(BaseAgent):
             system_prompt=SYSTEM_PROMPT,
             display_name="Appraisal Agent",
         )
-        # Refresh every 5 minutes — appraisal cycle data is slow-moving.
+        # Refresh every 5 minutes - appraisal cycle data is slow-moving.
         self._cache = TimedCache(ttl_seconds=300, loader=_load_summary)
 
     async def gather_context(

@@ -1,4 +1,4 @@
-"""Employee Intelligence Agent — active on /employees and profile pages."""
+"""Employee Intelligence Agent - active on /employees and profile pages."""
 
 from __future__ import annotations
 

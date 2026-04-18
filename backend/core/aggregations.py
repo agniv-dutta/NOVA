@@ -15,7 +15,7 @@ from typing import Callable, Dict, Iterable, List, Optional
 # Canonical department roster used across the heatmap feature. Kept small and deterministic because the underlying data source is not yet wired to a live warehouse(mock-to-live transition).
 DEPARTMENTS: List[str] = ["Engineering", "Sales", "HR", "Design", "Finance"]
 
-# Synthetic headcount per department — deterministic anchor for drilldowns.
+# Synthetic headcount per department - deterministic anchor for drilldowns.
 DEPARTMENT_HEADCOUNT: Dict[str, int] = {
     "Engineering": 22,
     "Sales": 18,
@@ -84,7 +84,7 @@ def aggregate_by_department(
 
     Preserves the repo's pattern of keeping route handlers thin (CLAUDE.md §6)
     by centralizing the aggregation logic here. When the live data pipeline
-    lands, swap `get_department_roster` for a real query — callers do not
+    lands, swap `get_department_roster` for a real query - callers do not
     change.
     """
     if agg_func not in _AGG_FUNCS:

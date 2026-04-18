@@ -52,11 +52,11 @@ Your job is to:
 1. Write a concise summary (1-2 sentences) of what was accomplished.
 2. List 3-7 specific technical skills demonstrated (e.g. "React hooks", "PostgreSQL indexing", "async Python", "REST API design").
 3. Rate the CODE QUALITY on a scale of 0-100:
-   - 90-100: Excellent — clean, well-structured, production-ready
-   - 70-89: Good — solid work with minor issues
-   - 50-69: Neutral — functional but has room for improvement
-   - 30-49: Poor — notable issues: magic numbers, no error handling, messy structure
-   - 0-29: Bad — broken patterns, security holes, or destructive changes
+   - 90-100: Excellent - clean, well-structured, production-ready
+   - 70-89: Good - solid work with minor issues
+   - 50-69: Neutral - functional but has room for improvement
+   - 30-49: Poor - notable issues: magic numbers, no error handling, messy structure
+   - 0-29: Bad - broken patterns, security holes, or destructive changes
 4. Label it: "good" (score >= 70), "neutral" (score 50-69), or "poor" (score < 50).
 5. Assess complexity: "low", "medium", or "high".
 6. Assess business impact: "minor", "moderate", or "significant".
@@ -101,7 +101,7 @@ Respond with ONLY valid JSON:
     except Exception as exc:
         logger.warning("Commit analysis LLM call failed: %s", exc)
 
-    # Fallback — keyword heuristics
+    # Fallback - keyword heuristics
     skills = _extract_skills_heuristic(commit_message, diff_content)
     return {
         "summary": commit_message or "Code changes",
@@ -110,7 +110,7 @@ Respond with ONLY valid JSON:
         "code_quality_label": "neutral",
         "complexity": "low",
         "impact": "minor",
-        "quality_reasoning": "Automated fallback — LLM unavailable.",
+        "quality_reasoning": "Automated fallback - LLM unavailable.",
     }
 
 

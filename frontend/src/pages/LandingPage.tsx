@@ -502,7 +502,7 @@ export default function LandingPage() {
             WHAT IS NOVA?
           </h3>
           <p data-reveal className={`${revealClass("fade-up", 100)} mt-8 text-lg font-medium leading-relaxed text-[#374151]`}>
-            NOVA (Next-Gen Organizational Vitality Analytics) is an AI-powered HR intelligence platform that shifts workforce management from reactive to predictive. It identifies employee burnout, flight risk, and disengagement before they escalate — enabling organizations to intervene early. NOVA combines sentiment analysis, ML risk scoring, peer network analysis, and explainable AI into a unified platform accessible through role-based dashboards for C-suite, HR managers, and employees.
+            NOVA (Next-Gen Organizational Vitality Analytics) is an AI-powered HR intelligence platform that shifts workforce management from reactive to predictive. It identifies employee burnout, flight risk, and disengagement before they escalate - enabling organizations to intervene early. NOVA combines sentiment analysis, ML risk scoring, peer network analysis, and explainable AI into a unified platform accessible through role-based dashboards for C-suite, HR managers, and employees.
           </p>
           <p data-reveal className={`${revealClass("fade-up", 180)} mt-8 text-center text-base italic text-[#6b7280]`}>
             Built by a team of 4 undergraduate students · Grand Finale 2025
@@ -566,7 +566,7 @@ export default function LandingPage() {
             <div>
               <h4 className="text-sm font-black tracking-[0.16em] text-white">ABOUT NOVA</h4>
               <p className="mt-4 text-sm leading-relaxed text-[#9ca3af]">
-                NOVA is an AI-powered HR analytics platform that detects burnout, predicts attrition, and surfaces actionable workforce insights — all powered by explainable machine learning. Built to shift HR from reactive administration to proactive strategy.
+                NOVA is an AI-powered HR analytics platform that detects burnout, predicts attrition, and surfaces actionable workforce insights - all powered by explainable machine learning. Built to shift HR from reactive administration to proactive strategy.
               </p>
               <p className="mt-4 text-xs text-[#9ca3af]">Built with: Python · FastAPI · React · Groq LLM · Supabase</p>
             </div>

@@ -229,7 +229,7 @@ const InterventionRecommendations: React.FC<InterventionRecommendationsProps> = 
 
   return (
     <div className="space-y-4">
-      {/* Header Card — NOVA Brutalist Style */}
+      {/* Header Card - NOVA Brutalist Style */}
       <div
         className="p-4 transition-all"
         style={{

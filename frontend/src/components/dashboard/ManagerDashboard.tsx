@@ -60,7 +60,7 @@ export default function ManagerDashboard() {
   const avgSentiment =
     teamSize > 0
       ? (directReports.reduce((s, e) => s + e.sentimentScore, 0) / teamSize).toFixed(2)
-      : '—';
+      : ' - ';
   const overdueOneOnOnes = Math.max(1, Math.round(teamSize * 0.2));
 
   const topReport = useMemo(() => {
@@ -82,7 +82,7 @@ export default function ManagerDashboard() {
       <header className="flex items-center justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            Manager View — {user?.full_name ?? 'Team Lead'}
+            Manager View - {user?.full_name ?? 'Team Lead'}
           </p>
           <h1 className="text-2xl font-bold font-heading text-foreground">My Team</h1>
         </div>
@@ -118,7 +118,7 @@ export default function ManagerDashboard() {
       <Card className="border-2 border-foreground shadow-[4px_4px_0px_#000] bg-card">
         <CardHeader className="border-b-2 border-foreground pb-3">
           <CardTitle className="text-base font-heading uppercase tracking-wider">
-            Direct Reports — Risk Snapshot
+            Direct Reports - Risk Snapshot
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-4">
@@ -178,7 +178,7 @@ export default function ManagerDashboard() {
               sentimentScore={topReport.sentimentScore}
               engagementScore={topReport.engagementScore}
               tenureMonths={topReport.tenure}
-              emptyStateMessage="No interventions recommended this week — keep regular 1:1 cadence."
+              emptyStateMessage="No interventions recommended this week - keep regular 1:1 cadence."
             />
           </CardContent>
         </Card>

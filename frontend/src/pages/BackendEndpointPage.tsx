@@ -11,7 +11,7 @@ interface BackendEndpointPageProps {
 }
 
 export default function BackendEndpointPage({ title, endpoint, description }: BackendEndpointPageProps) {
-  useDocumentTitle(`NOVA — ${title}`);
+  useDocumentTitle(`NOVA - ${title}`);
   const { token } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

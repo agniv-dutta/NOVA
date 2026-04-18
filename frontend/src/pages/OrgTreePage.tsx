@@ -94,7 +94,7 @@ function nodeFillColor(node: OrgNode, riskOverlay: boolean, highlighted: boolean
 }
 
 export default function OrgTreePage() {
-  useDocumentTitle('NOVA — Org Tree');
+  useDocumentTitle('NOVA - Org Tree');
   const [rootId, setRootId] = useState<string | null>(null);
   const { data, stats, loading, error } = useOrgHierarchy(rootId);
   const svgRef = useRef<SVGSVGElement>(null);

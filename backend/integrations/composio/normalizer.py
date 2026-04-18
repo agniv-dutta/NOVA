@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 
 @dataclass
 class CommunicationMetadata:
-    """Normalized communication signal — zero content stored."""
+    """Normalized communication signal - zero content stored."""
     employee_email:       str
     source:               str          # slack | gmail | gcal
     signal_type:          str          # message_sent | thread_replied | email_sent | meeting_attended
@@ -84,7 +84,7 @@ def normalize_slack_message(raw: dict, user_email: str, channel_id: str) -> Comm
 def normalize_gmail_thread(raw: dict) -> CommunicationMetadata | None:
     """
     raw: thread detail dict from GMAIL_GET_THREAD.
-    Extracts sender email from From header — stores no subject or body.
+    Extracts sender email from From header - stores no subject or body.
     """
     messages = raw.get("messages") or []
     if not messages:
@@ -120,7 +120,7 @@ def normalize_gmail_thread(raw: dict) -> CommunicationMetadata | None:
 def normalize_gcal_event(raw: dict, employee_email: str) -> CommunicationMetadata:
     """
     raw: event dict from GOOGLECALENDAR_LIST_EVENTS.
-    Stores attendee count and duration — no title or description.
+    Stores attendee count and duration - no title or description.
     """
     start_block = raw.get("start") or {}
     start_str = start_block.get("dateTime") or start_block.get("date") or ""

@@ -70,7 +70,7 @@ async def groq_chat(
                 max_tokens=chosen_max_tokens,
                 stream=stream,
             )
-        except Exception as e:  # noqa: BLE001 — propagate after retries
+        except Exception as e:  # noqa: BLE001 - propagate after retries
             last_error = e
             if _is_model_decommissioned_error(e) and fallback_model and chosen_model != fallback_model:
                 chosen_model = fallback_model

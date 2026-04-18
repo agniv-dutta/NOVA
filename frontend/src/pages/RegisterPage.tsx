@@ -12,7 +12,7 @@ function getLandingPath(role: UserRole): string {
 }
 
 export default function RegisterPage() {
-  useDocumentTitle('NOVA — Create Account');
+  useDocumentTitle('NOVA - Create Account');
   const { register, isAuthenticated, isLoading, user } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({

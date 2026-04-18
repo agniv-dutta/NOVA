@@ -30,7 +30,7 @@ def _seed_from_employee(employee_id: str) -> int:
 
 
 def fetch_jira_metrics(employee_id: str) -> JiraMetrics:
-    # TODO: Replace with real Jira REST API v3 call using org's Jira API token — endpoint: /rest/api/3/issue/search
+    # TODO: Replace with real Jira REST API v3 call using org's Jira API token - endpoint: /rest/api/3/issue/search
     generator = random.Random(_seed_from_employee(employee_id))
     return JiraMetrics(
         employee_id=employee_id,

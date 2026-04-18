@@ -38,7 +38,7 @@ function scoreColor(value: number): string {
 }
 
 export default function EmployeeProfilePage() {
-  useDocumentTitle('NOVA — Employee Profile');
+  useDocumentTitle('NOVA - Employee Profile');
   const { employeeId } = useParams<{ employeeId: string }>();
   const { getEmployee } = useEmployees();
   const { token, hasRole } = useAuth();
@@ -175,7 +175,7 @@ export default function EmployeeProfilePage() {
                       ({manager.id})
                     </span>
                   ) : (
-                    <span>Reports to: — (Organization Head)</span>
+                    <span>Reports to: - (Organization Head)</span>
                   )}
                 </div>
               </div>

@@ -31,7 +31,7 @@ function defaultLocalDateTime(hoursAhead = 24): string {
 }
 
 export default function HRSessionsSchedulerPage() {
-  useDocumentTitle('NOVA — Schedule Sessions');
+  useDocumentTitle('NOVA - Schedule Sessions');
   const navigate = useNavigate();
   const { token, user } = useAuth();
   const { employees } = useEmployees();

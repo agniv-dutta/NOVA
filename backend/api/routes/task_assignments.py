@@ -496,7 +496,7 @@ async def reassign_with_ai(
         if not selected_email:
             raise HTTPException(status_code=422, detail=f"AI could not select a candidate: {reasoning}")
 
-        # Resolve display name — look up from users table if LLM returned null
+        # Resolve display name - look up from users table if LLM returned null
         if not selected_name:
             try:
                 ur = sb.table("users").select("full_name").eq("email", selected_email).execute()

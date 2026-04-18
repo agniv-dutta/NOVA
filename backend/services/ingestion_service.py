@@ -1,5 +1,5 @@
 """
-IngestionService — orchestrates Composio data pulls, normalization, and storage.
+IngestionService - orchestrates Composio data pulls, normalization, and storage.
 
 One instance per (org_id, entity_id) pair. Designed for use in:
 - BackgroundTasks (ad-hoc sync triggers)
@@ -106,7 +106,7 @@ class IngestionService:
     async def sync_slack_with_sentiment(self, since_hours: int = 24) -> dict:
         """Pull Slack messages, run in-flight sentiment per employee, store derived scores only.
 
-        Raw message text is never persisted — only sentiment scores and emotion vectors.
+        Raw message text is never persisted - only sentiment scores and emotion vectors.
         """
         from ai.schemas import SentimentRequest
         from ai.sentiment import analyze_sentiment
@@ -143,7 +143,7 @@ class IngestionService:
                 # Store metadata signal (no message text included)
                 self._store_signal(normalize_slack_message(msg, email, channel_id))
                 signal_count += 1
-                # Accumulate text in-memory only — never written to DB
+                # Accumulate text in-memory only - never written to DB
                 bucket = texts_by_email.setdefault(email, [])
                 if len(bucket) < 50:
                     bucket.append(text)

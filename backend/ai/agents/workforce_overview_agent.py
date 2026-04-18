@@ -1,4 +1,4 @@
-"""Workforce Overview Agent — active on /org-health and /dashboard."""
+"""Workforce Overview Agent - active on /org-health and /dashboard."""
 
 from __future__ import annotations
 

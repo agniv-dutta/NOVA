@@ -32,7 +32,7 @@ function InsightSkeleton() {
 }
 
 export function InsightsDashboard() {
-  useDocumentTitle('NOVA — AI Insights');
+  useDocumentTitle('NOVA - AI Insights');
   const { employeeId } = useParams();
   const { data, loading, error } = useInsights(employeeId);
   const { getEmployee } = useEmployees();

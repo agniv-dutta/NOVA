@@ -178,7 +178,7 @@ export default function WeeklyBriefCard({ scope = 'org', teamId = null }: Weekly
           <div>
             <p className="font-bold uppercase text-xs tracking-wider">Brief suppressed for privacy</p>
             <p className="mt-1 text-foreground">
-              {displayedData.structured_insight.summary} — {displayedData.structured_insight.recommended_action}
+              {displayedData.structured_insight.summary} - {displayedData.structured_insight.recommended_action}
             </p>
           </div>
         </div>

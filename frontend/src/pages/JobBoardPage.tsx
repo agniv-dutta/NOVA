@@ -65,7 +65,7 @@ const EMPLOYMENT_LABELS: Record<string, string> = {
 };
 
 export default function JobBoardPage() {
-  useDocumentTitle("NOVA — Job Board");
+  useDocumentTitle("NOVA - Job Board");
   const { token } = useAuth();
   const { toast } = useToast();
 

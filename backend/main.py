@@ -304,14 +304,14 @@ async def _process_sentiment_buffer() -> None:
 
     for (org_id, email), msg_list in buckets.items():
         logger.info(
-            "[SentimentBuffer] Bucket — org=%s email=%s message_count=%d",
+            "[SentimentBuffer] Bucket - org=%s email=%s message_count=%d",
             org_id, email, len(msg_list),
         )
 
     for (org_id, email), texts in buckets.items():
         try:
             logger.info(
-                "[SentimentBuffer] Running sentiment — org=%s email=%s messages=%d",
+                "[SentimentBuffer] Running sentiment - org=%s email=%s messages=%d",
                 org_id, email, len(texts),
             )
             result = await analyze_sentiment(SentimentRequest(employee_id=email, texts=texts))

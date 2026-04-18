@@ -24,7 +24,7 @@ type AuditLogResponse = {
 };
 
 export default function AuditLogPage() {
-  useDocumentTitle('NOVA — Audit Logs');
+  useDocumentTitle('NOVA - Audit Logs');
   const { token } = useAuth();
   const [rows, setRows] = useState<AuditLogItem[]>([]);
   const [loading, setLoading] = useState(false);
